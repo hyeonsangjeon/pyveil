@@ -3,7 +3,7 @@ requires = ["setuptools>=61.0", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "veil"
+name = "pyveil"
 version = "0.1.0"
 description = "A Python library for masking sensitive data (PII) - emails, phones, names, and more"
 readme = "README.md"
@@ -58,17 +58,17 @@ test = [
 ]
 
 [project.urls]
-Homepage = "https://github.com/yourusername/veil"
-Documentation = "https://github.com/yourusername/veil#readme"
-Repository = "https://github.com/yourusername/veil"
-Issues = "https://github.com/yourusername/veil/issues"
-Changelog = "https://github.com/yourusername/veil/releases"
+Homepage = "https://github.com/yourusername/pyveil"
+Documentation = "https://github.com/yourusername/pyveil#readme"
+Repository = "https://github.com/yourusername/pyveil"
+Issues = "https://github.com/yourusername/pyveil/issues"
+Changelog = "https://github.com/yourusername/pyveil/releases"
 
 [tool.setuptools]
-packages = ["veil"]
+packages = ["pyveil"]
 
 [tool.setuptools.package-data]
-veil = ["py.typed"]
+pyveil = ["py.typed"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
@@ -77,7 +77,7 @@ python_classes = ["Test*"]
 python_functions = ["test_*"]
 addopts = [
     "--verbose",
-    "--cov=veil",
+    "--cov=pyveil",
     "--cov-report=term-missing",
     "--cov-report=html",
 ]
@@ -140,7 +140,7 @@ module = "tests.*"
 disallow_untyped_defs = false
 
 [tool.coverage.run]
-source = ["veil"]
+source = ["pyveil"]
 omit = [
     "*/tests/*",
     "*/test_*.py",

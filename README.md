@@ -1,4 +1,4 @@
-# veil 🎭
+# pyveil 🎭
 
 A Python library for masking sensitive data (PII) - emails, phones, names, and more
 
@@ -7,6 +7,6 @@ A Python library for masking sensitive data (PII) - emails, phones, names, and m
 
 ## Overview
 
-Veil helps protect sensitive information by detecting and masking various types of personally identifiable information (PII) in text data. Whether you're handling logs, user data, or any text containing sensitive information, Veil provides flexible and easy-to-use tools to protect privacy.
+pyveil helps protect sensitive information by detecting and masking various types of personally identifiable information (PII) in text data. Whether you're handling logs, user data, or any text containing sensitive information, PyVeil provides flexible and easy-to-use tools to protect privacy.
 
 ## Features
