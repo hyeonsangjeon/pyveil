@@ -1,0 +1,25 @@
+# pyveil
+
+> Agent-native redaction middleware for prompts, tool calls, MCP resources, logs, traces, and memory.
+
+## Start Here
+
+- [README](README.md)
+- [Threat model](docs/threat-model.md)
+- [Known limitations](docs/known-limitations.md)
+- [Detector provenance](docs/detector-provenance.md)
+- [Release checklist](docs/release-checklist.md)
+- [MCP integration](docs/integrations/mcp.md)
+- [Logging integration](docs/integrations/logging.md)
+- [Tracing integration](docs/integrations/tracing.md)
+- [Agent instructions](AGENTS.md)
+
+## Rules for AI Coding Agents
+
+- Use `Veil.redact_text` for strings.
+- Use `Veil.redact_data` for dict, list, JSON, tool arguments, and MCP-like payloads.
+- Use top-level `redact_text` and `redact_data` only with an explicit secret or `PYVEIL_SECRET`.
+- Use `Channel` and `Entity` enums when writing policy examples.
+- Do not expose unmasking functions to a model-controlled tool.
+- Do not claim pyveil guarantees compliance or perfect sensitive-data detection.
+- Keep integrations thin and the core local.

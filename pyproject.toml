@@ -1,35 +1,45 @@
 [build-system]
-requires = ["setuptools>=61.0", "wheel"]
+requires = ["setuptools>=61.0,<77.0", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
 name = "pyveil"
 version = "0.1.0"
-description = "A Python library for masking sensitive data (PII) - emails, phones, names, and more"
+description = "Redact secrets before your AI agent sees them"
 readme = "README.md"
 requires-python = ">=3.8"
 license = {text = "MIT"}
 authors = [
-    {name = "Hyeon Sang Jeon", email = "your.email@example.com"}
+    {name = "Hyeon Sang Jeon", email = "wingnut0310@gmail.com"}
 ]
 maintainers = [
-    {name = "Hyeon Sang Jeon", email = "your.email@example.com"}
+    {name = "Hyeon Sang Jeon", email = "wingnut0310@gmail.com"}
 ]
 keywords = [
+    "agent-native",
+    "agents",
+    "ai-agents",
+    "data-protection",
+    "guardrails",
+    "llm",
+    "logs",
+    "masking",
+    "mcp",
+    "memory",
+    "observability",
     "pii",
     "privacy",
-    "masking",
-    "data-protection",
-    "security",
+    "prompts",
+    "redaction",
     "anonymization",
+    "security",
     "sensitive-data",
-    "gdpr",
-    "compliance"
+    "tool-calls",
+    "traces"
 ]
 classifiers = [
     "Development Status :: 3 - Alpha",
     "Intended Audience :: Developers",
-    "License :: OSI Approved :: MIT License",
     "Operating System :: OS Independent",
     "Programming Language :: Python :: 3",
     "Programming Language :: Python :: 3.8",
@@ -37,6 +47,8 @@ classifiers = [
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
     "Topic :: Security",
     "Topic :: Software Development :: Libraries :: Python Modules",
     "Topic :: Text Processing",
@@ -46,10 +58,12 @@ dependencies = []
 
 [project.optional-dependencies]
 dev = [
+    "build>=1.2.0",
     "pytest>=7.0.0",
     "pytest-cov>=4.0.0",
     "black>=23.0.0",
     "ruff>=0.1.0",
+    "twine>=5.0.0",
     "mypy>=1.0.0",
 ]
 test = [
@@ -58,14 +72,17 @@ test = [
 ]
 
 [project.urls]
-Homepage = "https://github.com/yourusername/pyveil"
-Documentation = "https://github.com/yourusername/pyveil#readme"
-Repository = "https://github.com/yourusername/pyveil"
-Issues = "https://github.com/yourusername/pyveil/issues"
-Changelog = "https://github.com/yourusername/pyveil/releases"
+Homepage = "https://github.com/hyeonsangjeon/pyveil"
+Documentation = "https://github.com/hyeonsangjeon/pyveil#readme"
+Repository = "https://github.com/hyeonsangjeon/pyveil"
+Issues = "https://github.com/hyeonsangjeon/pyveil/issues"
+Changelog = "https://github.com/hyeonsangjeon/pyveil/releases"
+
+[project.scripts]
+pyveil = "pyveil.cli:main"
 
 [tool.setuptools]
-packages = ["pyveil"]
+packages = ["pyveil", "pyveil.integrations"]
 
 [tool.setuptools.package-data]
 pyveil = ["py.typed"]
@@ -103,6 +120,8 @@ extend-exclude = '''
 [tool.ruff]
 line-length = 100
 target-version = "py38"
+
+[tool.ruff.lint]
 select = [
     "E",   # pycodestyle errors
     "W",   # pycodestyle warnings
@@ -118,11 +137,11 @@ ignore = [
     "C901",  # too complex
 ]
 
-[tool.ruff.per-file-ignores]
+[tool.ruff.lint.per-file-ignores]
 "__init__.py" = ["F401"]
 
 [tool.mypy]
-python_version = "3.8"
+python_version = "3.10"
 warn_return_any = true
 warn_unused_configs = true
 disallow_untyped_defs = true

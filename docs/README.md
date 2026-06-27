@@ -1,13 +1,21 @@
 # pyveil Documentation
 
-## Overview
+pyveil redacts secrets before your AI agent sees them. It is agent-native redaction middleware for AI context boundaries.
 
-pyveil is a Python library designed to mask sensitive personally identifiable information (PII) in text data. It helps protect privacy by detecting and masking various types of sensitive information including emails, phone numbers, credit cards, SSNs, IP addresses, and names.
+Start with:
 
-## Installation
+- [Threat model](threat-model.md)
+- [Known limitations](known-limitations.md)
+- [Detector provenance](detector-provenance.md)
+- [Release checklist](release-checklist.md)
+- [MCP integration](integrations/mcp.md)
+- [Logging integration](integrations/logging.md)
+- [Tracing integration](integrations/tracing.md)
 
-```bash
-pip install veil
+The stable v0.1 shape is:
+
+```text
+detector -> finding -> policy -> masker
 ```
 
-## Quick Start
+Channels such as `prompt.input`, `tool.call.arguments`, `mcp.resource.content`, `memory.write`, `trace.span.attributes`, and `log.record` are part of the public model. Python callers can use the public `Channel` enum instead of raw strings.

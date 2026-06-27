@@ -1,0 +1,51 @@
+version: 1
+
+default_level: HIGH
+
+placeholder:
+  digest: hmac-sha256
+  length: 12
+  scope: tenant_session
+  format: "[{type}:{digest}]"
+
+channels:
+  prompt.input:
+    level: HIGH
+  prompt.output:
+    level: HIGH
+  tool.call.arguments:
+    level: HIGH
+    block:
+      - AUTH_HEADER
+      - PRIVATE_KEY
+      - API_KEY
+      - JWT
+      - KV_SECRET
+      - URL_QUERY_SECRET
+  tool.call.result:
+    level: HIGH
+  mcp.resource.content:
+    level: HIGH
+  memory.write:
+    level: HIGH
+  trace.span.attributes:
+    level: HIGH
+  log.record:
+    level: HIGH
+
+detectors:
+  email: true
+  phone: true
+  credit_card: true
+  jwt: true
+  auth_header: true
+  private_key: true
+  api_key: true
+  url_query_secret: true
+  kv_secret: true
+  names: false
+  addresses: false
+
+safety:
+  include_raw_findings: false
+  max_input_chars: 1000000

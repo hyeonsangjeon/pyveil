@@ -1,7 +1,11 @@
 # Include documentation
 include README.md
+include CHANGELOG.md
 include LICENSE
-include CLAUDE.md
+include AGENTS.md
+include SECURITY.md
+include llms.txt
+include pyveil.yaml
 
 # Include examples
 recursive-include examples *.py
@@ -11,6 +15,7 @@ recursive-include tests *.py
 
 # Include docs
 recursive-include docs *.md
+recursive-include docs/media *.gif *.png
 
 # Exclude unnecessary files
 global-exclude __pycache__
