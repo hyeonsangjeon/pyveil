@@ -69,10 +69,10 @@ print(safe.text)
 
 ## Usage Guides
 
-Short no-audio walkthroughs are attached to the `v0.1.0` GitHub release:
+Short no-audio walkthroughs are attached to the `v0.1.1` GitHub release:
 
-- [English usage guide](https://github.com/hyeonsangjeon/pyveil/releases/download/v0.1.0/pyveil-usage-guide-en.mp4)
-- [Korean usage guide](https://github.com/hyeonsangjeon/pyveil/releases/download/v0.1.0/pyveil-usage-guide-ko.mp4)
+- [English usage guide](https://github.com/hyeonsangjeon/pyveil/releases/download/v0.1.1/pyveil-usage-guide-en.mp4)
+- [Korean usage guide](https://github.com/hyeonsangjeon/pyveil/releases/download/v0.1.1/pyveil-usage-guide-ko.mp4)
 
 ## Why Middleware
 

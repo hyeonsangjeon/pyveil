@@ -1,8 +1,11 @@
 # Changelog
 
-## 0.1.0 - Unreleased
+## 0.1.1 - 2026-06-27
 
 Initial agent-native redaction release.
+
+This version supersedes the legacy `0.1.0` PyPI package metadata and starts the
+agent-native package line.
 
 ### Added
 

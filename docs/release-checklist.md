@@ -13,7 +13,7 @@ for v in 3.8 3.9 3.10 3.11 3.12 3.13 3.14; do
 done
 uv run --extra dev python -m build
 uv run --extra dev python -m twine check dist/*
-uv run --isolated --with ./dist/pyveil-0.1.0-py3-none-any.whl python -c "from pyveil import Veil; assert '[EMAIL:' in Veil.high(secret=b'test').redact_text('alice@example.com').text"
+uv run --isolated --with ./dist/pyveil-0.1.1-py3-none-any.whl python -c "from pyveil import Veil; assert '[EMAIL:' in Veil.high(secret=b'test').redact_text('alice@example.com').text"
 ```
 
 ## Metadata
