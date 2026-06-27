@@ -1,8 +1,16 @@
 # pyveil
 
-[![Python 3.8+](https://img.shields.io/badge/python-3.8%2B-blue.svg)](https://www.python.org/)
-[![License: MIT](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
-[![Tests](https://github.com/hyeonsangjeon/pyveil/actions/workflows/tests.yml/badge.svg)](https://github.com/hyeonsangjeon/pyveil/actions/workflows/tests.yml)
+<p align="center">
+  <a href="https://pypi.org/project/pyveil/"><img alt="PyPI" src="https://img.shields.io/pypi/v/pyveil?style=flat-square"></a>
+  <a href="https://www.python.org/"><img alt="Python 3.8 to 3.14" src="https://img.shields.io/badge/python-3.8%20to%203.14-3776AB?style=flat-square"></a>
+  <a href="https://github.com/hyeonsangjeon/pyveil/actions/workflows/tests.yml"><img alt="Tested on Python 3.8 to 3.14" src="https://img.shields.io/badge/tested-Python%203.8%20to%203.14-brightgreen?style=flat-square"></a>
+  <a href="https://github.com/hyeonsangjeon/pyveil/actions/workflows/tests.yml"><img alt="Tests" src="https://github.com/hyeonsangjeon/pyveil/actions/workflows/tests.yml/badge.svg"></a>
+  <a href="#development"><img alt="Coverage 91 percent" src="https://img.shields.io/badge/coverage-91%25-brightgreen?style=flat-square"></a>
+  <a href="LICENSE"><img alt="License: MIT" src="https://img.shields.io/badge/license-MIT-green?style=flat-square"></a>
+  <img alt="Core dependencies: zero" src="https://img.shields.io/badge/core%20deps-zero-111827?style=flat-square">
+  <img alt="Typed package" src="https://img.shields.io/badge/typed-py.typed-7C3AED?style=flat-square">
+  <img alt="Agent-native redaction" src="https://img.shields.io/badge/agent--native-redaction-FF6B35?style=flat-square">
+</p>
 
 Redact secrets before your AI agent sees them.
 
