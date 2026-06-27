@@ -36,6 +36,8 @@ user data / tool data / resource data
 pip install pyveil
 ```
 
+[PyPI package](https://pypi.org/project/pyveil/)
+
 Python `3.8` through `3.14` are tested.
 
 ## 30 Second Quickstart
