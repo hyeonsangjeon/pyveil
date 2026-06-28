@@ -1,0 +1,38 @@
+name: Feature request
+description: Propose a focused pyveil improvement.
+title: "[Feature]: "
+labels: ["enhancement"]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem
+      description: What agent redaction workflow does this unblock?
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposal
+      description: Describe the smallest useful change.
+    validations:
+      required: true
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area
+      options:
+        - Detectors
+        - Policy
+        - CLI
+        - Examples
+        - Documentation
+        - Integration
+        - Other
+    validations:
+      required: true
+  - type: textarea
+    id: safety
+    attributes:
+      label: Safety considerations
+      description: False positives, false negatives, raw value exposure, or compatibility risks.

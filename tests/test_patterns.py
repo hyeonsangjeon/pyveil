@@ -17,6 +17,16 @@ def test_detects_credit_card_with_luhn_but_not_invalid_card():
     assert invalid.findings == ()
 
 
+def test_detects_email_before_trailing_sentence_punctuation():
+    veil = Veil.high(secret=b"test-secret")
+
+    result = veil.redact_text("Reach alice@example.com.")
+
+    assert "alice@example.com" not in result.text
+    assert result.text.startswith("Reach [EMAIL:")
+    assert result.text.endswith("].")
+
+
 def test_detects_jwt_and_api_key():
     veil = Veil.high(secret=b"test-secret")
     token = (

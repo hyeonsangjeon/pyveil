@@ -1,5 +1,26 @@
 # Changelog
 
+## 0.1.2 - 2026-06-28
+
+Documentation and adoption polish.
+
+### Added
+
+- PyPI package link in the README body so the PyPI long description and GitHub
+  README stay aligned.
+- Practical integration examples for agent context wrapping, FastAPI middleware,
+  LiteLLM-style proxy filtering, and MCP-style server result wrapping.
+- `CONTRIBUTING.md`, issue templates, PR template, FAQ, and roadmap.
+
+### Changed
+
+- README usage guide links now target the `v0.1.2` release assets.
+
+### Fixed
+
+- Email detection now handles addresses followed by sentence punctuation such
+  as `alice@example.com.`.
+
 ## 0.1.1 - 2026-06-27
 
 Initial agent-native redaction release.

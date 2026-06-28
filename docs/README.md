@@ -5,8 +5,10 @@ pyveil redacts secrets before your AI agent sees them. It is agent-native redact
 Start with:
 
 - [Threat model](threat-model.md)
+- [FAQ](faq.md)
 - [Known limitations](known-limitations.md)
 - [Detector provenance](detector-provenance.md)
+- [Roadmap](roadmap.md)
 - [Release checklist](release-checklist.md)
 - [MCP integration](integrations/mcp.md)
 - [Logging integration](integrations/logging.md)

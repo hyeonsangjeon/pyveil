@@ -71,10 +71,10 @@ print(safe.text)
 
 ## Usage Guides
 
-Short no-audio walkthroughs are attached to the `v0.1.1` GitHub release:
+Short no-audio walkthroughs are attached to the `v0.1.2` GitHub release:
 
-- [English usage guide](https://github.com/hyeonsangjeon/pyveil/releases/download/v0.1.1/pyveil-usage-guide-en.mp4)
-- [Korean usage guide](https://github.com/hyeonsangjeon/pyveil/releases/download/v0.1.1/pyveil-usage-guide-ko.mp4)
+- [English usage guide](https://github.com/hyeonsangjeon/pyveil/releases/download/v0.1.2/pyveil-usage-guide-en.mp4)
+- [Korean usage guide](https://github.com/hyeonsangjeon/pyveil/releases/download/v0.1.2/pyveil-usage-guide-ko.mp4)
 
 ## Why Middleware
 
@@ -228,9 +228,12 @@ This repository includes files meant for coding agents and LLM readers:
 
 - [AGENTS.md](AGENTS.md) for agent instructions
 - [llms.txt](llms.txt) for LLM-friendly navigation
+- [CONTRIBUTING.md](CONTRIBUTING.md)
 - [docs/threat-model.md](docs/threat-model.md)
+- [docs/faq.md](docs/faq.md)
 - [docs/known-limitations.md](docs/known-limitations.md)
 - [docs/detector-provenance.md](docs/detector-provenance.md)
+- [docs/roadmap.md](docs/roadmap.md)
 - [docs/release-checklist.md](docs/release-checklist.md)
 - [docs/integrations/mcp.md](docs/integrations/mcp.md)
 - [docs/integrations/logging.md](docs/integrations/logging.md)
@@ -242,7 +245,11 @@ Examples:
 - [examples/redact_json.py](examples/redact_json.py)
 - [examples/log_filter.py](examples/log_filter.py)
 - [examples/mcp_tool_result.py](examples/mcp_tool_result.py)
+- [examples/mcp_server_wrapper.py](examples/mcp_server_wrapper.py)
 - [examples/memory_write.py](examples/memory_write.py)
+- [examples/openai_agents_guardrail.py](examples/openai_agents_guardrail.py)
+- [examples/fastapi_middleware.py](examples/fastapi_middleware.py)
+- [examples/litellm_proxy_filter.py](examples/litellm_proxy_filter.py)
 
 ## Development
 

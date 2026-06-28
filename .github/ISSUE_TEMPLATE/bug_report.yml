@@ -1,0 +1,39 @@
+name: Bug report
+description: Report a reproducible pyveil bug.
+title: "[Bug]: "
+labels: ["bug"]
+body:
+  - type: textarea
+    id: summary
+    attributes:
+      label: Summary
+      description: What failed, and what did you expect?
+    validations:
+      required: true
+  - type: textarea
+    id: reproduce
+    attributes:
+      label: Reproduction
+      description: Minimal code, command, or payload that reproduces the issue. Use synthetic sensitive values only.
+      render: python
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: pyveil version
+      placeholder: "0.1.2"
+    validations:
+      required: true
+  - type: input
+    id: python
+    attributes:
+      label: Python version
+      placeholder: "3.12"
+    validations:
+      required: true
+  - type: textarea
+    id: notes
+    attributes:
+      label: Additional context
+      description: Include channel, level, policy, or CLI flags when relevant.

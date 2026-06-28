@@ -1,6 +1,7 @@
 # Include documentation
 include README.md
 include CHANGELOG.md
+include CONTRIBUTING.md
 include LICENSE
 include AGENTS.md
 include SECURITY.md

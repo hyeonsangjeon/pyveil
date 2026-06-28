@@ -6,13 +6,16 @@
 
 - [README](README.md)
 - [Threat model](docs/threat-model.md)
+- [FAQ](docs/faq.md)
 - [Known limitations](docs/known-limitations.md)
 - [Detector provenance](docs/detector-provenance.md)
+- [Roadmap](docs/roadmap.md)
 - [Release checklist](docs/release-checklist.md)
 - [MCP integration](docs/integrations/mcp.md)
 - [Logging integration](docs/integrations/logging.md)
 - [Tracing integration](docs/integrations/tracing.md)
 - [Agent instructions](AGENTS.md)
+- [Contributing](CONTRIBUTING.md)
 
 ## Rules for AI Coding Agents
 
