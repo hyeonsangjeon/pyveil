@@ -1,0 +1,392 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=1280, initial-scale=1">
+  <title>pyveil social preview</title>
+  <style>
+    :root {
+      --bg: #07110f;
+      --ink: #f7fbff;
+      --muted: #9da9b8;
+      --line: rgba(255, 255, 255, 0.14);
+      --panel: rgba(10, 19, 24, 0.88);
+      --panel-2: rgba(8, 25, 20, 0.9);
+      --violet: #a78bfa;
+      --cyan: #22d3ee;
+      --green: #4ade80;
+      --red: #fb7185;
+      --amber: #fbbf24;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html,
+    body {
+      width: 1280px;
+      height: 640px;
+      margin: 0;
+      overflow: hidden;
+      background: var(--bg);
+      color: var(--ink);
+      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display",
+        "Helvetica Neue", Arial, sans-serif;
+    }
+
+    body {
+      position: relative;
+      padding: 54px 72px;
+      background:
+        linear-gradient(115deg, rgba(8, 47, 73, 0.52), transparent 38%),
+        linear-gradient(22deg, transparent 45%, rgba(88, 28, 135, 0.38)),
+        #07110f;
+    }
+
+    .grid {
+      position: absolute;
+      inset: 0;
+      background-image:
+        linear-gradient(rgba(255, 255, 255, 0.045) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255, 255, 255, 0.045) 1px, transparent 1px);
+      background-size: 44px 44px;
+      mask-image: linear-gradient(180deg, rgba(0, 0, 0, 0.85), transparent 78%);
+      opacity: 0.52;
+    }
+
+    .frame {
+      position: relative;
+      z-index: 1;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      gap: 34px;
+    }
+
+    .top {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 36px;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 22px;
+    }
+
+    .mark {
+      width: 74px;
+      height: 74px;
+      border-radius: 22px;
+      position: relative;
+      background:
+        linear-gradient(145deg, rgba(34, 211, 238, 0.28), rgba(167, 139, 250, 0.22)),
+        rgba(255, 255, 255, 0.08);
+      border: 1px solid rgba(255, 255, 255, 0.22);
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.28);
+    }
+
+    .mark::before {
+      content: "";
+      position: absolute;
+      left: 22px;
+      top: 13px;
+      width: 30px;
+      height: 38px;
+      border: 5px solid var(--ink);
+      border-bottom: 0;
+      border-radius: 16px 16px 0 0;
+      opacity: 0.95;
+    }
+
+    .mark::after {
+      content: "";
+      position: absolute;
+      left: 17px;
+      top: 34px;
+      width: 40px;
+      height: 27px;
+      border-radius: 10px;
+      background: linear-gradient(135deg, var(--cyan), var(--violet));
+      box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.38);
+    }
+
+    .name {
+      font-size: 92px;
+      line-height: 0.9;
+      font-weight: 760;
+      letter-spacing: 0;
+    }
+
+    .name span {
+      color: var(--violet);
+    }
+
+    .badges {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+      gap: 10px;
+      max-width: 440px;
+      padding-top: 8px;
+    }
+
+    .badge {
+      height: 34px;
+      display: inline-flex;
+      align-items: center;
+      padding: 0 14px;
+      border-radius: 999px;
+      border: 1px solid rgba(255, 255, 255, 0.18);
+      background: rgba(255, 255, 255, 0.075);
+      color: #dce7f5;
+      font-size: 17px;
+      font-weight: 650;
+      white-space: nowrap;
+    }
+
+    .hero {
+      max-width: 980px;
+    }
+
+    .headline {
+      margin: 0;
+      font-size: 58px;
+      line-height: 1.02;
+      font-weight: 760;
+      letter-spacing: 0;
+    }
+
+    .headline strong {
+      color: var(--green);
+      font-weight: 760;
+    }
+
+    .subhead {
+      margin: 14px 0 0;
+      color: #c2ccda;
+      font-size: 26px;
+      line-height: 1.24;
+      font-weight: 500;
+    }
+
+    .stage {
+      margin-top: auto;
+      margin-bottom: 56px;
+      display: grid;
+      grid-template-columns: 1fr 120px 1fr;
+      align-items: stretch;
+      gap: 20px;
+    }
+
+    .panel {
+      min-height: 210px;
+      border-radius: 24px;
+      padding: 25px 28px;
+      background: var(--panel);
+      border: 1px solid var(--line);
+      box-shadow: 0 22px 72px rgba(0, 0, 0, 0.28);
+      overflow: hidden;
+    }
+
+    .panel.safe {
+      background: var(--panel-2);
+      border-color: rgba(74, 222, 128, 0.28);
+    }
+
+    .label {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 17px;
+      font-size: 18px;
+      line-height: 1;
+      font-weight: 760;
+      text-transform: uppercase;
+      color: var(--red);
+    }
+
+    .safe .label {
+      color: var(--green);
+    }
+
+    .tiny {
+      color: var(--muted);
+      font-size: 15px;
+      font-weight: 650;
+      text-transform: none;
+    }
+
+    .code {
+      font-family: "SF Mono", SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      font-size: 24px;
+      line-height: 1.44;
+      color: #dfe7f2;
+      white-space: pre;
+    }
+
+    .secret {
+      color: #ffd1d8;
+    }
+
+    .placeholder {
+      color: var(--green);
+      font-weight: 750;
+    }
+
+    .pipe {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+    }
+
+    .pipe::before,
+    .pipe::after {
+      content: "";
+      position: absolute;
+      top: 50%;
+      width: 34px;
+      height: 2px;
+      background: linear-gradient(90deg, transparent, var(--violet));
+    }
+
+    .pipe::before {
+      left: -17px;
+    }
+
+    .pipe::after {
+      right: -17px;
+      background: linear-gradient(90deg, var(--violet), transparent);
+    }
+
+    .core {
+      width: 112px;
+      height: 112px;
+      border-radius: 32px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 7px;
+      background:
+        linear-gradient(160deg, rgba(167, 139, 250, 0.28), rgba(34, 211, 238, 0.16)),
+        rgba(255, 255, 255, 0.08);
+      border: 1px solid rgba(255, 255, 255, 0.25);
+      box-shadow: 0 18px 52px rgba(0, 0, 0, 0.32);
+    }
+
+    .core .veil {
+      font-size: 25px;
+      line-height: 1;
+      color: var(--violet);
+      font-weight: 800;
+    }
+
+    .core .hmac {
+      font-size: 18px;
+      line-height: 1;
+      color: #dce7f5;
+      font-weight: 760;
+      letter-spacing: 0;
+    }
+
+    .footer {
+      position: absolute;
+      left: 72px;
+      right: 72px;
+      bottom: 22px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 24px;
+      color: #aeb9c7;
+      font-size: 18px;
+      font-weight: 560;
+    }
+
+    .channels {
+      display: flex;
+      gap: 9px;
+      align-items: center;
+    }
+
+    .channel {
+      padding: 8px 11px;
+      border-radius: 10px;
+      background: rgba(255, 255, 255, 0.07);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      color: #d8e2ef;
+      font-family: "SF Mono", SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      font-size: 14px;
+      line-height: 1;
+    }
+  </style>
+</head>
+<body>
+  <div class="grid"></div>
+  <main class="frame" aria-label="pyveil social preview">
+    <section class="top">
+      <div>
+        <div class="brand">
+          <div class="mark" aria-hidden="true"></div>
+          <div class="name">py<span>veil</span></div>
+        </div>
+        <div class="hero">
+          <h1 class="headline">AI agents do not need your <strong>secrets</strong>.</h1>
+          <p class="subhead">Redact prompts, tool calls, MCP resources, memory, logs, and traces before context crosses the boundary.</p>
+        </div>
+      </div>
+
+      <div class="badges" aria-label="package facts">
+        <div class="badge">Python 3.8-3.14</div>
+        <div class="badge">zero core deps</div>
+        <div class="badge">typed</div>
+        <div class="badge">agent-native</div>
+      </div>
+    </section>
+
+    <section class="stage" aria-label="redaction flow">
+      <div class="panel">
+        <div class="label">
+          Sensitive context
+          <span class="tiny">before pyveil</span>
+        </div>
+        <div class="code">email: <span class="secret">alice@example.com</span>
+auth:  <span class="secret">Bearer sk-demo-...</span>
+card:  <span class="secret">4242 4242 4242 4242</span></div>
+      </div>
+
+      <div class="pipe" aria-hidden="true">
+        <div class="core">
+          <div class="veil">veil</div>
+          <div class="hmac">HMAC</div>
+        </div>
+      </div>
+
+      <div class="panel safe">
+        <div class="label">
+          Agent-safe context
+          <span class="tiny">after pyveil</span>
+        </div>
+        <div class="code">email: <span class="placeholder">[EMAIL:b4df46a892c9]</span>
+auth:  <span class="placeholder">BLOCKED</span>
+card:  <span class="placeholder">[CARD:91ae7c02d4b8]</span></div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <div>Deterministic placeholders. No unmasking API in v0.1.</div>
+    <div class="channels" aria-label="channels">
+      <span class="channel">prompt.input</span>
+      <span class="channel">tool.call</span>
+      <span class="channel">mcp.resource</span>
+      <span class="channel">memory.write</span>
+    </div>
+  </footer>
+</body>
+</html>
