@@ -69,6 +69,46 @@ safe = redact_text(
 print(safe.text)
 ```
 
+## LLM Client Boundary
+
+Put `pyveil` immediately before the call that sends messages to a model provider. The model client can be OpenAI, Azure OpenAI, Anthropic, Gemini, LiteLLM, a proxy, or an internal gateway; only `call_llm` changes.
+
+```python
+from typing import Callable, Dict, List
+
+from pyveil import Channel, Veil
+
+Message = Dict[str, str]
+LLMCall = Callable[[List[Message]], str]
+
+veil = Veil.high(secret=b"tenant-or-run-secret", scope="tenant/session")
+
+
+def call_with_redaction(messages: List[Message], call_llm: LLMCall) -> str:
+    safe = veil.redact_data(messages, channel=Channel.PROMPT_INPUT)
+    return call_llm(safe.data)
+
+
+def demo_llm(messages: List[Message]) -> str:
+    # Replace this with your provider SDK call.
+    return "provider received: " + messages[-1]["content"]
+
+
+response = call_with_redaction(
+    [
+        {"role": "system", "content": "You are concise."},
+        {
+            "role": "user",
+            "content": "Email alice@example.com about my API key sk-proj-abcdefghijklmnopqrstuvwxyz123456.",
+        },
+    ],
+    demo_llm,
+)
+
+print(response)
+# provider received: Email [EMAIL:...] about my API key [API_KEY:...].
+```
+
 ## Usage Guides
 
 Short no-audio walkthroughs are attached to the `v0.1.2` GitHub release:
