@@ -7,6 +7,7 @@
 - [README](README.md)
 - [Threat model](docs/threat-model.md)
 - [FAQ](docs/faq.md)
+- [Redaction reference](docs/redaction-reference.md)
 - [Known limitations](docs/known-limitations.md)
 - [Detector provenance](docs/detector-provenance.md)
 - [Roadmap](docs/roadmap.md)

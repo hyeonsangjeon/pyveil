@@ -6,6 +6,7 @@ Start with:
 
 - [Threat model](threat-model.md)
 - [FAQ](faq.md)
+- [Redaction reference](redaction-reference.md)
 - [Known limitations](known-limitations.md)
 - [Detector provenance](detector-provenance.md)
 - [Roadmap](roadmap.md)

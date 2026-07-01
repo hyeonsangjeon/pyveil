@@ -239,6 +239,8 @@ v0.1 focuses on high-precision, low-dependency detection:
 
 Broad name and address detection is intentionally out of scope for core v0.1 unless supplied as known values or custom rules in a future release.
 
+For the full masking board, see [docs/redaction-reference.md](docs/redaction-reference.md).
+
 ## Safety Model
 
 `pyveil` aims to reduce sensitive-context exposure at agent boundaries.
@@ -271,6 +273,7 @@ This repository includes files meant for coding agents and LLM readers:
 - [CONTRIBUTING.md](CONTRIBUTING.md)
 - [docs/threat-model.md](docs/threat-model.md)
 - [docs/faq.md](docs/faq.md)
+- [docs/redaction-reference.md](docs/redaction-reference.md)
 - [docs/known-limitations.md](docs/known-limitations.md)
 - [docs/detector-provenance.md](docs/detector-provenance.md)
 - [docs/roadmap.md](docs/roadmap.md)
@@ -287,6 +290,7 @@ Examples:
 - [examples/mcp_tool_result.py](examples/mcp_tool_result.py)
 - [examples/mcp_server_wrapper.py](examples/mcp_server_wrapper.py)
 - [examples/memory_write.py](examples/memory_write.py)
+- [examples/llm_client_boundary.py](examples/llm_client_boundary.py)
 - [examples/openai_agents_guardrail.py](examples/openai_agents_guardrail.py)
 - [examples/fastapi_middleware.py](examples/fastapi_middleware.py)
 - [examples/litellm_proxy_filter.py](examples/litellm_proxy_filter.py)
