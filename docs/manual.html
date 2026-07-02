@@ -1,0 +1,1168 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>pyveil manual - agent-native redaction middleware</title>
+  <meta name="description" content="The pyveil manual: install, quickstart, core concepts, full API reference, recipes, CLI, and integrations for redacting secrets before AI agents see them.">
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg: #07110f;
+      --bg-soft: #0a1512;
+      --ink: #f7fbff;
+      --muted: #b6c2cf;
+      --faint: #8695a3;
+      --line: rgba(255, 255, 255, 0.14);
+      --line-soft: rgba(255, 255, 255, 0.08);
+      --panel: rgba(9, 17, 22, 0.88);
+      --code-bg: #050b0f;
+      --green: #4ade80;
+      --violet: #a78bfa;
+      --cyan: #22d3ee;
+      --red: #fb7185;
+      --amber: #fbbf24;
+      --topbar-h: 60px;
+    }
+
+    * { box-sizing: border-box; }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--ink);
+      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Helvetica Neue", Arial, sans-serif;
+      line-height: 1.6;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    a { color: var(--cyan); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+
+    code {
+      font-family: "SF Mono", SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      font-size: 0.92em;
+    }
+
+    .skip-link {
+      position: absolute;
+      left: -999px;
+      top: 0;
+      background: var(--green);
+      color: #04120b;
+      padding: 10px 14px;
+      border-radius: 8px;
+      font-weight: 700;
+      z-index: 100;
+    }
+    .skip-link:focus { left: 12px; top: 12px; }
+
+    /* ---------- Top bar ---------- */
+    .topbar {
+      position: fixed;
+      inset: 0 0 auto 0;
+      height: var(--topbar-h);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      padding: 0 20px;
+      background: rgba(7, 17, 15, 0.9);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--line);
+      z-index: 40;
+    }
+    .topbar .brand { font-size: 20px; font-weight: 800; letter-spacing: 0; }
+    .topbar .brand span { color: var(--violet); }
+    .topbar .brand small {
+      display: inline-block;
+      margin-left: 8px;
+      padding: 2px 8px;
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--muted);
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      vertical-align: middle;
+    }
+    .top-links { display: flex; align-items: center; gap: 8px; }
+    .top-links a {
+      color: var(--ink);
+      font-weight: 700;
+      font-size: 13px;
+      padding: 7px 11px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      white-space: nowrap;
+    }
+    .top-links a:hover { background: rgba(255,255,255,0.05); text-decoration: none; }
+    .top-links a.cta { border-color: rgba(74,222,128,0.45); background: rgba(74,222,128,0.14); color: #dfffea; }
+    .menu-toggle {
+      display: none;
+      background: rgba(255,255,255,0.05);
+      border: 1px solid var(--line);
+      color: var(--ink);
+      border-radius: 8px;
+      width: 40px; height: 38px;
+      font-size: 18px;
+      cursor: pointer;
+    }
+
+    /* ---------- Layout ---------- */
+    .layout {
+      display: grid;
+      grid-template-columns: 280px minmax(0, 1fr);
+      gap: 0;
+      max-width: 1240px;
+      margin: 0 auto;
+      padding-top: var(--topbar-h);
+    }
+
+    .sidebar {
+      position: sticky;
+      top: var(--topbar-h);
+      align-self: start;
+      height: calc(100vh - var(--topbar-h));
+      overflow-y: auto;
+      padding: 26px 14px 60px 20px;
+      border-right: 1px solid var(--line-soft);
+    }
+    .sidebar::-webkit-scrollbar { width: 8px; }
+    .sidebar::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.12); border-radius: 8px; }
+
+    .nav-group { margin-bottom: 22px; }
+    .nav-group h4 {
+      margin: 0 0 8px;
+      padding: 0 10px;
+      font-size: 11px;
+      letter-spacing: 0.09em;
+      text-transform: uppercase;
+      color: var(--faint);
+      font-weight: 800;
+    }
+    .nav-group a {
+      display: block;
+      padding: 6px 10px;
+      margin: 1px 0;
+      border-radius: 7px;
+      color: var(--muted);
+      font-size: 14px;
+      font-weight: 600;
+      border-left: 2px solid transparent;
+    }
+    .nav-group a:hover { color: var(--ink); background: rgba(255,255,255,0.04); text-decoration: none; }
+    .nav-group a.active {
+      color: var(--green);
+      background: rgba(74,222,128,0.10);
+      border-left-color: var(--green);
+    }
+
+    /* ---------- Content ---------- */
+    .content {
+      padding: 12px 40px 120px;
+      max-width: 900px;
+    }
+    .content section { padding-top: 26px; scroll-margin-top: calc(var(--topbar-h) + 14px); }
+    .content h1 {
+      font-size: clamp(34px, 5vw, 52px);
+      line-height: 1.05;
+      margin: 20px 0 10px;
+      letter-spacing: -0.5px;
+    }
+    .content h1 strong { color: var(--green); }
+    .content .tagline { color: var(--muted); font-size: 20px; font-weight: 600; margin: 0 0 8px; max-width: 720px; }
+    .content h2 {
+      font-size: 28px;
+      margin: 10px 0 14px;
+      padding-bottom: 10px;
+      border-bottom: 1px solid var(--line-soft);
+      letter-spacing: -0.3px;
+    }
+    .content h3 { font-size: 19px; margin: 26px 0 10px; }
+    .content h4 { font-size: 15px; margin: 20px 0 8px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.05em; }
+    .content p { color: #dbe4ee; margin: 12px 0; }
+    .content li { color: #dbe4ee; margin: 6px 0; }
+    .content strong { color: var(--ink); }
+    .lede { font-size: 17px; color: var(--muted) !important; }
+
+    pre {
+      position: relative;
+      margin: 14px 0;
+      padding: 18px 18px;
+      overflow: auto;
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      background: var(--code-bg);
+      color: #dce7f5;
+      font-size: 13.5px;
+      line-height: 1.6;
+    }
+    pre code { font-size: 13.5px; }
+    pre::-webkit-scrollbar { height: 8px; }
+    pre::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.14); border-radius: 8px; }
+    .copy-btn {
+      position: absolute;
+      top: 8px; right: 8px;
+      padding: 4px 9px;
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--muted);
+      background: rgba(255,255,255,0.05);
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      cursor: pointer;
+      opacity: 0;
+      transition: opacity .15s ease;
+    }
+    pre:hover .copy-btn { opacity: 1; }
+    .copy-btn:hover { color: var(--ink); background: rgba(255,255,255,0.1); }
+    .copy-btn.copied { color: var(--green); border-color: rgba(74,222,128,0.45); }
+
+    p code, li code, td code, h3 code {
+      background: rgba(255,255,255,0.07);
+      border: 1px solid var(--line-soft);
+      border-radius: 5px;
+      padding: 1px 6px;
+      color: #e8eef6;
+    }
+    .tok-out { color: var(--green); }
+    .tok-cmt { color: var(--faint); }
+
+    .flow {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 10px;
+      margin: 16px 0;
+      padding: 18px;
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      background: var(--bg-soft);
+    }
+    .flow .node {
+      padding: 8px 14px;
+      border-radius: 8px;
+      border: 1px solid var(--line);
+      font-weight: 700;
+      font-size: 14px;
+      white-space: nowrap;
+    }
+    .flow .node.raw { color: var(--red); border-color: rgba(251,113,133,0.4); background: rgba(251,113,133,0.08); }
+    .flow .node.veil { color: var(--violet); border-color: rgba(167,139,250,0.45); background: rgba(167,139,250,0.12); }
+    .flow .node.safe { color: var(--green); border-color: rgba(74,222,128,0.4); background: rgba(74,222,128,0.08); }
+    .flow .arrow { color: var(--faint); font-size: 18px; font-weight: 700; }
+
+    table { width: 100%; border-collapse: collapse; margin: 16px 0; font-size: 14px; }
+    th, td { text-align: left; padding: 10px 12px; border-bottom: 1px solid var(--line-soft); vertical-align: top; }
+    th { color: var(--ink); font-weight: 700; border-bottom: 1px solid var(--line); background: rgba(255,255,255,0.02); }
+    td { color: #cdd8e4; }
+    tbody tr:hover { background: rgba(255,255,255,0.02); }
+
+    .badge {
+      display: inline-block;
+      padding: 2px 9px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 800;
+      letter-spacing: 0.03em;
+    }
+    .badge.high { color: #04120b; background: var(--green); }
+    .badge.low { color: #0b1220; background: var(--cyan); }
+    .badge.block { color: #1a0a0e; background: var(--red); }
+    .badge.pass { color: #1c1408; background: var(--amber); }
+    .badge.redact { color: #12081c; background: var(--violet); }
+
+    .callout {
+      margin: 16px 0;
+      padding: 14px 16px 14px 18px;
+      border-radius: 10px;
+      border: 1px solid var(--line);
+      border-left-width: 3px;
+      background: var(--bg-soft);
+    }
+    .callout p { margin: 6px 0; }
+    .callout.tip { border-left-color: var(--green); }
+    .callout.warn { border-left-color: var(--amber); }
+    .callout.danger { border-left-color: var(--red); }
+    .callout .c-label { font-weight: 800; font-size: 12px; letter-spacing: 0.06em; text-transform: uppercase; }
+    .callout.tip .c-label { color: var(--green); }
+    .callout.warn .c-label { color: var(--amber); }
+    .callout.danger .c-label { color: var(--red); }
+
+    .cards { display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: 12px; margin: 16px 0; }
+    .card {
+      padding: 16px 18px;
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      background: var(--panel);
+    }
+    .card h3 { margin: 0 0 6px; font-size: 16px; }
+    .card p { margin: 0; color: var(--muted); font-size: 14px; }
+
+    .api-item {
+      margin: 18px 0;
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      overflow: hidden;
+      background: var(--bg-soft);
+    }
+    .api-sig {
+      padding: 12px 16px;
+      background: var(--code-bg);
+      border-bottom: 1px solid var(--line);
+      font-family: "SF Mono", SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      font-size: 13.5px;
+      color: #e8eef6;
+      overflow-x: auto;
+    }
+    .api-sig .kw { color: var(--violet); }
+    .api-sig .fn { color: var(--green); }
+    .api-body { padding: 4px 16px 12px; }
+    .api-body table { margin: 8px 0; }
+
+    .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+    @media (max-width: 900px) { .grid2, .cards { grid-template-columns: 1fr; } }
+
+    .footer {
+      margin-top: 40px;
+      padding-top: 22px;
+      border-top: 1px solid var(--line);
+      color: var(--faint);
+      font-size: 13px;
+    }
+
+    /* ---------- Responsive ---------- */
+    .backdrop { display: none; }
+    @media (max-width: 1000px) {
+      .layout { grid-template-columns: 1fr; }
+      .menu-toggle { display: inline-flex; align-items: center; justify-content: center; }
+      .sidebar {
+        position: fixed;
+        top: var(--topbar-h);
+        left: 0;
+        width: 290px;
+        height: calc(100vh - var(--topbar-h));
+        background: var(--bg);
+        border-right: 1px solid var(--line);
+        transform: translateX(-100%);
+        transition: transform .22s ease;
+        z-index: 35;
+      }
+      .sidebar.open { transform: translateX(0); }
+      .backdrop.show { display: block; position: fixed; inset: var(--topbar-h) 0 0 0; background: rgba(0,0,0,0.5); z-index: 30; }
+      .content { padding: 12px 22px 100px; }
+      .top-links .hide-sm { display: none; }
+    }
+    @media (max-width: 520px) {
+      .content h1 { font-size: 32px; }
+      .topbar .brand small { display: none; }
+    }
+  </style>
+</head>
+<body>
+  <a class="skip-link" href="#overview">Skip to content</a>
+
+  <header class="topbar">
+    <div style="display:flex; align-items:center; gap:12px;">
+      <button class="menu-toggle" id="menuToggle" aria-label="Toggle navigation" aria-expanded="false">&#9776;</button>
+      <a class="brand" href="./" style="color:inherit;">py<span>veil</span><small>manual</small></a>
+    </div>
+    <nav class="top-links" aria-label="External">
+      <a class="hide-sm" href="./">Home</a>
+      <a href="https://pypi.org/project/pyveil/" target="_blank" rel="noopener">PyPI</a>
+      <a class="cta" href="https://github.com/hyeonsangjeon/pyveil" target="_blank" rel="noopener">GitHub</a>
+    </nav>
+  </header>
+
+  <div class="backdrop" id="backdrop"></div>
+
+  <div class="layout">
+    <aside class="sidebar" id="sidebar" aria-label="Manual navigation">
+      <div class="nav-group">
+        <h4>Get started</h4>
+        <a href="#overview">Overview</a>
+        <a href="#install">Installation</a>
+        <a href="#quickstart">Quickstart</a>
+      </div>
+      <div class="nav-group">
+        <h4>Core concepts</h4>
+        <a href="#how-it-works">How it works</a>
+        <a href="#channels">Channels</a>
+        <a href="#levels">Levels: HIGH vs LOW</a>
+        <a href="#policy">Policy &amp; actions</a>
+        <a href="#placeholders">Placeholders &amp; scope</a>
+        <a href="#findings">Findings &amp; results</a>
+      </div>
+      <div class="nav-group">
+        <h4>Using pyveil</h4>
+        <a href="#text">Text redaction</a>
+        <a href="#structured">Structured redaction</a>
+        <a href="#recipes">Recipes</a>
+        <a href="#cli">Command line</a>
+        <a href="#integrations">Integrations</a>
+      </div>
+      <div class="nav-group">
+        <h4>Reference</h4>
+        <a href="#api">API reference</a>
+        <a href="#detectors">Detectors &amp; masking</a>
+        <a href="#safety">Safety &amp; non-goals</a>
+        <a href="#faq">FAQ</a>
+      </div>
+    </aside>
+
+    <main class="content" id="content">
+      <!-- ============ OVERVIEW ============ -->
+      <section id="overview">
+        <h1>The <strong>pyveil</strong> manual</h1>
+        <p class="tagline">Redact secrets before AI agents, tools, MCP resources, memory, logs, and traces ever see them.</p>
+        <p class="lede">
+          <strong>pyveil</strong> is agent-native redaction middleware. You put it on the boundary between raw
+          context and anything an agent touches &mdash; a model prompt, a tool call, an MCP resource, a memory
+          store, a trace exporter, or a log sink. The core is standard-library only: deterministic HMAC
+          placeholders, channel-aware policy, and high-precision detectors.
+        </p>
+
+        <div class="flow" aria-hidden="true">
+          <span class="node raw">raw context</span>
+          <span class="arrow">&rarr;</span>
+          <span class="node veil">pyveil</span>
+          <span class="arrow">&rarr;</span>
+          <span class="node safe">prompt / tool / MCP / memory / trace / log</span>
+        </div>
+
+        <div class="cards">
+          <div class="card"><h3>Boundary-first</h3><p>Redact before context crosses a trust boundary, not after the model has already read it.</p></div>
+          <div class="card"><h3>Deterministic</h3><p>The same value maps to the same stable placeholder, so an agent can keep references without the raw secret.</p></div>
+          <div class="card"><h3>Zero core deps</h3><p>Pure standard library. No network calls, no unmasking API, no third-party runtime dependency.</p></div>
+          <div class="card"><h3>Channel-aware</h3><p>Policy decides per channel whether a finding is redacted, passed, or blocked outright.</p></div>
+        </div>
+
+        <div class="callout warn">
+          <p><span class="c-label">Scope</span></p>
+          <p>pyveil reduces sensitive-context exposure at agent boundaries. It is <strong>not</strong> a DLP product,
+          a compliance guarantee, a secret-scanning replacement, or a reversible vault. See
+          <a href="#safety">Safety &amp; non-goals</a>.</p>
+        </div>
+      </section>
+
+      <!-- ============ INSTALL ============ -->
+      <section id="install">
+        <h2>Installation</h2>
+        <p>pyveil supports <strong>Python 3.8 through 3.14</strong> and has no required runtime dependencies.</p>
+
+        <h3>From PyPI (recommended)</h3>
+        <pre><code>pip install pyveil</code></pre>
+
+        <h3>From source / Git</h3>
+        <p>Install the latest <code>main</code> directly from GitHub:</p>
+        <pre><code>pip install "git+https://github.com/hyeonsangjeon/pyveil.git"</code></pre>
+        <p>Pin to a released tag for reproducible builds:</p>
+        <pre><code>pip install "git+https://github.com/hyeonsangjeon/pyveil.git@v0.1.2"</code></pre>
+
+        <h3>For development (editable clone)</h3>
+        <pre><code>git clone https://github.com/hyeonsangjeon/pyveil.git
+cd pyveil
+pip install -e ".[dev]"     <span class="tok-cmt"># ruff, mypy, pytest, build, twine</span>
+<span class="tok-cmt"># or just the test extras:</span>
+pip install -e ".[test]"</code></pre>
+
+        <h3>Verify the install</h3>
+        <pre><code>python -c "import pyveil; print(pyveil.__version__)"
+pyveil --help</code></pre>
+        <p>Installing the package also registers the <code>pyveil</code> command line tool. See <a href="#cli">Command line</a>.</p>
+      </section>
+
+      <!-- ============ QUICKSTART ============ -->
+      <section id="quickstart">
+        <h2>Quickstart</h2>
+        <p>Create one redactor, then call <code>redact_text</code> for strings or <code>redact_data</code> for dict/list/JSON.</p>
+
+        <h4>30-second example</h4>
+        <pre><code>from pyveil import Veil
+
+veil = Veil.high(secret=b"tenant-or-run-secret", scope="tenant/session")
+
+result = veil.redact_text(
+    "Email alice@example.com and call 010-1234-5678",
+    channel="prompt.input",
+)
+
+print(result.text)
+<span class="tok-out"># Email [EMAIL:a3d2b564c825] and call [PHONE:cbbfb8059b58]</span></code></pre>
+
+        <div class="callout tip">
+          <p><span class="c-label">The secret matters</span></p>
+          <p>The <code>secret</code> keys the HMAC placeholders. The same secret + scope + value always produces the
+          same placeholder, so pass a stable per-tenant or per-run secret &mdash; not a random one each call. You can
+          also set <code>PYVEIL_SECRET</code> in the environment (see below).</p>
+        </div>
+
+        <h4>One-off scripts</h4>
+        <p>When you do not want to hold a <code>Veil</code> instance, use the module-level helpers. They read the
+        secret from the <code>secret=</code> argument or the <code>PYVEIL_SECRET</code> environment variable.</p>
+        <pre><code>from pyveil import redact_text
+
+safe = redact_text(
+    "email alice@example.com",
+    secret=b"tenant-or-run-secret",
+    scope="tenant/session",
+)
+print(safe.text)
+<span class="tok-out"># email [EMAIL:a3d2b564c825]</span></code></pre>
+      </section>
+
+      <!-- ============ HOW IT WORKS ============ -->
+      <section id="how-it-works">
+        <h2>How it works</h2>
+        <p>Every redaction call runs the same three stages:</p>
+        <ol>
+          <li><strong>Detect</strong> &mdash; high-precision detectors find sensitive spans in text, and sensitive
+          <em>key names</em> in structured data.</li>
+          <li><strong>Decide</strong> &mdash; the <a href="#policy">policy</a> looks at the <a href="#channels">channel</a>
+          and entity type and returns an action: <span class="badge redact">REDACT</span>
+          <span class="badge pass">PASS</span> or <span class="badge block">BLOCK</span>.</li>
+          <li><strong>Replace</strong> &mdash; redacted values become a deterministic
+          <a href="#placeholders">HMAC placeholder</a> (HIGH) or a shape-preserving mask (LOW). Blocked values raise
+          <code>BlockedSensitiveData</code>.</li>
+        </ol>
+        <p>The result is a <a href="#findings"><code>RedactionResult</code></a> carrying the redacted payload, a tuple
+        of <code>Finding</code> records (metadata only &mdash; never the raw value), and small stats.</p>
+
+        <div class="callout tip">
+          <p><span class="c-label">Reuse the instance</span></p>
+          <p>Build one <code>Veil</code> per tenant, session, or run and reuse it in tight loops. Construction is
+          cheap, but a shared instance keeps <code>secret</code> and <code>scope</code> consistent across a whole run.</p>
+        </div>
+      </section>
+
+      <!-- ============ CHANNELS ============ -->
+      <section id="channels">
+        <h2>Channels</h2>
+        <p>A <strong>channel</strong> names the boundary the data is about to cross. Channels are first-class so a
+        policy can treat the same value differently depending on where it is going. Pass a channel as a string or a
+        <code>Channel</code> enum member.</p>
+
+        <table>
+          <thead><tr><th>Channel</th><th>Enum</th><th>Typical use</th></tr></thead>
+          <tbody>
+            <tr><td><code>prompt.input</code></td><td><code>Channel.PROMPT_INPUT</code></td><td>User or retrieved context before model input</td></tr>
+            <tr><td><code>prompt.output</code></td><td><code>Channel.PROMPT_OUTPUT</code></td><td>Model output before display or chaining</td></tr>
+            <tr><td><code>tool.call.arguments</code></td><td><code>Channel.TOOL_CALL_ARGUMENTS</code></td><td>Arguments before a model-controlled tool runs</td></tr>
+            <tr><td><code>tool.call.result</code></td><td><code>Channel.TOOL_CALL_RESULT</code></td><td>Tool results before returning to the model</td></tr>
+            <tr><td><code>mcp.resource.content</code></td><td><code>Channel.MCP_RESOURCE_CONTENT</code></td><td>MCP resource content before agent use</td></tr>
+            <tr><td><code>memory.write</code></td><td><code>Channel.MEMORY_WRITE</code></td><td>Memory text before embedding or persistence</td></tr>
+            <tr><td><code>trace.span.attributes</code></td><td><code>Channel.TRACE_SPAN_ATTRIBUTES</code></td><td>Observability attributes before export</td></tr>
+            <tr><td><code>log.record</code></td><td><code>Channel.LOG_RECORD</code></td><td>Application logs before handlers or sinks</td></tr>
+          </tbody>
+        </table>
+        <p>Defaults: <code>redact_text</code> uses <code>prompt.input</code> and <code>redact_data</code> uses
+        <code>tool.call.arguments</code>.</p>
+      </section>
+
+      <!-- ============ LEVELS ============ -->
+      <section id="levels">
+        <h2>Levels: HIGH vs LOW</h2>
+        <p>The <strong>level</strong> controls how a redacted value looks. Use <span class="badge high">HIGH</span> by
+        default for anything an agent or external system sees. Use <span class="badge low">LOW</span> only for
+        human-facing diagnostics where a little shape helps a person recognize a value.</p>
+
+        <table>
+          <thead><tr><th>Level</th><th>Behavior</th><th>Example</th></tr></thead>
+          <tbody>
+            <tr>
+              <td><span class="badge high">HIGH</span></td>
+              <td>Replaces each value with a deterministic HMAC placeholder <code>[TYPE:digest]</code></td>
+              <td><code>alice@example.com &rarr; [EMAIL:c2c2a4d06bfa]</code></td>
+            </tr>
+            <tr>
+              <td><span class="badge low">LOW</span></td>
+              <td>Keeps limited shape for email, phone, and card; credential-like values become <code>[TYPE]</code></td>
+              <td><code>alice@example.com &rarr; al***@e******.com</code></td>
+            </tr>
+          </tbody>
+        </table>
+
+        <pre><code>from pyveil import Veil
+
+high = Veil.high(secret=b"docs-secret", scope="docs/reference")
+low  = Veil.low(secret=b"docs-secret", scope="docs/reference")
+
+print(high.redact_text("call 010-1234-5678").text)
+<span class="tok-out"># call [PHONE:3b2b3e0e6c51]</span>
+print(low.redact_text("call 010-1234-5678").text)
+<span class="tok-out"># call 010-****-5678</span></code></pre>
+
+        <div class="callout danger">
+          <p><span class="c-label">LOW still leaks shape</span></p>
+          <p>LOW is a preview mode. It keeps partial digits and characters on purpose. Never send LOW output across an
+          agent, model, or external boundary &mdash; use HIGH there.</p>
+        </div>
+      </section>
+
+      <!-- ============ POLICY ============ -->
+      <section id="policy">
+        <h2>Policy &amp; actions</h2>
+        <p>A <code>Policy</code> maps <code>(channel, entity)</code> pairs to one of three actions:</p>
+        <ul>
+          <li><span class="badge redact">REDACT</span> &mdash; replace the value with a placeholder or mask (the default).</li>
+          <li><span class="badge pass">PASS</span> &mdash; leave the value untouched (still reported as a finding).</li>
+          <li><span class="badge block">BLOCK</span> &mdash; refuse the whole payload by raising <code>BlockedSensitiveData</code>.</li>
+        </ul>
+
+        <p>The default policy redacts every supported finding, but <strong>blocks credential-like material in
+        <code>tool.call.arguments</code></strong>, because model-controlled tool arguments should never carry raw
+        credentials:</p>
+        <table>
+          <thead><tr><th>Channel</th><th>Blocked by default</th></tr></thead>
+          <tbody>
+            <tr>
+              <td><code>tool.call.arguments</code></td>
+              <td><code>AUTH_HEADER</code>, <code>PRIVATE_KEY</code>, <code>API_KEY</code>, <code>JWT</code>, <code>KV_SECRET</code>, <code>URL_QUERY_SECRET</code></td>
+            </tr>
+          </tbody>
+        </table>
+
+        <h3>Customizing a policy</h3>
+        <p>Start from <code>Policy.default_high()</code> (or <code>default_low()</code>) and layer immutable
+        <code>override(...)</code> calls. Each override returns a new policy.</p>
+        <pre><code>from pyveil import Action, Channel, Entity, Policy, Veil
+
+policy = (
+    Policy.default_high()
+    .override(Channel.PROMPT_INPUT, Entity.EMAIL, Action.PASS)          <span class="tok-cmt"># allow emails into prompts</span>
+    .override(Channel.PROMPT_OUTPUT, Entity.PHONE, Action.BLOCK)        <span class="tok-cmt"># never emit phones</span>
+)
+
+veil = Veil.high(secret=b"tenant-secret", policy=policy)</code></pre>
+
+        <div class="callout tip">
+          <p><span class="c-label">policy beats level</span></p>
+          <p>When you pass both <code>policy</code> and <code>level</code>, the explicit <code>policy</code> decides
+          channel levels and actions. Set per-channel levels with the optional <code>level=</code> argument on
+          <code>override(...)</code>.</p>
+        </div>
+      </section>
+
+      <!-- ============ PLACEHOLDERS ============ -->
+      <section id="placeholders">
+        <h2>Placeholders &amp; scope</h2>
+        <p>At HIGH level a detected value becomes <code>[TYPE:digest]</code>, where <code>digest</code> is a truncated
+        <strong>HMAC-SHA256</strong> over the value, keyed by your <code>secret</code> and namespaced by
+        <code>scope</code> and entity type.</p>
+        <pre><code>[EMAIL:a3d2b564c825]
+   |         |
+ entity   12 hex chars of HMAC-SHA256(secret, scope + type + value)</code></pre>
+
+        <p>Two properties follow from this:</p>
+        <ul>
+          <li><strong>Deterministic:</strong> the same secret, scope, entity, and value always yield the same
+          placeholder &mdash; so an agent can correlate "the same email" across a run without ever seeing it.</li>
+          <li><strong>Scoped:</strong> changing <code>scope</code> changes every placeholder, which breaks
+          cross-context linkability. Use distinct scopes (for example <code>tenant-123/session-456</code>) when you do
+          <em>not</em> want values linkable across tenants, sessions, or runs.</li>
+        </ul>
+
+        <table>
+          <thead><tr><th>Parameter</th><th>Meaning</th></tr></thead>
+          <tbody>
+            <tr><td><code>secret</code></td><td>HMAC key (<code>str</code> or <code>bytes</code>). Required and non-empty.</td></tr>
+            <tr><td><code>scope</code></td><td>Namespace string, default <code>"default"</code>. Separates placeholders across contexts.</td></tr>
+            <tr><td><code>placeholder_length</code></td><td>Hex characters of digest to keep, default <code>12</code> (minimum 8).</td></tr>
+          </tbody>
+        </table>
+
+        <div class="callout warn">
+          <p><span class="c-label">Secret hygiene</span></p>
+          <p>The secret is a credential. Load it from your environment or secret manager, not source code. An empty
+          secret raises <code>ValueError</code>.</p>
+        </div>
+      </section>
+
+      <!-- ============ FINDINGS ============ -->
+      <section id="findings">
+        <h2>Findings &amp; results</h2>
+        <p>Both redaction methods return a <code>RedactionResult</code>. It never stores raw sensitive values.</p>
+        <pre><code>from pyveil import Veil
+
+veil = Veil.high(secret=b"tenant-secret", scope="tenant/session")
+result = veil.redact_text("Authorization: Bearer synthetic-token-value")
+
+result.text                       <span class="tok-cmt"># redacted string (redact_text only)</span>
+result.data                       <span class="tok-cmt"># redacted payload (str, dict, list, ...)</span>
+result.findings                   <span class="tok-cmt"># tuple[Finding, ...]</span>
+result.stats.total_findings       <span class="tok-cmt"># e.g. 1</span>
+result.stats.counts_by_type       <span class="tok-cmt"># e.g. {"AUTH_HEADER": 1}</span>
+
+f = result.findings[0]
+f.type, f.detector, f.rule_id     <span class="tok-cmt"># "AUTH_HEADER", "auth_header", "authorization_header"</span>
+f.placeholder, f.fingerprint      <span class="tok-cmt"># stable placeholder + digest</span>
+f.start, f.end, f.path            <span class="tok-cmt"># span offsets (text) / JSON pointer (structured)</span>
+f.raw                             <span class="tok-cmt"># always None by design</span></code></pre>
+
+        <div class="callout tip">
+          <p><span class="c-label">Raw values are never kept</span></p>
+          <p>The <code>Finding.raw</code> field exists only to make the contract visible: pyveil does not retain raw
+          sensitive values in findings. Use <code>fingerprint</code> to correlate occurrences without the plaintext.</p>
+        </div>
+      </section>
+
+      <!-- ============ TEXT ============ -->
+      <section id="text">
+        <h2>Text redaction</h2>
+        <p>Use <code>redact_text</code> for free-form strings: prompts, retrieved passages, model output, or log lines.</p>
+        <pre><code>from pyveil import Channel, Veil
+
+veil = Veil.high(
+    secret=b"tenant-secret",
+    scope="tenant_123/session_456",
+    max_input_chars=1_000_000,
+)
+
+safe = veil.redact_text(
+    "Authorization: Bearer synthetic-token-value",
+    channel=Channel.PROMPT_INPUT,
+)
+
+print(safe.text)               <span class="tok-out"># [AUTH_HEADER:...]</span>
+print(safe.findings[0].type)   <span class="tok-out"># AUTH_HEADER</span></code></pre>
+        <p><code>max_input_chars</code> caps input size before detection runs; oversized input raises
+        <code>ValueError</code>. Set it to <code>None</code> to disable the cap.</p>
+      </section>
+
+      <!-- ============ STRUCTURED ============ -->
+      <section id="structured">
+        <h2>Structured redaction</h2>
+        <p>Use <code>redact_data</code> for dictionaries, lists, tuples, JSON strings, tool arguments, MCP payloads,
+        trace attributes, and memory records. The payload keeps its shape; only string values change.</p>
+        <pre><code>from pyveil import Veil
+
+payload = {
+    "user": "alice@example.com",
+    "headers": {"Authorization": "Bearer synthetic-token-value"},
+    "args": {"phone": "+82 10-1234-5678"},
+    "debug": True,
+}
+
+veil = Veil.high(secret=b"tenant-secret", scope="tenant/session")
+safe = veil.redact_data(payload, channel="tool.call.result")
+
+print(safe.data)</code></pre>
+        <pre class="tok-out"><code>{
+  "user": "[EMAIL:4ad330c24162]",
+  "headers": {"Authorization": "[AUTH_HEADER:c042667cf238]"},
+  "args": {"phone": "[PHONE:39759ae5a2f8]"},
+  "debug": true
+}</code></pre>
+
+        <p>Two structured-specific behaviors:</p>
+        <ul>
+          <li><strong>Sensitive key names.</strong> If a key looks sensitive (for example <code>password</code>,
+          <code>api_key</code>, <code>token</code>, <code>authorization</code>), pyveil treats its value as sensitive
+          even when the value alone would not match a token pattern.</li>
+          <li><strong>Non-string scalars are preserved.</strong> <code>{"api_key": 12345}</code> or
+          <code>{"password": True}</code> keep their original type instead of becoming a string. Notice
+          <code>debug</code> stays a real boolean above.</li>
+        </ul>
+        <p>If you pass a JSON <em>string</em>, pyveil parses it, redacts, and returns a compact JSON string in
+        <code>result.data</code>.</p>
+      </section>
+
+      <!-- ============ RECIPES ============ -->
+      <section id="recipes">
+        <h2>Recipes</h2>
+        <p>Copy-paste patterns for the boundaries agents actually leak through. The rule is always the same:
+        <code>raw context &rarr; pyveil &rarr; model / tool / memory / log / trace</code>.</p>
+
+        <h3>1. Redact before any LLM client</h3>
+        <p>Keep pyveil one layer above the provider SDK. OpenAI, Azure OpenAI, Anthropic, Gemini, LiteLLM, and internal
+        gateways all use the same boundary shape &mdash; only <code>call_llm</code> changes.</p>
+        <pre><code>from typing import Callable, Dict, List, cast
+from pyveil import Channel, Veil
+
+Message = Dict[str, str]
+LLMCall = Callable[[List[Message]], str]
+
+veil = Veil.high(secret=b"tenant-secret", scope="tenant-123/session-456")
+
+def call_with_redaction(messages: List[Message], call_llm: LLMCall) -> str:
+    safe = veil.redact_data(messages, channel=Channel.PROMPT_INPUT)
+    return call_llm(cast(List[Message], safe.data))</code></pre>
+
+        <h3>2. Block credentials before model-controlled tool calls</h3>
+        <p>The default policy blocks credential-like material in <code>tool.call.arguments</code>. Catch the block and
+        refuse to run the tool.</p>
+        <pre><code>from pyveil import BlockedSensitiveData, Channel, Veil
+
+veil = Veil.high(secret=b"tenant-secret", scope="tenant-123/run-789")
+
+tool_args = {
+    "url": "https://api.example.test/accounts",
+    "headers": {"Authorization": "Bearer synthetic-token-value"},
+}
+
+try:
+    safe_args = veil.redact_data(tool_args, channel=Channel.TOOL_CALL_ARGUMENTS).data
+except BlockedSensitiveData as exc:
+    print(exc)   <span class="tok-out"># Blocked sensitive data on channel tool.call.arguments (AUTH_HEADER=1)</span>
+else:
+    run_tool(**safe_args)</code></pre>
+
+        <h3>3. Redact tool results before returning them to the model</h3>
+        <p>Tool results often carry customer records, URLs, headers, or hidden tokens.</p>
+        <pre><code>veil = Veil.high(secret=b"tenant-secret", scope="tenant-123/tool-result")
+
+raw_result = {
+    "owner": "alice@example.com",
+    "callback": "https://example.test/callback?access_token=synthetic-token&state=ok",
+}
+safe_result = veil.redact_data(raw_result, channel="tool.call.result").data</code></pre>
+
+        <h3>4. Redact MCP resource content</h3>
+        <pre><code>veil = Veil.high(secret=b"tenant-secret", scope="tenant-123/mcp")
+
+def read_resource_for_agent(resource_id: str) -> object:
+    raw_resource = read_resource(resource_id)
+    return veil.redact_data(raw_resource, channel="mcp.resource.content").data</code></pre>
+
+        <h3>5. Redact memory before embedding or persistence</h3>
+        <pre><code>veil = Veil.high(secret=b"tenant-secret", scope="tenant-123/memory")
+
+def write_memory(text: str) -> None:
+    safe = veil.redact_text(text, channel="memory.write")
+    embedding = embed(safe.text)
+    memory_store.save(text=safe.text, embedding=embedding)</code></pre>
+
+        <h3>6. Redact logs before export</h3>
+        <pre><code>import logging
+from pyveil import Veil
+from pyveil.integrations import PyVeilLogFilter
+
+logger = logging.getLogger("app")
+logger.addFilter(PyVeilLogFilter(Veil.high(secret=b"log-secret", scope="prod/logs")))
+
+logger.warning("failed request for alice@example.com")
+<span class="tok-cmt"># handlers see: failed request for [EMAIL:...]</span></code></pre>
+
+        <h3>7. CLI preflight in CI or local scripts</h3>
+        <pre><code>export PYVEIL_SECRET="tenant-or-run-secret"
+export PYVEIL_SCOPE="tenant/session"
+
+pyveil scan prompt.txt --format json
+pyveil redact prompt.txt --channel prompt.input &gt; prompt.safe.txt
+pyveil redact request.json --channel tool.call.result --format json &gt; request.safe.json</code></pre>
+
+        <div class="callout danger">
+          <p><span class="c-label">What to avoid</span></p>
+          <p>Do not ask the model to redact secrets after it has already seen them. Do not expose an unmasking tool to
+          an agent. Do not reuse one <code>scope</code> across tenants when linkability matters. Do not push blocked
+          <code>tool.call.arguments</code> through the tool anyway.</p>
+        </div>
+      </section>
+
+      <!-- ============ CLI ============ -->
+      <section id="cli">
+        <h2>Command line</h2>
+        <p>Installing pyveil registers the <code>pyveil</code> command. It reads the secret from <code>--secret</code>
+        or <code>PYVEIL_SECRET</code>, and the scope from <code>--scope</code> or <code>PYVEIL_SCOPE</code>
+        (default <code>default</code>). JSON-shaped input is treated as structured data.</p>
+
+        <table>
+          <thead><tr><th>Command</th><th>What it does</th></tr></thead>
+          <tbody>
+            <tr><td><code>pyveil redact [PATH]</code></td><td>Redact a file or stdin. <code>--channel</code>, <code>--level low|high</code>, <code>--format text|json</code>.</td></tr>
+            <tr><td><code>pyveil scan [PATH]</code></td><td>Detect and emit findings + stats as JSON (no raw values).</td></tr>
+            <tr><td><code>pyveil init [PATH]</code></td><td>Write a starter <code>pyveil.yaml</code> config (default path <code>pyveil.yaml</code>).</td></tr>
+            <tr><td><code>pyveil test-config [PATH]</code></td><td>Validate the shape of a <code>pyveil.yaml</code>.</td></tr>
+          </tbody>
+        </table>
+
+        <pre><code><span class="tok-cmt"># set credentials once</span>
+export PYVEIL_SECRET="tenant-or-run-secret"
+export PYVEIL_SCOPE="tenant/session"
+
+<span class="tok-cmt"># redact a prompt file to stdout</span>
+echo "call 010-1234-5678" | pyveil redact --channel prompt.input
+<span class="tok-out"># call [PHONE:cbbfb8059b58]</span>
+
+<span class="tok-cmt"># scan for findings as JSON</span>
+echo "key sk-proj-abcdefghijklmnopqrstuvwxyz123456" | pyveil scan --format json
+<span class="tok-out"># {"findings":[{"type":"API_KEY","placeholder":"[API_KEY:38ded98a17e7]", ...}],"stats":{"total_findings":1, ...}}</span>
+
+<span class="tok-cmt"># redact structured JSON (use --format json for JSON input)</span>
+echo '{"user":"alice@example.com"}' | pyveil redact --channel tool.call.result --format json
+<span class="tok-out"># {"data":{"user":"[EMAIL:a3d2b564c825]"},"stats":{"total_findings":1, ...}}</span></code></pre>
+
+        <p>A blocked payload exits non-zero and prints a summary (counts by type, no raw values) to stderr.</p>
+      </section>
+
+      <!-- ============ INTEGRATIONS ============ -->
+      <section id="integrations">
+        <h2>Integrations</h2>
+        <p>Thin helpers under <code>pyveil.integrations</code> wrap common boundaries. They wrap a <code>Veil</code>
+        you build, so secret, scope, and policy stay in your control.</p>
+
+        <h3>Standard logging</h3>
+        <p><code>PyVeilLogFilter</code> is a <code>logging.Filter</code> that redacts each record's message before
+        handlers export it (channel <code>log.record</code>).</p>
+        <pre><code>import logging
+from pyveil import Veil
+from pyveil.integrations import PyVeilLogFilter
+
+veil = Veil.high(secret=b"log-secret", scope="prod/logs")
+handler = logging.StreamHandler()
+handler.addFilter(PyVeilLogFilter(veil))
+
+logger = logging.getLogger("app")
+logger.addHandler(handler)
+logger.warning("failed request for alice@example.com")</code></pre>
+
+        <h3>MCP-style wrappers</h3>
+        <p>Redact tool results and resource payloads before they enter agent context.</p>
+        <pre><code>from pyveil import Veil
+from pyveil.integrations.mcp import redact_tool_result, redact_resource
+
+veil = Veil.high(secret=b"tenant-secret", scope="tenant/mcp")
+
+safe_result   = redact_tool_result(raw_tool_result, veil)   <span class="tok-cmt"># channel tool.call.result</span>
+safe_resource = redact_resource(raw_resource, veil)         <span class="tok-cmt"># channel mcp.resource.content</span></code></pre>
+        <p>See the repository <code>examples/</code> directory for FastAPI middleware, a LiteLLM proxy filter, an
+        OpenAI Agents guardrail, and more.</p>
+      </section>
+
+      <!-- ============ API REFERENCE ============ -->
+      <section id="api">
+        <h2>API reference</h2>
+        <p>Everything below is importable from the top-level <code>pyveil</code> package.</p>
+
+        <h3>The <code>Veil</code> class</h3>
+        <div class="api-item">
+          <div class="api-sig"><span class="kw">class</span> <span class="fn">Veil</span>(secret, level=Level.HIGH, scope="default", policy=None, placeholder_length=12, max_input_chars=1_000_000)</div>
+          <div class="api-body">
+            <p>The redaction facade. Build one per tenant, session, or run.</p>
+            <table>
+              <thead><tr><th>Parameter</th><th>Type</th><th>Notes</th></tr></thead>
+              <tbody>
+                <tr><td><code>secret</code></td><td><code>str | bytes</code></td><td>Required, non-empty. HMAC key for placeholders.</td></tr>
+                <tr><td><code>level</code></td><td><code>Level</code></td><td>Default masking strength when no policy overrides it.</td></tr>
+                <tr><td><code>scope</code></td><td><code>str</code></td><td>Placeholder namespace. Different scope &rarr; different placeholders.</td></tr>
+                <tr><td><code>policy</code></td><td><code>Policy | None</code></td><td>Channel-aware policy. Takes precedence over <code>level</code>.</td></tr>
+                <tr><td><code>placeholder_length</code></td><td><code>int</code></td><td>Digest hex length, minimum 8, default 12.</td></tr>
+                <tr><td><code>max_input_chars</code></td><td><code>int | None</code></td><td>Input size cap; <code>None</code> disables it.</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="api-item">
+          <div class="api-sig"><span class="fn">Veil.high</span>(secret, scope="default", policy=None, max_input_chars=1_000_000) &nbsp;&middot;&nbsp; <span class="fn">Veil.low</span>(...)</div>
+          <div class="api-body"><p>Classmethod constructors for a HIGH redactor (agent/tool boundaries) or a LOW redactor (human-facing previews). <code>Veil.low</code> uses a LOW default policy.</p></div>
+        </div>
+
+        <div class="api-item">
+          <div class="api-sig"><span class="fn">veil.redact_text</span>(text, channel="prompt.input") &rarr; RedactionResult</div>
+          <div class="api-body"><p>Redact a string. Raises <code>TypeError</code> if <code>text</code> is not a string, <code>BlockedSensitiveData</code> if policy blocks, <code>ValueError</code> if over <code>max_input_chars</code>.</p></div>
+        </div>
+
+        <div class="api-item">
+          <div class="api-sig"><span class="fn">veil.redact_data</span>(data, channel="tool.call.arguments") &rarr; RedactionResult</div>
+          <div class="api-body"><p>Redact dict/list/tuple data or a JSON string. Preserves structure and non-string scalar types. A JSON string in yields a compact JSON string in <code>result.data</code>.</p></div>
+        </div>
+
+        <h3>Module-level helpers</h3>
+        <div class="api-item">
+          <div class="api-sig"><span class="fn">redact_text</span>(text, channel="prompt.input", *, secret=None, scope="default", level=Level.HIGH, policy=None, ...)</div>
+          <div class="api-body"><p>One-shot text redaction. Reads <code>secret=</code> or the <code>PYVEIL_SECRET</code> environment variable; raises <code>ValueError</code> if neither is set.</p></div>
+        </div>
+        <div class="api-item">
+          <div class="api-sig"><span class="fn">redact_data</span>(data, channel="tool.call.arguments", *, secret=None, scope="default", level=Level.HIGH, policy=None, ...)</div>
+          <div class="api-body"><p>One-shot structured redaction with the same secret resolution.</p></div>
+        </div>
+
+        <h3>Configuration types</h3>
+        <div class="grid2">
+          <div class="api-item">
+            <div class="api-sig"><span class="kw">enum</span> <span class="fn">Level</span></div>
+            <div class="api-body"><p><code>LOW</code>, <code>HIGH</code></p></div>
+          </div>
+          <div class="api-item">
+            <div class="api-sig"><span class="kw">enum</span> <span class="fn">Action</span></div>
+            <div class="api-body"><p><code>REDACT</code>, <code>BLOCK</code>, <code>PASS</code></p></div>
+          </div>
+          <div class="api-item">
+            <div class="api-sig"><span class="kw">enum</span> <span class="fn">Channel</span></div>
+            <div class="api-body"><p>Eight boundary channels &mdash; see <a href="#channels">Channels</a>.</p></div>
+          </div>
+          <div class="api-item">
+            <div class="api-sig"><span class="kw">enum</span> <span class="fn">Entity</span></div>
+            <div class="api-body"><p>Nine entity types &mdash; see <a href="#detectors">Detectors</a>.</p></div>
+          </div>
+        </div>
+
+        <div class="api-item">
+          <div class="api-sig"><span class="kw">class</span> <span class="fn">Policy</span>(default_level=Level.HIGH, channel_levels=None, blocked=..., channel_actions=None)</div>
+          <div class="api-body">
+            <p>Immutable channel-aware policy.</p>
+            <ul>
+              <li><code>Policy.default_high()</code> / <code>Policy.default_low()</code> &mdash; sensible presets.</li>
+              <li><code>level_for(channel)</code> &rarr; <code>Level</code></li>
+              <li><code>action_for(channel, entity)</code> &rarr; <code>Action</code></li>
+              <li><code>override(channel, entity, action, level=None)</code> &rarr; a new <code>Policy</code></li>
+            </ul>
+          </div>
+        </div>
+
+        <h3>Result types</h3>
+        <div class="api-item">
+          <div class="api-sig"><span class="kw">dataclass</span> <span class="fn">RedactionResult</span></div>
+          <div class="api-body"><p><code>data</code>, <code>findings: tuple[Finding, ...]</code>, <code>stats: RedactionStats</code>, and a <code>.text</code> property (raises <code>TypeError</code> for non-string data).</p></div>
+        </div>
+        <div class="api-item">
+          <div class="api-sig"><span class="kw">dataclass</span> <span class="fn">Finding</span></div>
+          <div class="api-body"><p><code>type</code>, <code>detector</code>, <code>rule_id</code>, <code>confidence</code>, <code>start</code>, <code>end</code>, <code>path</code>, <code>placeholder</code>, <code>fingerprint</code>, <code>raw</code> (always <code>None</code>).</p></div>
+        </div>
+        <div class="api-item">
+          <div class="api-sig"><span class="kw">dataclass</span> <span class="fn">RedactionStats</span></div>
+          <div class="api-body"><p><code>total_findings: int</code>, <code>counts_by_type: dict[str, int]</code>.</p></div>
+        </div>
+        <div class="api-item">
+          <div class="api-sig"><span class="kw">exception</span> <span class="fn">BlockedSensitiveData</span>(ValueError)</div>
+          <div class="api-body"><p>Raised when policy blocks a value on a channel. Carries <code>.channel</code> and <code>.findings</code> and a <code>.summary()</code> with counts by type &mdash; never raw values.</p></div>
+        </div>
+      </section>
+
+      <!-- ============ DETECTORS ============ -->
+      <section id="detectors">
+        <h2>Detectors &amp; masking board</h2>
+        <p>v0.1 favors <strong>high precision over broad coverage</strong>. Each entity is masked as shown below.
+        Examples use <code>secret=b"docs-secret"</code>, <code>scope="docs/reference"</code>; the 12 hex characters
+        differ for other secrets or scopes.</p>
+
+        <table>
+          <thead><tr><th>Target</th><th>Example input</th><th>HIGH output</th><th>LOW output</th></tr></thead>
+          <tbody>
+            <tr><td>Email</td><td><code>alice@example.com</code></td><td><code>[EMAIL:c2c2a4d06bfa]</code></td><td><code>al***@e******.com</code></td></tr>
+            <tr><td>Korean mobile</td><td><code>010-1234-5678</code></td><td><code>[PHONE:3b2b3e0e6c51]</code></td><td><code>010-****-5678</code></td></tr>
+            <tr><td>International phone</td><td><code>+1 415 555 0199</code></td><td><code>[PHONE:018e583b4e44]</code></td><td><code>+1 415 *** 0199</code></td></tr>
+            <tr><td>Credit card (Luhn)</td><td><code>4242 4242 4242 4242</code></td><td><code>[CREDIT_CARD:630b6f1dd4d6]</code></td><td><code>**** **** **** 4242</code></td></tr>
+            <tr><td>JWT</td><td><code>eyJ...</code></td><td><code>[JWT:7353c165390b]</code></td><td><code>[JWT]</code></td></tr>
+            <tr><td>Auth header</td><td><code>Authorization: Bearer ...</code></td><td><code>[AUTH_HEADER:01c75f477708]</code></td><td><code>[AUTH_HEADER]</code></td></tr>
+            <tr><td>Private key</td><td><code>-----BEGIN PRIVATE KEY-----...</code></td><td><code>[PRIVATE_KEY:79435f360977]</code></td><td><code>[PRIVATE_KEY]</code></td></tr>
+            <tr><td>API key</td><td><code>sk-proj-...</code></td><td><code>[API_KEY:0f8d254df046]</code></td><td><code>[API_KEY]</code></td></tr>
+            <tr><td>URL query secret</td><td><code>?access_token=...</code></td><td><code>?access_token=[URL_QUERY_SECRET:d54543607961]</code></td><td><code>?access_token=[URL_QUERY_SECRET]</code></td></tr>
+            <tr><td>Key-value secret</td><td><code>password=...</code></td><td><code>password=[KV_SECRET:e114522dc1d3]</code></td><td><code>password=[KV_SECRET]</code></td></tr>
+          </tbody>
+        </table>
+
+        <h3>What is intentionally not detected</h3>
+        <p>Core v0.1 does not broadly detect personal names, postal addresses, or arbitrary domain-specific identifiers
+        (account, billing, telecom, membership, device IDs). Broad semantic detection has higher false-positive and
+        false-negative risk; add those with known values or a custom-rule layer when your project has enough context
+        to do it safely.</p>
+      </section>
+
+      <!-- ============ SAFETY ============ -->
+      <section id="safety">
+        <h2>Safety model &amp; non-goals</h2>
+        <p>pyveil reduces sensitive-context exposure at agent boundaries. It works alongside &mdash; not instead of
+        &mdash; access control, logging discipline, secret scanning, and provider-side controls.</p>
+        <ul>
+          <li>No raw sensitive value is stored in a <code>Finding</code> by default.</li>
+          <li>Placeholders use HMAC-SHA256 with your secret; <code>scope</code> separates contexts.</li>
+          <li><code>max_input_chars</code> caps input before detection.</li>
+          <li>The core has no network calls and no required third-party runtime dependency.</li>
+        </ul>
+        <div class="callout danger">
+          <p><span class="c-label">pyveil is not</span></p>
+          <p>A Presidio clone &middot; an enterprise DLP system &middot; a compliance guarantee &middot; a
+          secret-scanning replacement &middot; a prompt-injection firewall &middot; a reversible token vault.</p>
+        </div>
+      </section>
+
+      <!-- ============ FAQ ============ -->
+      <section id="faq">
+        <h2>FAQ</h2>
+        <h3>Is pyveil a DLP product?</h3>
+        <p>No. It is lightweight redaction middleware for agent context boundaries. It does not replace enterprise DLP,
+        access control, secret scanning, or provider-side safety controls.</p>
+        <h3>Does pyveil guarantee compliance?</h3>
+        <p>No. It can reduce sensitive-context exposure, but it does not prove GDPR, HIPAA, PCI, or any other regime.</p>
+        <h3>Why are placeholders stable?</h3>
+        <p>Stable HMAC placeholders let an agent preserve references across a run without seeing the raw value. Use
+        different <code>scope</code> values when cross-context linkability is not desired.</p>
+        <h3>Why not detect names and addresses by default?</h3>
+        <p>Broad semantic detection has higher false-positive and false-negative risk than the high-precision v0.1
+        detectors. Use known values, structured key names, or a future custom-rule layer for domain-specific IDs.</p>
+        <h3>Can I unmask values later?</h3>
+        <p>No. v0.1 has no reversible vault and no unmasking API. This is intentional: the default design avoids
+        storing raw sensitive values.</p>
+        <h3>Does pyveil call external services?</h3>
+        <p>No. The core uses the Python standard library and makes no network calls.</p>
+
+        <div class="footer">
+          <p>MIT licensed. Python 3.8 through 3.14. Designed for agent context boundaries, not as a compliance
+          guarantee or DLP replacement. &nbsp;&middot;&nbsp;
+          <a href="https://github.com/hyeonsangjeon/pyveil">GitHub</a> &middot;
+          <a href="https://pypi.org/project/pyveil/">PyPI</a> &middot;
+          <a href="cookbook.md">Cookbook</a> &middot;
+          <a href="redaction-reference.md">Reference</a></p>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script>
+    // Copy-to-clipboard buttons on every code block.
+    document.querySelectorAll("pre").forEach(function (pre) {
+      var btn = document.createElement("button");
+      btn.className = "copy-btn";
+      btn.type = "button";
+      btn.textContent = "Copy";
+      btn.addEventListener("click", function () {
+        var code = pre.querySelector("code");
+        var text = (code ? code.innerText : pre.innerText).replace(/\u00a0/g, " ");
+        navigator.clipboard.writeText(text).then(function () {
+          btn.textContent = "Copied";
+          btn.classList.add("copied");
+          setTimeout(function () { btn.textContent = "Copy"; btn.classList.remove("copied"); }, 1400);
+        });
+      });
+      pre.appendChild(btn);
+    });
+
+    // Active section highlighting in the sidebar.
+    var links = Array.prototype.slice.call(document.querySelectorAll(".sidebar a"));
+    var byId = {};
+    links.forEach(function (a) { byId[a.getAttribute("href").slice(1)] = a; });
+    var observer = new IntersectionObserver(function (entries) {
+      entries.forEach(function (entry) {
+        if (entry.isIntersecting) {
+          links.forEach(function (a) { a.classList.remove("active"); });
+          var active = byId[entry.target.id];
+          if (active) {
+            active.classList.add("active");
+            active.scrollIntoView({ block: "nearest" });
+          }
+        }
+      });
+    }, { rootMargin: "-64px 0px -70% 0px", threshold: 0 });
+    document.querySelectorAll(".content section").forEach(function (s) { observer.observe(s); });
+
+    // Mobile sidebar toggle.
+    var sidebar = document.getElementById("sidebar");
+    var backdrop = document.getElementById("backdrop");
+    var toggle = document.getElementById("menuToggle");
+    function setOpen(open) {
+      sidebar.classList.toggle("open", open);
+      backdrop.classList.toggle("show", open);
+      toggle.setAttribute("aria-expanded", open ? "true" : "false");
+    }
+    toggle.addEventListener("click", function () { setOpen(!sidebar.classList.contains("open")); });
+    backdrop.addEventListener("click", function () { setOpen(false); });
+    document.querySelectorAll(".sidebar a").forEach(function (a) {
+      a.addEventListener("click", function () { if (window.innerWidth <= 1000) setOpen(false); });
+    });
+  </script>
+</body>
+</html>
