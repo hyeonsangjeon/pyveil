@@ -6,6 +6,7 @@ Start with:
 
 - [Threat model](threat-model.md)
 - [FAQ](faq.md)
+- [Cookbook](cookbook.md)
 - [Redaction reference](redaction-reference.md)
 - [Known limitations](known-limitations.md)
 - [Detector provenance](detector-provenance.md)
@@ -22,3 +23,5 @@ detector -> finding -> policy -> masker
 ```
 
 Channels such as `prompt.input`, `tool.call.arguments`, `mcp.resource.content`, `memory.write`, `trace.span.attributes`, and `log.record` are part of the public model. Python callers can use the public `Channel` enum instead of raw strings.
+
+`index.html` is a static GitHub Pages landing page. Serve GitHub Pages from the repository `/docs` directory to publish it.

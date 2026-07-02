@@ -1,0 +1,355 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>pyveil - agent-native redaction middleware</title>
+  <meta name="description" content="pyveil redacts secrets before AI agents, tools, MCP resources, memory, logs, and traces see them.">
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg: #07110f;
+      --ink: #f7fbff;
+      --muted: #b6c2cf;
+      --line: rgba(255, 255, 255, 0.14);
+      --panel: rgba(9, 17, 22, 0.88);
+      --green: #4ade80;
+      --violet: #a78bfa;
+      --cyan: #22d3ee;
+      --red: #fb7185;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html,
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--ink);
+      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Helvetica Neue", Arial, sans-serif;
+      line-height: 1.5;
+      overflow-x: hidden;
+    }
+
+    a {
+      color: inherit;
+    }
+
+    .hero {
+      min-height: 560px;
+      position: relative;
+      display: flex;
+      align-items: flex-end;
+      padding: 36px;
+      background-image:
+        linear-gradient(90deg, rgba(7, 17, 15, 0.98), rgba(7, 17, 15, 0.93) 52%, rgba(7, 17, 15, 0.78)),
+        url("media/social-preview.png");
+      background-size: cover;
+      background-position: center;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .hero-inner,
+    .section {
+      width: min(1120px, 100%);
+      margin: 0 auto;
+      min-width: 0;
+    }
+
+    .nav {
+      position: absolute;
+      top: 22px;
+      left: 36px;
+      right: 36px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 20px;
+    }
+
+    .brand {
+      font-size: 24px;
+      font-weight: 800;
+      letter-spacing: 0;
+    }
+
+    .brand span {
+      color: var(--violet);
+    }
+
+    .links {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+    }
+
+    .links a,
+    .button {
+      display: inline-flex;
+      align-items: center;
+      min-height: 38px;
+      padding: 8px 13px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: rgba(7, 17, 15, 0.72);
+      color: var(--ink);
+      text-decoration: none;
+      font-weight: 700;
+      font-size: 14px;
+      backdrop-filter: blur(8px);
+      flex: 0 0 auto;
+      white-space: nowrap;
+    }
+
+    h1 {
+      max-width: 760px;
+      margin: 0;
+      font-size: clamp(48px, 7vw, 86px);
+      line-height: 0.98;
+      letter-spacing: 0;
+    }
+
+    h1 strong {
+      color: var(--green);
+    }
+
+    .lead {
+      max-width: 760px;
+      margin: 20px 0 0;
+      color: var(--muted);
+      font-size: clamp(20px, 2.4vw, 28px);
+      font-weight: 600;
+    }
+
+    .actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin-top: 28px;
+    }
+
+    .primary {
+      border-color: rgba(74, 222, 128, 0.45);
+      background: rgba(74, 222, 128, 0.14);
+      color: #dfffea;
+    }
+
+    main {
+      padding: 44px 36px 72px;
+    }
+
+    .section {
+      margin-top: 36px;
+    }
+
+    .section h2 {
+      margin: 0 0 16px;
+      font-size: 32px;
+      line-height: 1.1;
+      letter-spacing: 0;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 14px;
+    }
+
+    .recipe {
+      min-height: 160px;
+      padding: 20px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--panel);
+    }
+
+    .recipe h3 {
+      margin: 0 0 8px;
+      font-size: 19px;
+      line-height: 1.2;
+    }
+
+    .recipe p {
+      margin: 0;
+      color: var(--muted);
+      font-size: 15px;
+    }
+
+    .code-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+      align-items: stretch;
+    }
+
+    pre {
+      margin: 0;
+      min-width: 0;
+      padding: 20px;
+      overflow: auto;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #050b0f;
+      color: #dce7f5;
+      font-size: 14px;
+      line-height: 1.55;
+    }
+
+    code {
+      font-family: "SF Mono", SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    }
+
+    .output {
+      color: var(--green);
+    }
+
+    .demo {
+      width: min(820px, 100%);
+      display: block;
+      margin-top: 16px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #050b0f;
+    }
+
+    .footer {
+      margin-top: 52px;
+      padding-top: 24px;
+      border-top: 1px solid var(--line);
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    @media (max-width: 820px) {
+      .hero {
+        min-height: 620px;
+        padding: 28px 20px;
+      }
+
+      .nav {
+        left: 20px;
+        right: 20px;
+        align-items: flex-start;
+        flex-direction: column;
+      }
+
+      main {
+        padding: 32px 20px 56px;
+      }
+
+      .hero-inner,
+      .section {
+        width: 100%;
+        max-width: calc(100vw - 40px);
+      }
+
+      .lead {
+        max-width: 330px;
+      }
+
+      .grid,
+      .code-row {
+        grid-template-columns: 1fr;
+        min-width: 0;
+      }
+
+      .actions {
+        max-width: 340px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header class="hero">
+    <nav class="nav" aria-label="Primary">
+      <div class="brand">py<span>veil</span></div>
+      <div class="links">
+        <a href="https://github.com/hyeonsangjeon/pyveil">GitHub</a>
+        <a href="https://pypi.org/project/pyveil/">PyPI</a>
+        <a href="cookbook.md">Cookbook</a>
+        <a href="redaction-reference.md">Reference</a>
+      </div>
+    </nav>
+    <div class="hero-inner">
+      <h1>Redact <strong>secrets</strong> before AI agents see them.</h1>
+      <p class="lead">Middleware for prompts, tools, MCP, memory, logs, and traces.</p>
+      <div class="actions">
+        <a class="button primary" href="cookbook.md">Copy-paste recipes</a>
+        <a class="button" href="redaction-reference.md">Masking board</a>
+        <a class="button" href="https://github.com/hyeonsangjeon/pyveil#install">Install</a>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <section class="section">
+      <h2>Boundary-first redaction</h2>
+      <div class="code-row">
+        <pre><code>from pyveil import Channel, Veil
+
+veil = Veil.high(
+    secret=b"tenant-secret",
+    scope="tenant/session",
+)
+
+safe = veil.redact_data(
+    messages,
+    channel=Channel.PROMPT_INPUT,
+)
+
+response = call_llm(safe.data)</code></pre>
+        <pre class="output"><code>Email alice@example.com
+API key sk-proj-...
+
+-> pyveil
+
+Email [EMAIL:a3d2b564c825]
+API key [API_KEY:38ded98a17e7]</code></pre>
+      </div>
+    </section>
+
+    <section class="section">
+      <h2>Recipes people actually need</h2>
+      <div class="grid">
+        <article class="recipe">
+          <h3>LLM client wrapper</h3>
+          <p>Redact OpenAI, Azure OpenAI, Anthropic, Gemini, LiteLLM, or internal gateway messages before provider calls.</p>
+        </article>
+        <article class="recipe">
+          <h3>Tool-call guard</h3>
+          <p>Block auth headers, API keys, JWTs, private keys, and query secrets before model-controlled tools execute.</p>
+        </article>
+        <article class="recipe">
+          <h3>MCP resource wrapper</h3>
+          <p>Redact files, records, logs, and API payloads before returning MCP resource content to an agent.</p>
+        </article>
+        <article class="recipe">
+          <h3>Memory write filter</h3>
+          <p>Redact sensitive values before embedding and persisting long-lived agent memory.</p>
+        </article>
+        <article class="recipe">
+          <h3>Logging filter</h3>
+          <p>Attach a standard logging filter so records are redacted before handlers and external sinks.</p>
+        </article>
+        <article class="recipe">
+          <h3>CLI preflight</h3>
+          <p>Scan or redact files in local scripts and CI without adding runtime dependencies to your application.</p>
+        </article>
+      </div>
+    </section>
+
+    <section class="section">
+      <h2>Demo</h2>
+      <p class="lead">The package keeps core behavior local, deterministic, and small: no network calls, no unmasking API, no third-party core dependency.</p>
+      <img class="demo" src="media/pyveil-awesome-demo.gif" alt="pyveil redacts synthetic sensitive context before agent boundaries">
+    </section>
+
+    <footer class="section footer">
+      <div>MIT licensed. Python 3.8 through 3.14. Designed for agent context boundaries, not as a compliance guarantee or DLP replacement.</div>
+    </footer>
+  </main>
+</body>
+</html>

@@ -116,6 +116,8 @@ Short no-audio walkthroughs are attached to the `v0.1.2` GitHub release:
 - [English usage guide](https://github.com/hyeonsangjeon/pyveil/releases/download/v0.1.2/pyveil-usage-guide-en.mp4)
 - [Korean usage guide](https://github.com/hyeonsangjeon/pyveil/releases/download/v0.1.2/pyveil-usage-guide-ko.mp4)
 
+For copy-paste integration recipes, see [docs/cookbook.md](docs/cookbook.md).
+
 ## Why Middleware
 
 Prompt-only redaction asks the model to handle sensitive data after the model has already seen it. `pyveil` redacts before context crosses an agent boundary.
@@ -273,6 +275,7 @@ This repository includes files meant for coding agents and LLM readers:
 - [CONTRIBUTING.md](CONTRIBUTING.md)
 - [docs/threat-model.md](docs/threat-model.md)
 - [docs/faq.md](docs/faq.md)
+- [docs/cookbook.md](docs/cookbook.md)
 - [docs/redaction-reference.md](docs/redaction-reference.md)
 - [docs/known-limitations.md](docs/known-limitations.md)
 - [docs/detector-provenance.md](docs/detector-provenance.md)
@@ -281,6 +284,7 @@ This repository includes files meant for coding agents and LLM readers:
 - [docs/integrations/mcp.md](docs/integrations/mcp.md)
 - [docs/integrations/logging.md](docs/integrations/logging.md)
 - [docs/integrations/tracing.md](docs/integrations/tracing.md)
+- [docs/index.html](docs/index.html) for a static GitHub Pages landing page
 
 Examples:
 
