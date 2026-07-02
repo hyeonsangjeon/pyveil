@@ -159,11 +159,30 @@
     }
 
     .recipe {
+      display: flex;
+      flex-direction: column;
       min-height: 160px;
       padding: 20px;
       border: 1px solid var(--line);
       border-radius: 8px;
       background: var(--panel);
+      color: inherit;
+      text-decoration: none;
+      transition: border-color .15s ease, transform .15s ease;
+    }
+
+    a.recipe:hover {
+      border-color: rgba(74, 222, 128, 0.5);
+      transform: translateY(-2px);
+      text-decoration: none;
+    }
+
+    a.recipe .more {
+      margin-top: auto;
+      padding-top: 14px;
+      color: var(--green);
+      font-weight: 700;
+      font-size: 14px;
     }
 
     .recipe h3 {
@@ -267,6 +286,7 @@
     <nav class="nav" aria-label="Primary">
       <div class="brand">py<span>veil</span></div>
       <div class="links">
+        <a class="primary" href="manual.html">Manual</a>
         <a href="https://github.com/hyeonsangjeon/pyveil">GitHub</a>
         <a href="https://pypi.org/project/pyveil/">PyPI</a>
         <a href="https://github.com/hyeonsangjeon/pyveil/blob/main/docs/cookbook.md">Cookbook</a>
@@ -277,9 +297,9 @@
       <h1>Redact <strong>secrets</strong> before AI agents see them.</h1>
       <p class="lead">Middleware for prompts, tools, MCP, memory, logs, and traces.</p>
       <div class="actions">
-        <a class="button primary" href="https://github.com/hyeonsangjeon/pyveil/blob/main/docs/cookbook.md">Copy-paste recipes</a>
-        <a class="button" href="https://github.com/hyeonsangjeon/pyveil/blob/main/docs/redaction-reference.md">Masking board</a>
-        <a class="button" href="https://github.com/hyeonsangjeon/pyveil#install">Install</a>
+        <a class="button primary" href="manual.html">Read the manual</a>
+        <a class="button" href="manual.html#quickstart">Quickstart</a>
+        <a class="button" href="manual.html#install">Install</a>
       </div>
     </div>
   </header>
@@ -314,30 +334,36 @@ API key [API_KEY:38ded98a17e7]</code></pre>
     <section class="section">
       <h2>Recipes people actually need</h2>
       <div class="grid">
-        <article class="recipe">
+        <a class="recipe" href="manual.html#recipes">
           <h3>LLM client wrapper</h3>
           <p>Redact OpenAI, Azure OpenAI, Anthropic, Gemini, LiteLLM, or internal gateway messages before provider calls.</p>
-        </article>
-        <article class="recipe">
+          <span class="more">Read &rarr;</span>
+        </a>
+        <a class="recipe" href="manual.html#policy">
           <h3>Tool-call guard</h3>
           <p>Block auth headers, API keys, JWTs, private keys, and query secrets before model-controlled tools execute.</p>
-        </article>
-        <article class="recipe">
+          <span class="more">Read &rarr;</span>
+        </a>
+        <a class="recipe" href="manual.html#integrations">
           <h3>MCP resource wrapper</h3>
           <p>Redact files, records, logs, and API payloads before returning MCP resource content to an agent.</p>
-        </article>
-        <article class="recipe">
+          <span class="more">Read &rarr;</span>
+        </a>
+        <a class="recipe" href="manual.html#recipes">
           <h3>Memory write filter</h3>
           <p>Redact sensitive values before embedding and persisting long-lived agent memory.</p>
-        </article>
-        <article class="recipe">
+          <span class="more">Read &rarr;</span>
+        </a>
+        <a class="recipe" href="manual.html#integrations">
           <h3>Logging filter</h3>
           <p>Attach a standard logging filter so records are redacted before handlers and external sinks.</p>
-        </article>
-        <article class="recipe">
+          <span class="more">Read &rarr;</span>
+        </a>
+        <a class="recipe" href="manual.html#cli">
           <h3>CLI preflight</h3>
           <p>Scan or redact files in local scripts and CI without adding runtime dependencies to your application.</p>
-        </article>
+          <span class="more">Read &rarr;</span>
+        </a>
       </div>
     </section>
 
