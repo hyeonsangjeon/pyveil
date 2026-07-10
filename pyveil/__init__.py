@@ -1,6 +1,6 @@
-"""pyveil: agent-native redaction middleware."""
+"""pyveil: local PII and secret redaction for Python AI agents."""
 
-__version__ = "0.1.2"
+__version__ = "0.2.0"
 __author__ = "Hyeon Sang Jeon"
 __license__ = "MIT"
 
@@ -10,11 +10,13 @@ from .exceptions import BlockedSensitiveData
 from .findings import Finding, RedactionResult, RedactionStats
 from .levels import Action, Level
 from .policy import Policy
+from .rules import CustomRule
 
 __all__ = [
     "Action",
     "BlockedSensitiveData",
     "Channel",
+    "CustomRule",
     "Entity",
     "Finding",
     "Level",

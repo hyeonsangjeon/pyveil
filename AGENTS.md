@@ -2,7 +2,9 @@
 
 ## Project Purpose
 
-pyveil is agent-native redaction middleware. Keep it focused on redacting sensitive context before prompts, tool calls, MCP resources, memory, logs, and traces cross trust boundaries.
+pyveil is local PII and secret redaction middleware for Python LLM apps and AI
+agents. Keep it focused on redacting sensitive context before prompts, tool
+calls, MCP resources, memory, logs, and traces cross trust boundaries.
 
 Do not turn pyveil into a general DLP suite, gateway, Presidio clone, or prompt-injection firewall.
 
@@ -14,6 +16,7 @@ Do not turn pyveil into a general DLP suite, gateway, Presidio clone, or prompt-
 - Run typecheck: `uv run --extra dev mypy pyveil tests`
 - Build package: `uv run --with build python -m build`
 - Check package: `uv run --with twine python -m twine check dist/*`
+- Run CLI demo: `python3 -m pyveil.cli demo`
 - Run CLI locally: `PYVEIL_SECRET=dev-secret python3 -m pyveil.cli redact <file>`
 
 ## Architecture
@@ -28,6 +31,8 @@ detector -> finding -> policy -> masker
 - Findings never include raw sensitive values by default.
 - Policy decides per channel whether to redact or block.
 - Maskers produce LOW shape-preserving output or HIGH HMAC placeholders.
+- `CustomRule` adds trusted regex or exact known-value findings to the same
+  detector, finding, policy, and masker pipeline.
 - Prefer public `Channel` and `Entity` enums in examples when avoiding stringly-typed policy code.
 
 ## Security Rules
@@ -37,7 +42,9 @@ detector -> finding -> policy -> masker
 - Do not port proprietary legacy rules or business-specific telecom rules.
 - Do not add CLI defaults that silently reuse a hard-coded redaction secret.
 - Keep CLI JSON input structure-preserving; tool, MCP, and trace payloads are usually JSON-shaped.
-- Keep core deterministic, local, and standard-library only for v0.1.
+- Keep core deterministic, local, and standard-library only.
+- Treat custom regexes as trusted application code. Require focused positive
+  and negative tests and keep `max_input_chars` enabled.
 - New detectors must include synthetic positive and negative tests.
 - Prefer high precision over broad but noisy detection.
 
@@ -68,6 +75,7 @@ This repository includes files meant for coding agents and LLM readers:
 Examples:
 
 - [examples/basic_usage.py](examples/basic_usage.py)
+- [examples/custom_rules.py](examples/custom_rules.py)
 - [examples/redact_json.py](examples/redact_json.py)
 - [examples/log_filter.py](examples/log_filter.py)
 - [examples/mcp_tool_result.py](examples/mcp_tool_result.py)

@@ -5,7 +5,7 @@ unchanged and swap `call_llm` for OpenAI, Azure OpenAI, Anthropic, Gemini,
 LiteLLM, a proxy, or an internal gateway.
 """
 
-from typing import Any, Callable, Dict, List, cast
+from typing import Callable, Dict, List, cast
 
 from pyveil import Channel, Veil
 

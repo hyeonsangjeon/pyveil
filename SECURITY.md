@@ -15,6 +15,6 @@ Please report:
 ## Design Commitments
 
 - No network calls in core detectors.
-- No reversible vault in v0.1.
+- No reversible vault or unmasking API.
 - No raw findings by default.
 - HMAC placeholders use caller-provided secrets and scopes.

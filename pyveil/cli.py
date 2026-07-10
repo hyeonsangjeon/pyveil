@@ -7,6 +7,7 @@ import sys
 from pathlib import Path
 from typing import Iterable, Optional, Tuple
 
+from . import __version__
 from .core import Veil
 from .exceptions import BlockedSensitiveData
 from .findings import RedactionResult
@@ -52,28 +53,36 @@ safety:
 
 def main(argv: Optional[Iterable[str]] = None) -> int:
     parser = argparse.ArgumentParser(prog="pyveil")
+    parser.add_argument("--version", action="version", version="%(prog)s " + __version__)
     subcommands = parser.add_subparsers(dest="command", required=True)
 
     redact = subcommands.add_parser("redact", help="Redact text from a file or stdin")
-    redact.add_argument("path", nargs="?", help="Input file. Reads stdin when omitted.")
+    redact.add_argument("path", nargs="?", help="Input file. Use '-' or omit for stdin.")
     redact.add_argument("--channel", default="prompt.input")
     redact.add_argument("--level", choices=["low", "high"], default="high")
     redact.add_argument("--secret", help="HMAC secret. Defaults to PYVEIL_SECRET.")
     redact.add_argument("--format", choices=["text", "json"], default="text")
-    redact.add_argument("--scope", default=None, help="Placeholder scope. Defaults to PYVEIL_SCOPE or 'default'.")
+    redact.add_argument(
+        "--scope", default=None, help="Placeholder scope. Defaults to PYVEIL_SCOPE or 'default'."
+    )
 
     scan = subcommands.add_parser("scan", help="Scan text and emit findings as JSON")
-    scan.add_argument("path", nargs="?", help="Input file. Reads stdin when omitted.")
+    scan.add_argument("path", nargs="?", help="Input file. Use '-' or omit for stdin.")
     scan.add_argument("--channel", default="prompt.input")
     scan.add_argument("--secret", help="HMAC secret. Defaults to PYVEIL_SECRET.")
     scan.add_argument("--format", choices=["json"], default="json")
-    scan.add_argument("--scope", default=None, help="Placeholder scope. Defaults to PYVEIL_SCOPE or 'default'.")
+    scan.add_argument(
+        "--scope", default=None, help="Placeholder scope. Defaults to PYVEIL_SCOPE or 'default'."
+    )
 
     init = subcommands.add_parser("init", help="Write a default pyveil.yaml")
     init.add_argument("path", nargs="?", default="pyveil.yaml")
 
     test_config = subcommands.add_parser("test-config", help="Validate a pyveil.yaml shape")
     test_config.add_argument("path", nargs="?", default="pyveil.yaml")
+
+    demo = subcommands.add_parser("demo", help="Run a synthetic before/after redaction demo")
+    demo.add_argument("--format", choices=["text", "json"], default="text")
 
     args = parser.parse_args(list(argv) if argv is not None else None)
     if args.command == "init":
@@ -82,6 +91,8 @@ def main(argv: Optional[Iterable[str]] = None) -> int:
         return 0
     if args.command == "test-config":
         return _test_config(args.path)
+    if args.command == "demo":
+        return _demo(args.format)
 
     text = _read_text(args.path)
     secret = _resolve_cli_secret(args.secret)
@@ -89,7 +100,11 @@ def main(argv: Optional[Iterable[str]] = None) -> int:
         print("secret is required; pass --secret or set PYVEIL_SECRET", file=sys.stderr)
         return 2
     scope = _resolve_cli_scope(args.scope)
-    veil = Veil(secret=secret, level=Level.HIGH if getattr(args, "level", "high") == "high" else Level.LOW, scope=scope)
+    veil = Veil(
+        secret=secret,
+        level=Level.HIGH if getattr(args, "level", "high") == "high" else Level.LOW,
+        scope=scope,
+    )
     try:
         result, structured = _redact_input(veil, text, channel=args.channel)
     except BlockedSensitiveData as exc:
@@ -111,7 +126,7 @@ def main(argv: Optional[Iterable[str]] = None) -> int:
 
 
 def _read_text(path: Optional[str]) -> str:
-    if path:
+    if path and path != "-":
         return Path(path).read_text(encoding="utf-8")
     return sys.stdin.read()
 
@@ -185,6 +200,27 @@ def _test_config(path: str) -> int:
         print(f"missing required sections: {', '.join(missing)}", file=sys.stderr)
         return 1
     print("ok")
+    return 0
+
+
+def _demo(output_format: str) -> int:
+    text = (
+        "Email alice@example.com, call 010-1234-5678, and use API key "
+        "sk-proj-DEMO_ONLY_000000000000000000."
+    )
+    veil = Veil.high(secret=b"pyveil-demo-only", scope="synthetic-demo")
+    result = veil.redact_text(text, channel="prompt.input")
+    if output_format == "json":
+        payload = {
+            "before": text,
+            "after": result.text,
+            "counts_by_type": result.stats.counts_by_type,
+        }
+        print(json.dumps(payload, ensure_ascii=False, sort_keys=True))
+    else:
+        print("before: " + text)
+        print("after:  " + result.text)
+        print("found:  " + ", ".join(sorted(result.stats.counts_by_type)))
     return 0
 
 

@@ -33,7 +33,7 @@ DEFAULT_BLOCKED = frozenset(
 class Policy:
     """A small channel-aware policy.
 
-    The default v0.1 policy redacts all supported findings, but blocks
+    The default policy redacts all supported findings, but blocks
     credentials that should never be model-controlled tool arguments.
     """
 

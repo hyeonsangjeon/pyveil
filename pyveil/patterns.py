@@ -1,4 +1,4 @@
-"""Public detector constants for supported v0.1 finding types."""
+"""Public detector constants for supported built-in finding types."""
 
 from .detectors import (
     API_KEY,

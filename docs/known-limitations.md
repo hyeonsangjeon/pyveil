@@ -1,6 +1,6 @@
 # Known Limitations
 
-pyveil v0.1 is intentionally narrow.
+pyveil is intentionally narrow.
 
 ## Not Guaranteed
 
@@ -11,7 +11,9 @@ pyveil v0.1 is intentionally narrow.
 
 ## Detector Limits
 
-- Name and address detection is not enabled in core v0.1.
+- Broad semantic name and address discovery is not enabled in core. Use
+  `CustomRule.exact(...)` only when the application already knows the values,
+  or layer a dedicated NER system upstream.
 - Phone detection favors common Korean and international-ish patterns.
 - API key detection covers high-signal prefixes and key names, not every provider.
 - Structured redaction follows dict/list/JSON payloads but cannot infer every domain-specific identifier.
@@ -22,5 +24,5 @@ Stable placeholders preserve referential consistency, but that also creates link
 
 ## Runtime Limits
 
-- Core v0.1 enforces `max_input_chars` before detection for plain text and structured string content.
-- Core v0.1 does not enforce per-regex timeouts because it stays standard-library only. Keep size limits and upstream request timeouts around untrusted large inputs.
+- Core enforces `max_input_chars` before detection for plain text and structured string content.
+- Core does not enforce per-regex timeouts because it stays standard-library only. Custom regexes are trusted application code; keep them narrow and retain size limits and upstream request timeouts around untrusted large inputs.

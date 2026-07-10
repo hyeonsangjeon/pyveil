@@ -175,10 +175,36 @@ Use `pyveil scan` to count findings and `pyveil redact` to create a redacted art
 export PYVEIL_SECRET="tenant-or-run-secret"
 export PYVEIL_SCOPE="tenant/session"
 
+pyveil demo
+printf 'Email alice@example.com' | pyveil redact -
 pyveil scan prompt.txt --format json
 pyveil redact prompt.txt --channel prompt.input > prompt.safe.txt
 pyveil redact request.json --channel tool.call.result --format json > request.safe.json
 ```
+
+## 9. Redact Known Names And Domain Identifiers
+
+The dependency-free core does not guess unknown names. Add values that your
+application already knows are sensitive, plus narrow identifiers from your own
+domain:
+
+```python
+from pyveil import CustomRule, Veil
+
+rules = [
+    CustomRule.exact("PERSON", ["Alice Kim", "Hong Gildong"]),
+    CustomRule("ACCOUNT_ID", r"\bACC-[A-Z0-9]{10}\b", rule_id="account_id"),
+]
+
+veil = Veil.high(secret=b"tenant-secret", scope="tenant/session", rules=rules)
+safe = veil.redact_text(
+    "Alice Kim requested access to ACC-A1B2C3D4E5.",
+    channel="prompt.input",
+)
+```
+
+Do not build a regex from untrusted pattern input. Treat custom patterns as
+application code and test both matches and non-matches.
 
 ## Boundary Checklist
 

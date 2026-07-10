@@ -18,7 +18,7 @@ class Channel(str, Enum):
 
 
 class Entity(str, Enum):
-    """Known sensitive entity types emitted by v0.1 detectors."""
+    """Known sensitive entity types emitted by built-in detectors."""
 
     EMAIL = "EMAIL"
     PHONE = "PHONE"

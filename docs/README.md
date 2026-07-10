@@ -1,6 +1,8 @@
 # pyveil Documentation
 
-pyveil redacts secrets before your AI agent sees them. It is agent-native redaction middleware for AI context boundaries.
+pyveil provides local PII and secret redaction for Python LLM applications and
+AI agents. It runs before prompts, tool calls, MCP resources, memory, logs, and
+traces cross application boundaries.
 
 Start with:
 
@@ -16,12 +18,16 @@ Start with:
 - [Logging integration](integrations/logging.md)
 - [Tracing integration](integrations/tracing.md)
 
-The stable v0.1 shape is:
+The stable core shape is:
 
 ```text
 detector -> finding -> policy -> masker
 ```
 
 Channels such as `prompt.input`, `tool.call.arguments`, `mcp.resource.content`, `memory.write`, `trace.span.attributes`, and `log.record` are part of the public model. Python callers can use the public `Channel` enum instead of raw strings.
+
+Applications can add known sensitive values and narrow domain identifiers with
+the public `CustomRule` API while keeping semantic NER out of the dependency-free
+core.
 
 `index.html` is a static GitHub Pages landing page. Serve GitHub Pages from the repository `/docs` directory to publish it.

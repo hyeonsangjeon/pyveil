@@ -3,8 +3,16 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>pyveil manual - agent-native redaction middleware</title>
-  <meta name="description" content="The pyveil manual: install, quickstart, core concepts, full API reference, recipes, CLI, and integrations for redacting secrets before AI agents see them.">
+  <title>pyveil manual - Python PII and secret redaction for LLM apps</title>
+  <meta name="description" content="Use pyveil to redact PII, API keys, tokens, and known sensitive values before Python LLM apps, AI agents, tool calls, and MCP resources see them.">
+  <meta name="keywords" content="Python PII redaction, LLM privacy, AI agent security, secret redaction, MCP security, tool call guardrail">
+  <link rel="canonical" href="https://hyeonsangjeon.github.io/pyveil/manual.html">
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="pyveil manual - PII and secret redaction for AI agents">
+  <meta property="og:description" content="Dependency-free Python redaction for LLM prompts, tool calls, MCP, memory, logs, and traces.">
+  <meta property="og:url" content="https://hyeonsangjeon.github.io/pyveil/manual.html">
+  <meta property="og:image" content="https://hyeonsangjeon.github.io/pyveil/media/social-preview.png">
+  <meta name="twitter:card" content="summary_large_image">
   <style>
     :root {
       color-scheme: dark;
@@ -169,7 +177,7 @@
       font-size: clamp(34px, 5vw, 52px);
       line-height: 1.05;
       margin: 20px 0 10px;
-      letter-spacing: -0.5px;
+      letter-spacing: 0;
     }
     .content h1 strong { color: var(--green); }
     .content .tagline { color: var(--muted); font-size: 20px; font-weight: 600; margin: 0 0 8px; max-width: 720px; }
@@ -178,7 +186,7 @@
       margin: 10px 0 14px;
       padding-bottom: 10px;
       border-bottom: 1px solid var(--line-soft);
-      letter-spacing: -0.3px;
+      letter-spacing: 0;
     }
     .content h3 { font-size: 19px; margin: 26px 0 10px; }
     .content h4 { font-size: 15px; margin: 20px 0 8px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.05em; }
@@ -399,6 +407,7 @@
         <h4>Using pyveil</h4>
         <a href="#text">Text redaction</a>
         <a href="#structured">Structured redaction</a>
+        <a href="#custom-rules">Custom rules</a>
         <a href="#recipes">Recipes</a>
         <a href="#cli">Command line</a>
         <a href="#integrations">Integrations</a>
@@ -415,10 +424,10 @@
     <main class="content" id="content">
       <!-- ============ OVERVIEW ============ -->
       <section id="overview">
-        <h1>The <strong>pyveil</strong> manual</h1>
-        <p class="tagline">Redact secrets before AI agents, tools, MCP resources, memory, logs, and traces ever see them.</p>
+        <h1><strong>pyveil</strong> manual</h1>
+        <p class="tagline">Local PII and secret redaction for Python LLM apps, AI agents, tools, MCP, memory, logs, and traces.</p>
         <p class="lede">
-          <strong>pyveil</strong> is agent-native redaction middleware. You put it on the boundary between raw
+          <strong>pyveil</strong> is dependency-free redaction middleware. You put it on the boundary between raw
           context and anything an agent touches &mdash; a model prompt, a tool call, an MCP resource, a memory
           store, a trace exporter, or a log sink. The core is standard-library only: deterministic HMAC
           placeholders, channel-aware policy, and high-precision detectors.
@@ -459,7 +468,7 @@
         <p>Install the latest <code>main</code> directly from GitHub:</p>
         <pre><code>pip install "git+https://github.com/hyeonsangjeon/pyveil.git"</code></pre>
         <p>Pin to a released tag for reproducible builds:</p>
-        <pre><code>pip install "git+https://github.com/hyeonsangjeon/pyveil.git@v0.1.2"</code></pre>
+        <pre><code>pip install "git+https://github.com/hyeonsangjeon/pyveil.git@v0.2.0"</code></pre>
 
         <h3>For development (editable clone)</h3>
         <pre><code>git clone https://github.com/hyeonsangjeon/pyveil.git
@@ -769,6 +778,32 @@ print(safe.data)</code></pre>
         <code>result.data</code>.</p>
       </section>
 
+      <!-- ============ CUSTOM RULES ============ -->
+      <section id="custom-rules">
+        <h2>Custom rules</h2>
+        <p>The dependency-free core does not guess arbitrary names or company-specific identifiers. Add values your
+        application already knows are sensitive, plus narrow trusted regexes from your own domain.</p>
+        <pre><code>from pyveil import CustomRule, Veil
+
+rules = [
+    CustomRule.exact("PERSON", ["Alice Kim", "Hong Gildong"]),
+    CustomRule("CUSTOMER_ID", r"\bCUS-[A-Z0-9]{8}\b", rule_id="customer_id"),
+]
+
+veil = Veil.high(
+    secret=b"tenant-secret",
+    scope="tenant/session",
+    rules=rules,
+)
+
+safe = veil.redact_text("Alice Kim owns CUS-A1B2C3D4.")
+print(safe.text)
+<span class="tok-out"># [PERSON:...] owns [CUSTOMER_ID:...].</span></code></pre>
+        <p><code>CustomRule.exact</code> escapes values, prefers longer matches, and applies word boundaries by
+        default. Custom regexes are trusted application code: keep them narrow, test positive and negative samples,
+        and keep <code>max_input_chars</code> enabled.</p>
+      </section>
+
       <!-- ============ RECIPES ============ -->
       <section id="recipes">
         <h2>Recipes</h2>
@@ -815,7 +850,7 @@ else:
 
 raw_result = {
     "owner": "alice@example.com",
-    "callback": "https://example.test/callback?access_token=synthetic-token&state=ok",
+    "callback": "https://example.test/callback?access_token=synthetic-token&amp;state=ok",
 }
 safe_result = veil.redact_data(raw_result, channel="tool.call.result").data</code></pre>
 
@@ -849,6 +884,8 @@ logger.warning("failed request for alice@example.com")
         <pre><code>export PYVEIL_SECRET="tenant-or-run-secret"
 export PYVEIL_SCOPE="tenant/session"
 
+pyveil demo
+printf 'Email alice@example.com' | pyveil redact -
 pyveil scan prompt.txt --format json
 pyveil redact prompt.txt --channel prompt.input &gt; prompt.safe.txt
 pyveil redact request.json --channel tool.call.result --format json &gt; request.safe.json</code></pre>
@@ -871,6 +908,7 @@ pyveil redact request.json --channel tool.call.result --format json &gt; request
         <table>
           <thead><tr><th>Command</th><th>What it does</th></tr></thead>
           <tbody>
+            <tr><td><code>pyveil demo</code></td><td>Run a synthetic before/after demo without configuration.</td></tr>
             <tr><td><code>pyveil redact [PATH]</code></td><td>Redact a file or stdin. <code>--channel</code>, <code>--level low|high</code>, <code>--format text|json</code>.</td></tr>
             <tr><td><code>pyveil scan [PATH]</code></td><td>Detect and emit findings + stats as JSON (no raw values).</td></tr>
             <tr><td><code>pyveil init [PATH]</code></td><td>Write a starter <code>pyveil.yaml</code> config (default path <code>pyveil.yaml</code>).</td></tr>
@@ -882,8 +920,11 @@ pyveil redact request.json --channel tool.call.result --format json &gt; request
 export PYVEIL_SECRET="tenant-or-run-secret"
 export PYVEIL_SCOPE="tenant/session"
 
+<span class="tok-cmt"># immediate synthetic demonstration</span>
+pyveil demo
+
 <span class="tok-cmt"># redact a prompt file to stdout</span>
-echo "call 010-1234-5678" | pyveil redact --channel prompt.input
+echo "call 010-1234-5678" | pyveil redact - --channel prompt.input
 <span class="tok-out"># call [PHONE:cbbfb8059b58]</span>
 
 <span class="tok-cmt"># scan for findings as JSON</span>
@@ -938,7 +979,7 @@ safe_resource = redact_resource(raw_resource, veil)         <span class="tok-cmt
 
         <h3>The <code>Veil</code> class</h3>
         <div class="api-item">
-          <div class="api-sig"><span class="kw">class</span> <span class="fn">Veil</span>(secret, level=Level.HIGH, scope="default", policy=None, placeholder_length=12, max_input_chars=1_000_000)</div>
+          <div class="api-sig"><span class="kw">class</span> <span class="fn">Veil</span>(secret, level=Level.HIGH, scope="default", policy=None, placeholder_length=12, max_input_chars=1_000_000, rules=())</div>
           <div class="api-body">
             <p>The redaction facade. Build one per tenant, session, or run.</p>
             <table>
@@ -950,13 +991,14 @@ safe_resource = redact_resource(raw_resource, veil)         <span class="tok-cmt
                 <tr><td><code>policy</code></td><td><code>Policy | None</code></td><td>Channel-aware policy. Takes precedence over <code>level</code>.</td></tr>
                 <tr><td><code>placeholder_length</code></td><td><code>int</code></td><td>Digest hex length, minimum 8, default 12.</td></tr>
                 <tr><td><code>max_input_chars</code></td><td><code>int | None</code></td><td>Input size cap; <code>None</code> disables it.</td></tr>
+                <tr><td><code>rules</code></td><td><code>Sequence[CustomRule]</code></td><td>Known sensitive values and trusted application regexes.</td></tr>
               </tbody>
             </table>
           </div>
         </div>
 
         <div class="api-item">
-          <div class="api-sig"><span class="fn">Veil.high</span>(secret, scope="default", policy=None, max_input_chars=1_000_000) &nbsp;&middot;&nbsp; <span class="fn">Veil.low</span>(...)</div>
+          <div class="api-sig"><span class="fn">Veil.high</span>(secret, scope="default", policy=None, max_input_chars=1_000_000, rules=()) &nbsp;&middot;&nbsp; <span class="fn">Veil.low</span>(...)</div>
           <div class="api-body"><p>Classmethod constructors for a HIGH redactor (agent/tool boundaries) or a LOW redactor (human-facing previews). <code>Veil.low</code> uses a LOW default policy.</p></div>
         </div>
 
@@ -1013,6 +1055,15 @@ safe_resource = redact_resource(raw_resource, veil)         <span class="tok-cmt
           </div>
         </div>
 
+        <div class="api-item">
+          <div class="api-sig"><span class="kw">class</span> <span class="fn">CustomRule</span>(entity, pattern, rule_id="custom_regex", detector="custom_rule", confidence=1.0, priority=65)</div>
+          <div class="api-body">
+            <p>A trusted application regex that emits a custom entity through the standard finding, policy, and
+            masking pipeline. Use <code>CustomRule.exact(entity, values, ignore_case=False,
+            word_boundaries=True)</code> for values the application already knows are sensitive.</p>
+          </div>
+        </div>
+
         <h3>Result types</h3>
         <div class="api-item">
           <div class="api-sig"><span class="kw">dataclass</span> <span class="fn">RedactionResult</span></div>
@@ -1035,7 +1086,7 @@ safe_resource = redact_resource(raw_resource, veil)         <span class="tok-cmt
       <!-- ============ DETECTORS ============ -->
       <section id="detectors">
         <h2>Detectors &amp; masking board</h2>
-        <p>v0.1 favors <strong>high precision over broad coverage</strong>. Each entity is masked as shown below.
+        <p>Core detectors favor <strong>high precision over broad coverage</strong>. Each entity is masked as shown below.
         Examples use <code>secret=b"docs-secret"</code>, <code>scope="docs/reference"</code>; the 12 hex characters
         differ for other secrets or scopes.</p>
 
@@ -1056,10 +1107,10 @@ safe_resource = redact_resource(raw_resource, veil)         <span class="tok-cmt
         </table>
 
         <h3>What is intentionally not detected</h3>
-        <p>Core v0.1 does not broadly detect personal names, postal addresses, or arbitrary domain-specific identifiers
+        <p>Core does not broadly discover personal names, postal addresses, or arbitrary domain-specific identifiers
         (account, billing, telecom, membership, device IDs). Broad semantic detection has higher false-positive and
-        false-negative risk; add those with known values or a custom-rule layer when your project has enough context
-        to do it safely.</p>
+        false-negative risk. Add known values and narrow domain IDs with <code>CustomRule</code>, or layer a dedicated
+        NER system upstream when unknown semantic entities must be discovered.</p>
       </section>
 
       <!-- ============ SAFETY ============ -->
@@ -1092,10 +1143,11 @@ safe_resource = redact_resource(raw_resource, veil)         <span class="tok-cmt
         <p>Stable HMAC placeholders let an agent preserve references across a run without seeing the raw value. Use
         different <code>scope</code> values when cross-context linkability is not desired.</p>
         <h3>Why not detect names and addresses by default?</h3>
-        <p>Broad semantic detection has higher false-positive and false-negative risk than the high-precision v0.1
-        detectors. Use known values, structured key names, or a future custom-rule layer for domain-specific IDs.</p>
+        <p>Broad semantic detection has higher false-positive and false-negative risk than the high-precision core
+        detectors. Use <code>CustomRule.exact(...)</code> for values the application already knows, narrow
+        <code>CustomRule</code> regexes for domain IDs, or a dedicated NER layer for unknown names and addresses.</p>
         <h3>Can I unmask values later?</h3>
-        <p>No. v0.1 has no reversible vault and no unmasking API. This is intentional: the default design avoids
+        <p>No. pyveil has no reversible vault and no unmasking API. This is intentional: the default design avoids
         storing raw sensitive values.</p>
         <h3>Does pyveil call external services?</h3>
         <p>No. The core uses the Python standard library and makes no network calls.</p>

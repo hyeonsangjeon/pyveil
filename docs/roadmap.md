@@ -9,9 +9,15 @@ This roadmap is directional, not a compatibility promise.
 - Tighten documentation around safety boundaries and known limitations.
 - Keep detector changes conservative and high precision.
 
-## 0.2.0 Candidates
+## 0.2.x
 
-- Custom user rule API for known values and domain-specific identifiers.
+- Stabilize the `CustomRule` API for exact known values and domain identifiers.
+- Improve CLI and provider-neutral adoption paths without adding core
+  dependencies.
+- Add reproducible detector and latency evaluation fixtures.
+
+## Future Candidates
+
 - Config loading into `Policy` and `Veil` objects.
 - Optional framework adapters where they do not add hard runtime dependencies.
 - Richer stats for blocked/redacted/passed findings.

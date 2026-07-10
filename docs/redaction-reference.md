@@ -1,6 +1,6 @@
 # Redaction Reference
 
-This page is the quick board for what pyveil v0.1 detects and how each finding is masked.
+This page is the quick board for what pyveil detects and how each finding is masked.
 
 Use this as the operator/manual view. For detector provenance and contribution rules, see [detector-provenance.md](detector-provenance.md).
 
@@ -43,6 +43,29 @@ Examples below use synthetic values with `secret=b"docs-secret"` and `scope="doc
 | `API_KEY` | High-signal provider prefixes such as OpenAI, GitHub, Slack, Google API key, and AWS access key shapes |
 | `URL_QUERY_SECRET` | Sensitive URL query parameter values such as `access_token`, `refresh_token`, `api_key`, `secret`, and `auth` |
 | `KV_SECRET` | Text or structured values under sensitive keys such as `password`, `secret`, `token`, `cookie`, and related names |
+| Custom entity | Exact values or trusted application regexes supplied through `CustomRule` |
+
+## Custom Rules
+
+Use an exact rule when authenticated application data already tells you which
+names or values are sensitive:
+
+```python
+from pyveil import CustomRule, Veil
+
+rules = [
+    CustomRule.exact("PERSON", ["Alice Kim", "Hong Gildong"]),
+    CustomRule("CUSTOMER_ID", r"\bCUS-[A-Z0-9]{8}\b", rule_id="customer_id"),
+]
+
+veil = Veil.high(secret=b"tenant-secret", scope="tenant/session", rules=rules)
+safe = veil.redact_text("Alice Kim owns CUS-A1B2C3D4.")
+```
+
+Exact rules escape source values, prefer longer matches, and use word
+boundaries by default. Set `ignore_case=True` only when case is not meaningful.
+Custom regexes are trusted code and run inside the same `max_input_chars`
+boundary as built-in detectors.
 
 ## Channel Policy
 
@@ -81,12 +104,14 @@ Structured payloads keep their shape. If a key name is sensitive, pyveil treats 
 
 ## What Is Not Included
 
-Core v0.1 intentionally does not try to broadly detect:
+Core intentionally does not try to broadly detect:
 
 - personal names
 - postal addresses
 - company-specific account, billing, telecom, membership, or device identifiers
-- arbitrary domain-specific IDs
+- arbitrary domain-specific IDs unless supplied with `CustomRule`
 - every provider token format
 
-Add those with custom rules or upstream domain logic when the project has enough context to do so safely.
+Add known values and narrow domain IDs with `CustomRule`. Use upstream semantic
+NER when the application must discover unknown names, organizations, locations,
+or addresses.
