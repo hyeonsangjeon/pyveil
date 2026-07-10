@@ -170,6 +170,8 @@
     /* ---------- Content ---------- */
     .content {
       padding: 12px 40px 120px;
+      width: 100%;
+      min-width: 0;
       max-width: 900px;
     }
     .content section { padding-top: 26px; scroll-margin-top: calc(var(--topbar-h) + 14px); }
@@ -344,7 +346,7 @@
     /* ---------- Responsive ---------- */
     .backdrop { display: none; }
     @media (max-width: 1000px) {
-      .layout { grid-template-columns: 1fr; }
+      .layout { width: 100%; grid-template-columns: minmax(0, 1fr); }
       .menu-toggle { display: inline-flex; align-items: center; justify-content: center; }
       .sidebar {
         position: fixed;
@@ -360,11 +362,15 @@
       }
       .sidebar.open { transform: translateX(0); }
       .backdrop.show { display: block; position: fixed; inset: var(--topbar-h) 0 0 0; background: rgba(0,0,0,0.5); z-index: 30; }
-      .content { padding: 12px 22px 100px; }
+      .content { width: 100%; min-width: 0; max-width: 100%; padding: 12px 22px 100px; }
+      .content section, .cards, .card, .flow, .api-item { min-width: 0; }
       .top-links .hide-sm { display: none; }
     }
     @media (max-width: 520px) {
       .content h1 { font-size: 32px; }
+      .content .tagline, .content p, .content li { overflow-wrap: anywhere; }
+      .flow .node { max-width: 100%; white-space: normal; overflow-wrap: anywhere; }
+      table { display: block; max-width: 100%; overflow-x: auto; }
       .topbar .brand small { display: none; }
     }
   </style>
