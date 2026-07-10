@@ -22,7 +22,7 @@ body:
     id: version
     attributes:
       label: pyveil version
-      placeholder: "0.1.2"
+      placeholder: "0.2.0"
     validations:
       required: true
   - type: input

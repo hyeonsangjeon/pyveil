@@ -1,6 +1,6 @@
 # pyveil
 
-> Agent-native redaction middleware for prompts, tool calls, MCP resources, logs, traces, and memory.
+> Local PII and secret redaction for Python LLM apps, AI agents, tool calls, MCP resources, logs, traces, and memory.
 
 ## Start Here
 
@@ -25,6 +25,8 @@
 - Use `Veil.redact_data` for dict, list, JSON, tool arguments, and MCP-like payloads.
 - Use top-level `redact_text` and `redact_data` only with an explicit secret or `PYVEIL_SECRET`.
 - Use `Channel` and `Entity` enums when writing policy examples.
+- Use `CustomRule.exact(...)` for values the application already knows are
+  sensitive and `CustomRule(...)` for narrow domain identifier regexes.
 - Do not expose unmasking functions to a model-controlled tool.
 - Do not claim pyveil guarantees compliance or perfect sensitive-data detection.
 - Keep integrations thin and the core local.

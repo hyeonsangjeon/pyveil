@@ -4,8 +4,8 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "pyveil"
-version = "0.1.2"
-description = "Redact secrets before your AI agent sees them"
+version = "0.2.0"
+description = "Local PII and secret redaction for Python LLM apps, AI agents, tool calls, and MCP"
 readme = "README.md"
 requires-python = ">=3.8"
 license = {text = "MIT"}
@@ -17,20 +17,26 @@ maintainers = [
 ]
 keywords = [
     "agent-native",
+    "agent-security",
     "agents",
     "ai-agents",
+    "ai-security",
+    "anthropic",
     "data-protection",
     "guardrails",
     "llm",
+    "llm-security",
     "logs",
     "masking",
     "mcp",
     "memory",
     "observability",
     "pii",
+    "pii-redaction",
     "privacy",
     "prompts",
     "redaction",
+    "openai",
     "anonymization",
     "security",
     "sensitive-data",
@@ -72,11 +78,12 @@ test = [
 ]
 
 [project.urls]
-Homepage = "https://github.com/hyeonsangjeon/pyveil"
-Documentation = "https://github.com/hyeonsangjeon/pyveil#readme"
+Homepage = "https://hyeonsangjeon.github.io/pyveil/"
+Documentation = "https://hyeonsangjeon.github.io/pyveil/manual.html"
 Repository = "https://github.com/hyeonsangjeon/pyveil"
 Issues = "https://github.com/hyeonsangjeon/pyveil/issues"
 Changelog = "https://github.com/hyeonsangjeon/pyveil/releases"
+Security = "https://github.com/hyeonsangjeon/pyveil/security/policy"
 
 [project.scripts]
 pyveil = "pyveil.cli:main"

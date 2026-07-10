@@ -1,9 +1,10 @@
-"""High-precision text detectors for v0.1."""
+"""High-precision built-in and application-defined text detectors."""
 
 import re
 from dataclasses import dataclass
-from typing import Iterable, List, Pattern, Sequence, Tuple
+from typing import Iterable, List, Optional, Pattern, Sequence, Tuple
 
+from .rules import CustomRule
 from .utils import luhn_valid
 
 EMAIL = "EMAIL"
@@ -26,21 +27,20 @@ class DetectedValue:
     detector: str
     rule_id: str
     confidence: float = 1.0
+    priority: Optional[int] = None
 
 
 EMAIL_RE = re.compile(
     r"(?<![\w.%+-])([A-Za-z0-9._%+-]{1,64}@[A-Za-z0-9.-]+\.[A-Za-z]{2,63})(?![\w-])"
 )
-KOREAN_PHONE_RE = re.compile(
-    r"(?<!\d)(?:\+82[-.\s]?)?0?1[016789][-\s.]?\d{3,4}[-\s.]?\d{4}(?!\d)"
-)
+KOREAN_PHONE_RE = re.compile(r"(?<!\d)(?:\+82[-.\s]?)?0?1[016789][-\s.]?\d{3,4}[-\s.]?\d{4}(?!\d)")
 LOCAL_PHONE_RE = re.compile(r"(?<!\d)0\d{1,2}[-.\s]?\d{3,4}[-\s.]?\d{4}(?!\d)")
 INTL_PHONE_RE = re.compile(r"(?<!\d)\+\d{1,3}[-.\s]\d{2,4}[-.\s]\d{3,4}[-.\s]\d{3,4}(?!\d)")
 CREDIT_CARD_RE = re.compile(r"(?<!\d)(?:\d[ -]?){12,18}\d(?!\d)")
-JWT_RE = re.compile(r"(?<![A-Za-z0-9_-])eyJ[A-Za-z0-9_-]{8,}\.[A-Za-z0-9_-]{8,}\.[A-Za-z0-9_-]{8,}(?![A-Za-z0-9_-])")
-AUTH_HEADER_RE = re.compile(
-    r"(?i)\bAuthorization\s*:\s*(?:Bearer|Basic)\s+[A-Za-z0-9._~+/=-]{8,}"
+JWT_RE = re.compile(
+    r"(?<![A-Za-z0-9_-])eyJ[A-Za-z0-9_-]{8,}\.[A-Za-z0-9_-]{8,}\.[A-Za-z0-9_-]{8,}(?![A-Za-z0-9_-])"
 )
+AUTH_HEADER_RE = re.compile(r"(?i)\bAuthorization\s*:\s*(?:Bearer|Basic)\s+[A-Za-z0-9._~+/=-]{8,}")
 PRIVATE_KEY_RE = re.compile(
     r"-----BEGIN [A-Z0-9 ]*PRIVATE KEY-----[\s\S]+?-----END [A-Z0-9 ]*PRIVATE KEY-----"
 )
@@ -77,12 +77,16 @@ PRIORITY = {
 }
 
 
-def detect_text(text: str) -> Tuple[DetectedValue, ...]:
+def detect_text(text: str, rules: Sequence[CustomRule] = ()) -> Tuple[DetectedValue, ...]:
     """Detect supported sensitive values in free text."""
 
     matches: List[DetectedValue] = []
-    matches.extend(_regex_matches(text, PRIVATE_KEY_RE, PRIVATE_KEY, "private_key", "pem_private_key"))
-    matches.extend(_regex_matches(text, AUTH_HEADER_RE, AUTH_HEADER, "auth_header", "authorization_header"))
+    matches.extend(
+        _regex_matches(text, PRIVATE_KEY_RE, PRIVATE_KEY, "private_key", "pem_private_key")
+    )
+    matches.extend(
+        _regex_matches(text, AUTH_HEADER_RE, AUTH_HEADER, "auth_header", "authorization_header")
+    )
     matches.extend(_regex_matches(text, JWT_RE, JWT, "jwt", "jwt_compact"))
     matches.extend(_api_key_matches(text))
     matches.extend(_url_query_secret_matches(text))
@@ -90,6 +94,7 @@ def detect_text(text: str) -> Tuple[DetectedValue, ...]:
     matches.extend(_regex_matches(text, EMAIL_RE, EMAIL, "email", "email_address", group=1))
     matches.extend(_credit_card_matches(text))
     matches.extend(_phone_matches(text))
+    matches.extend(_custom_rule_matches(text, rules))
     return _select_non_overlapping(matches)
 
 
@@ -136,7 +141,9 @@ def _regex_matches(
 def _api_key_matches(text: str) -> Iterable[DetectedValue]:
     for rule_id, pattern in API_KEY_PATTERNS:
         for match in pattern.finditer(text):
-            yield DetectedValue(API_KEY, match.start(), match.end(), match.group(), "api_key", rule_id)
+            yield DetectedValue(
+                API_KEY, match.start(), match.end(), match.group(), "api_key", rule_id
+            )
 
 
 def _url_query_secret_matches(text: str) -> Iterable[DetectedValue]:
@@ -155,7 +162,9 @@ def _url_query_secret_matches(text: str) -> Iterable[DetectedValue]:
 def _kv_secret_matches(text: str) -> Iterable[DetectedValue]:
     for match in KV_SECRET_RE.finditer(text):
         start, end = match.span(3)
-        yield DetectedValue(KV_SECRET, start, end, match.group(3), "kv_secret", "text_key_value_secret")
+        yield DetectedValue(
+            KV_SECRET, start, end, match.group(3), "kv_secret", "text_key_value_secret"
+        )
 
 
 def _credit_card_matches(text: str) -> Iterable[DetectedValue]:
@@ -186,7 +195,26 @@ def _phone_matches(text: str) -> Iterable[DetectedValue]:
             if span in seen:
                 continue
             seen.add(span)
-            yield DetectedValue(PHONE, match.start(), match.end(), match.group(), "phone", rule_id, 0.9)
+            yield DetectedValue(
+                PHONE, match.start(), match.end(), match.group(), "phone", rule_id, 0.9
+            )
+
+
+def _custom_rule_matches(text: str, rules: Sequence[CustomRule]) -> Iterable[DetectedValue]:
+    for rule in rules:
+        for match in rule.finditer(text):
+            if match.start() == match.end():
+                continue
+            yield DetectedValue(
+                rule.entity,
+                match.start(),
+                match.end(),
+                match.group(),
+                rule.detector,
+                rule.rule_id,
+                rule.confidence,
+                rule.priority,
+            )
 
 
 def _select_non_overlapping(matches: Sequence[DetectedValue]) -> Tuple[DetectedValue, ...]:
@@ -194,7 +222,11 @@ def _select_non_overlapping(matches: Sequence[DetectedValue]) -> Tuple[DetectedV
     occupied: List[Tuple[int, int]] = []
     sorted_matches = sorted(
         matches,
-        key=lambda item: (-(PRIORITY.get(item.type, 0)), item.start, -(item.end - item.start)),
+        key=lambda item: (
+            -(item.priority if item.priority is not None else PRIORITY.get(item.type, 0)),
+            item.start,
+            -(item.end - item.start),
+        ),
     )
     for match in sorted_matches:
         if any(not (match.end <= start or match.start >= end) for start, end in occupied):

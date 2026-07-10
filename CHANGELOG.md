@@ -1,5 +1,33 @@
 # Changelog
 
+## 0.2.0 - 2026-07-10
+
+Discovery and production-adoption release.
+
+### Added
+
+- `CustomRule` for trusted application regexes and exact known values such as
+  customer names, account IDs, and domain-specific identifiers.
+- `pyveil demo` for an immediate synthetic before/after demonstration.
+- Explicit `-` stdin support for `pyveil redact` and `pyveil scan`.
+- Search-oriented GitHub Pages metadata, canonical links, sitemap, and robots
+  policy.
+
+### Changed
+
+- Reworked the README around PII and secret redaction for Python LLM apps and
+  AI agents, with before/after proof and provider-neutral integration paths.
+- Updated PyPI summary, keywords, homepage, documentation, and security links.
+- Expanded documentation for custom rules and choosing between pyveil,
+  semantic NER, and enterprise DLP.
+
+### Fixed
+
+- Restored the GitHub Actions quality gate by removing an unused example
+  import that caused Ruff to fail while all Python test jobs passed.
+- Updated checkout and Python setup actions to their Node 24 releases, removing
+  GitHub's Node 20 deprecation annotations.
+
 ## 0.1.2 - 2026-06-28
 
 Documentation and adoption polish.

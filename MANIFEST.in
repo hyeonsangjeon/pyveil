@@ -16,6 +16,7 @@ recursive-include tests *.py
 
 # Include docs
 recursive-include docs *.md
+recursive-include docs *.html *.xml *.txt
 recursive-include docs/media *.gif *.png
 
 # Exclude unnecessary files

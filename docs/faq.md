@@ -20,12 +20,13 @@ is not desired.
 ## Why not detect names and addresses by default?
 
 Broad semantic detection has higher false-positive and false-negative risk than
-the high-precision v0.1 detectors. Use known values, structured key names, or a
-future custom-rule layer for domain-specific identifiers.
+the high-precision core detectors. Use `CustomRule.exact(...)` for values the
+application already knows, a narrow `CustomRule` regex for domain identifiers,
+or a dedicated NER layer for unknown semantic entities.
 
 ## Can I unmask values later?
 
-No. v0.1 has no reversible vault and no unmasking API. This is intentional: the
+No. pyveil has no reversible vault and no unmasking API. This is intentional: the
 default design avoids storing raw sensitive values.
 
 ## Does pyveil call external services?

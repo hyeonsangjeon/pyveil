@@ -1,4 +1,7 @@
+import io
 import json
+
+import pytest
 
 from pyveil.cli import main
 
@@ -120,3 +123,46 @@ def test_cli_scope_changes_placeholder(tmp_path, capsys):
     assert first.out != second.out
     assert "alice@example.com" not in first.out
     assert "alice@example.com" not in second.out
+
+
+def test_cli_dash_reads_stdin(capsys, monkeypatch):
+    monkeypatch.setattr("sys.stdin", io.StringIO("email alice@example.com"))
+
+    exit_code = main(["redact", "-", "--secret", "test-secret"])
+
+    captured = capsys.readouterr()
+    assert exit_code == 0
+    assert "alice@example.com" not in captured.out
+    assert "[EMAIL:" in captured.out
+
+
+def test_cli_demo_runs_without_secret(capsys, monkeypatch):
+    monkeypatch.delenv("PYVEIL_SECRET", raising=False)
+
+    exit_code = main(["demo"])
+
+    captured = capsys.readouterr()
+    assert exit_code == 0
+    assert "before: Email alice@example.com" in captured.out
+    assert "after:  Email [EMAIL:" in captured.out
+    assert "API_KEY" in captured.out
+
+
+def test_cli_demo_json_is_machine_readable(capsys):
+    exit_code = main(["demo", "--format", "json"])
+
+    captured = capsys.readouterr()
+    payload = json.loads(captured.out)
+    assert exit_code == 0
+    assert payload["before"].startswith("Email alice@example.com")
+    assert "alice@example.com" not in payload["after"]
+    assert payload["counts_by_type"] == {"API_KEY": 1, "EMAIL": 1, "PHONE": 1}
+
+
+def test_cli_reports_package_version(capsys):
+    with pytest.raises(SystemExit) as exc_info:
+        main(["--version"])
+
+    captured = capsys.readouterr()
+    assert exc_info.value.code == 0
+    assert captured.out == "pyveil 0.2.0\n"

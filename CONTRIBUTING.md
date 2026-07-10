@@ -13,7 +13,7 @@ one of these areas:
 - documentation that helps agents and humans integrate pyveil safely
 - tests that prove raw sensitive values do not leak by default
 
-Out of scope for core v0.1:
+Out of scope for the dependency-free core:
 
 - broad semantic name/address detection
 - compliance guarantees

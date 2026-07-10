@@ -2,7 +2,7 @@
 
 import json
 import os
-from typing import Any, Iterable, List, Optional, Tuple
+from typing import Any, Iterable, List, Optional, Sequence, Tuple
 
 from .constants import ChannelLike, normalize_channel
 from .detectors import DetectedValue, detect_text, entity_for_key, is_sensitive_key
@@ -12,11 +12,12 @@ from .levels import Action, Level
 from .masking import mask_value
 from .placeholders import Secret, normalize_secret, placeholder
 from .policy import Policy
+from .rules import CustomRule
 from .utils import json_pointer, looks_like_json, safe_string, stats_counts
 
 
 class Veil:
-    """Agent-native redaction facade.
+    """Boundary-aware redaction facade for LLM and agent applications.
 
     ``policy`` takes precedence over ``level`` when both are supplied.
     Build one ``Veil`` per tenant, session, or run and reuse it in tight loops.
@@ -30,6 +31,7 @@ class Veil:
         policy: Optional[Policy] = None,
         placeholder_length: int = 12,
         max_input_chars: Optional[int] = 1_000_000,
+        rules: Sequence[CustomRule] = (),
     ) -> None:
         if secret is None:
             raise ValueError("secret is required for stable HMAC placeholders")
@@ -38,6 +40,9 @@ class Veil:
         self.policy = policy or Policy(default_level=level)
         self.placeholder_length = placeholder_length
         self.max_input_chars = max_input_chars
+        self.rules = tuple(rules)
+        if not all(isinstance(rule, CustomRule) for rule in self.rules):
+            raise TypeError("rules must contain CustomRule instances")
 
     @classmethod
     def high(
@@ -46,6 +51,7 @@ class Veil:
         scope: str = "default",
         policy: Optional[Policy] = None,
         max_input_chars: Optional[int] = 1_000_000,
+        rules: Sequence[CustomRule] = (),
     ) -> "Veil":
         """Create a HIGH redactor for agent/model/tool boundaries."""
 
@@ -55,6 +61,7 @@ class Veil:
             scope=scope,
             policy=policy,
             max_input_chars=max_input_chars,
+            rules=rules,
         )
 
     @classmethod
@@ -64,6 +71,7 @@ class Veil:
         scope: str = "default",
         policy: Optional[Policy] = None,
         max_input_chars: Optional[int] = 1_000_000,
+        rules: Sequence[CustomRule] = (),
     ) -> "Veil":
         """Create a LOW redactor for human-facing diagnostic previews."""
 
@@ -73,6 +81,7 @@ class Veil:
             scope=scope,
             policy=policy or Policy.default_low(),
             max_input_chars=max_input_chars,
+            rules=rules,
         )
 
     def redact_text(self, text: str, channel: ChannelLike = "prompt.input") -> RedactionResult:
@@ -87,7 +96,9 @@ class Veil:
             raise BlockedSensitiveData(channel_value, blocked)
         return self._result(redacted, findings)
 
-    def redact_data(self, data: Any, channel: ChannelLike = "tool.call.arguments") -> RedactionResult:
+    def redact_data(
+        self, data: Any, channel: ChannelLike = "tool.call.arguments"
+    ) -> RedactionResult:
         """Redact sensitive values in dict/list data or JSON strings."""
 
         channel_value = normalize_channel(channel)
@@ -107,7 +118,9 @@ class Veil:
 
         findings: List[Finding] = []
         blocked: List[Finding] = []
-        redacted = self._redact_node(value, channel=channel_value, path=(), findings=findings, blocked=blocked)
+        redacted = self._redact_node(
+            value, channel=channel_value, path=(), findings=findings, blocked=blocked
+        )
         if blocked:
             raise BlockedSensitiveData(channel_value, blocked)
         if original_was_json:
@@ -128,7 +141,12 @@ class Veil:
                 child_path = path + (key,)
                 if is_sensitive_key(key):
                     redacted_mapping[key] = self._redact_keyed_value(
-                        key, child, channel=channel, path=child_path, findings=findings, blocked=blocked
+                        key,
+                        child,
+                        channel=channel,
+                        path=child_path,
+                        findings=findings,
+                        blocked=blocked,
                     )
                 else:
                     redacted_mapping[key] = self._redact_node(
@@ -137,12 +155,16 @@ class Veil:
             return redacted_mapping
         if isinstance(value, list):
             return [
-                self._redact_node(item, channel=channel, path=path + (index,), findings=findings, blocked=blocked)
+                self._redact_node(
+                    item, channel=channel, path=path + (index,), findings=findings, blocked=blocked
+                )
                 for index, item in enumerate(value)
             ]
         if isinstance(value, tuple):
             return tuple(
-                self._redact_node(item, channel=channel, path=path + (index,), findings=findings, blocked=blocked)
+                self._redact_node(
+                    item, channel=channel, path=path + (index,), findings=findings, blocked=blocked
+                )
                 for index, item in enumerate(value)
             )
         if isinstance(value, str):
@@ -165,7 +187,9 @@ class Veil:
     ) -> Any:
         if not isinstance(value, str):
             if isinstance(value, (dict, list, tuple)):
-                return self._redact_node(value, channel=channel, path=path, findings=findings, blocked=blocked)
+                return self._redact_node(
+                    value, channel=channel, path=path, findings=findings, blocked=blocked
+                )
             return value
         entity_type = entity_for_key(key, value)
         source = safe_string(value)
@@ -204,8 +228,10 @@ class Veil:
         replacements = []
         findings: List[Finding] = []
         blocked: List[Finding] = []
-        for detected in detect_text(text):
-            finding, replacement = self._finding_and_replacement(detected, text, channel=channel, path=path)
+        for detected in detect_text(text, rules=self.rules):
+            finding, replacement = self._finding_and_replacement(
+                detected, text, channel=channel, path=path
+            )
             findings.append(finding)
             action = self.policy.action_for(channel, detected.type)
             if action == Action.BLOCK:
@@ -282,6 +308,7 @@ def redact_text(
     policy: Optional[Policy] = None,
     placeholder_length: int = 12,
     max_input_chars: Optional[int] = 1_000_000,
+    rules: Sequence[CustomRule] = (),
 ) -> RedactionResult:
     """Redact text with a one-shot ``Veil`` instance.
 
@@ -295,6 +322,7 @@ def redact_text(
         policy=policy,
         placeholder_length=placeholder_length,
         max_input_chars=max_input_chars,
+        rules=rules,
     )
     return veil.redact_text(text, channel=channel)
 
@@ -309,6 +337,7 @@ def redact_data(
     policy: Optional[Policy] = None,
     placeholder_length: int = 12,
     max_input_chars: Optional[int] = 1_000_000,
+    rules: Sequence[CustomRule] = (),
 ) -> RedactionResult:
     """Redact structured data with a one-shot ``Veil`` instance.
 
@@ -322,6 +351,7 @@ def redact_data(
         policy=policy,
         placeholder_length=placeholder_length,
         max_input_chars=max_input_chars,
+        rules=rules,
     )
     return veil.redact_data(data, channel=channel)
 
@@ -334,6 +364,7 @@ def _one_shot_veil(
     policy: Optional[Policy],
     placeholder_length: int,
     max_input_chars: Optional[int],
+    rules: Sequence[CustomRule],
 ) -> Veil:
     resolved_secret = secret or os.environ.get("PYVEIL_SECRET")
     if resolved_secret is None:
@@ -345,4 +376,5 @@ def _one_shot_veil(
         policy=policy,
         placeholder_length=placeholder_length,
         max_input_chars=max_input_chars,
+        rules=rules,
     )

@@ -222,7 +222,7 @@
 
     .code {
       font-family: "SF Mono", SFMono-Regular, Menlo, Monaco, Consolas, monospace;
-      font-size: 24px;
+      font-size: 20px;
       line-height: 1.44;
       color: #dfe7f2;
       white-space: pre;
@@ -336,16 +336,16 @@
           <div class="name">py<span>veil</span></div>
         </div>
         <div class="hero">
-          <h1 class="headline">AI agents do not need your <strong>secrets</strong>.</h1>
-          <p class="subhead">Redact prompts, tool calls, MCP resources, memory, logs, and traces before context crosses the boundary.</p>
+          <h1 class="headline">Keep <strong>PII and secrets</strong> out of AI agents.</h1>
+          <p class="subhead">Local Python redaction for LLM prompts, tools, MCP, memory, logs, and traces.</p>
         </div>
       </div>
 
       <div class="badges" aria-label="package facts">
         <div class="badge">Python 3.8-3.14</div>
         <div class="badge">zero core deps</div>
-        <div class="badge">typed</div>
-        <div class="badge">agent-native</div>
+        <div class="badge">scoped HMAC</div>
+        <div class="badge">LLM + MCP</div>
       </div>
     </section>
 
@@ -356,8 +356,8 @@
           <span class="tiny">before pyveil</span>
         </div>
         <div class="code">email: <span class="secret">alice@example.com</span>
-auth:  <span class="secret">Bearer sk-demo-...</span>
-card:  <span class="secret">4242 4242 4242 4242</span></div>
+auth:  <span class="secret">Authorization: Bearer demo...</span>
+cc:    <span class="secret">4242 4242 4242 4242</span></div>
       </div>
 
       <div class="pipe" aria-hidden="true">
@@ -373,14 +373,14 @@ card:  <span class="secret">4242 4242 4242 4242</span></div>
           <span class="tiny">after pyveil</span>
         </div>
         <div class="code">email: <span class="placeholder">[EMAIL:b4df46a892c9]</span>
-auth:  <span class="placeholder">BLOCKED</span>
-card:  <span class="placeholder">[CARD:91ae7c02d4b8]</span></div>
+auth:  <span class="placeholder">[AUTH_HEADER:8c42d99f7a10]</span>
+cc:    <span class="placeholder">[CREDIT_CARD:91ae7c02d4b8]</span></div>
       </div>
     </section>
   </main>
 
   <footer class="footer">
-    <div>Deterministic placeholders. No unmasking API in v0.1.</div>
+    <div>Scoped HMAC placeholders. Raw values never enter findings.</div>
     <div class="channels" aria-label="channels">
       <span class="channel">prompt.input</span>
       <span class="channel">tool.call</span>

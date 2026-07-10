@@ -3,8 +3,32 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>pyveil - agent-native redaction middleware</title>
-  <meta name="description" content="pyveil redacts secrets before AI agents, tools, MCP resources, memory, logs, and traces see them.">
+  <title>pyveil - Python PII and secret redaction for LLM apps and AI agents</title>
+  <meta name="description" content="Dependency-free Python middleware that redacts PII, API keys, tokens, and known sensitive values before LLM prompts, tool calls, MCP, memory, logs, and traces.">
+  <meta name="keywords" content="Python PII redaction, LLM privacy, AI agent security, secret redaction, MCP security, tool call guardrail">
+  <link rel="canonical" href="https://hyeonsangjeon.github.io/pyveil/">
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="pyveil - PII and secret redaction for Python AI agents">
+  <meta property="og:description" content="Local, dependency-free redaction before LLM prompts, tool calls, MCP, memory, logs, and traces.">
+  <meta property="og:url" content="https://hyeonsangjeon.github.io/pyveil/">
+  <meta property="og:image" content="https://hyeonsangjeon.github.io/pyveil/media/social-preview.png">
+  <meta name="twitter:card" content="summary_large_image">
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "SoftwareApplication",
+    "name": "pyveil",
+    "applicationCategory": "DeveloperApplication",
+    "operatingSystem": "Any",
+    "softwareVersion": "0.2.0",
+    "programmingLanguage": "Python",
+    "description": "Local PII and secret redaction for Python LLM apps and AI agents.",
+    "url": "https://hyeonsangjeon.github.io/pyveil/",
+    "downloadUrl": "https://pypi.org/project/pyveil/",
+    "codeRepository": "https://github.com/hyeonsangjeon/pyveil",
+    "license": "https://opensource.org/license/mit"
+  }
+  </script>
   <style>
     :root {
       color-scheme: dark;
@@ -294,11 +318,11 @@
       </div>
     </nav>
     <div class="hero-inner">
-      <h1>Redact <strong>secrets</strong> before AI agents see them.</h1>
-      <p class="lead">Middleware for prompts, tools, MCP, memory, logs, and traces.</p>
+      <h1><strong>PII and secret redaction</strong> for Python AI agents.</h1>
+      <p class="lead">Local, dependency-free middleware for LLM prompts, tools, MCP, memory, logs, and traces.</p>
       <div class="actions">
-        <a class="button primary" href="manual.html">Read the manual</a>
-        <a class="button" href="manual.html#quickstart">Quickstart</a>
+        <a class="button primary" href="manual.html#quickstart">Start in 30 seconds</a>
+        <a class="button" href="manual.html">Read the manual</a>
         <a class="button" href="manual.html#install">Install</a>
       </div>
     </div>
@@ -306,7 +330,7 @@
 
   <main>
     <section class="section">
-      <h2>Boundary-first redaction</h2>
+      <h2>See exactly what the model receives</h2>
       <div class="code-row">
         <pre><code>from pyveil import Channel, Veil
 
@@ -337,6 +361,11 @@ API key [API_KEY:38ded98a17e7]</code></pre>
         <a class="recipe" href="manual.html#recipes">
           <h3>LLM client wrapper</h3>
           <p>Redact OpenAI, Azure OpenAI, Anthropic, Gemini, LiteLLM, or internal gateway messages before provider calls.</p>
+          <span class="more">Read &rarr;</span>
+        </a>
+        <a class="recipe" href="manual.html#custom-rules">
+          <h3>Known names and domain IDs</h3>
+          <p>Redact values your application already knows plus narrow customer, account, or project identifier patterns.</p>
           <span class="more">Read &rarr;</span>
         </a>
         <a class="recipe" href="manual.html#policy">
