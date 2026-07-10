@@ -25,6 +25,8 @@ Discovery and production-adoption release.
 
 - Restored the GitHub Actions quality gate by removing an unused example
   import that caused Ruff to fail while all Python test jobs passed.
+- Updated checkout and Python setup actions to their Node 24 releases, removing
+  GitHub's Node 20 deprecation annotations.
 
 ## 0.1.2 - 2026-06-28
 
