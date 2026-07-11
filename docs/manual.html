@@ -7,12 +7,19 @@
   <meta name="description" content="Use pyveil to redact PII, API keys, tokens, and known sensitive values before Python LLM apps, AI agents, tool calls, and MCP resources see them.">
   <meta name="keywords" content="Python PII redaction, LLM privacy, AI agent security, secret redaction, MCP security, tool call guardrail">
   <link rel="canonical" href="https://hyeonsangjeon.github.io/pyveil/manual.html">
+  <link rel="icon" href="media/favicon.svg" type="image/svg+xml">
+  <link rel="sitemap" href="sitemap.xml" type="application/xml">
+  <link rel="alternate" href="llms.txt" type="text/plain" title="LLM-readable documentation">
   <meta property="og:type" content="website">
+  <meta property="og:site_name" content="pyveil">
   <meta property="og:title" content="pyveil manual - PII and secret redaction for AI agents">
   <meta property="og:description" content="Dependency-free Python redaction for LLM prompts, tool calls, MCP, memory, logs, and traces.">
   <meta property="og:url" content="https://hyeonsangjeon.github.io/pyveil/manual.html">
   <meta property="og:image" content="https://hyeonsangjeon.github.io/pyveil/media/social-preview.png">
   <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="pyveil manual - PII and secret redaction for AI agents">
+  <meta name="twitter:description" content="Install, concepts, API, recipes, CLI, integrations, detectors, and safety boundaries.">
+  <meta name="twitter:image" content="https://hyeonsangjeon.github.io/pyveil/media/social-preview.png">
   <style>
     :root {
       color-scheme: dark;
@@ -385,6 +392,7 @@
     </div>
     <nav class="top-links" aria-label="External">
       <a class="hide-sm" href="./">Home</a>
+      <a class="hide-sm" href="guides/">Guides</a>
       <a href="https://pypi.org/project/pyveil/" target="_blank" rel="noopener">PyPI</a>
       <a class="cta" href="https://github.com/hyeonsangjeon/pyveil" target="_blank" rel="noopener">GitHub</a>
     </nav>
@@ -474,7 +482,7 @@
         <p>Install the latest <code>main</code> directly from GitHub:</p>
         <pre><code>pip install "git+https://github.com/hyeonsangjeon/pyveil.git"</code></pre>
         <p>Pin to a released tag for reproducible builds:</p>
-        <pre><code>pip install "git+https://github.com/hyeonsangjeon/pyveil.git@v0.2.0"</code></pre>
+        <pre><code>pip install "git+https://github.com/hyeonsangjeon/pyveil.git@v0.2.1"</code></pre>
 
         <h3>For development (editable clone)</h3>
         <pre><code>git clone https://github.com/hyeonsangjeon/pyveil.git
@@ -572,6 +580,7 @@ print(safe.text)
             <tr><td><code>log.record</code></td><td><code>Channel.LOG_RECORD</code></td><td>Application logs before handlers or sinks</td></tr>
           </tbody>
         </table>
+
         <p>Defaults: <code>redact_text</code> uses <code>prompt.input</code> and <code>redact_data</code> uses
         <code>tool.call.arguments</code>.</p>
       </section>
@@ -917,10 +926,16 @@ pyveil redact request.json --channel tool.call.result --format json &gt; request
             <tr><td><code>pyveil demo</code></td><td>Run a synthetic before/after demo without configuration.</td></tr>
             <tr><td><code>pyveil redact [PATH]</code></td><td>Redact a file or stdin. <code>--channel</code>, <code>--level low|high</code>, <code>--format text|json</code>.</td></tr>
             <tr><td><code>pyveil scan [PATH]</code></td><td>Detect and emit findings + stats as JSON (no raw values).</td></tr>
-            <tr><td><code>pyveil init [PATH]</code></td><td>Write a starter <code>pyveil.yaml</code> config (default path <code>pyveil.yaml</code>).</td></tr>
-            <tr><td><code>pyveil test-config [PATH]</code></td><td>Validate the shape of a <code>pyveil.yaml</code>.</td></tr>
+            <tr><td><code>pyveil init [PATH]</code></td><td>Write a reference <code>pyveil.yaml</code> schema (default path <code>pyveil.yaml</code>).</td></tr>
+            <tr><td><code>pyveil test-config [PATH]</code></td><td>Validate the required sections of the reference schema.</td></tr>
           </tbody>
         </table>
+
+        <div class="callout warn">
+          <p><span class="c-label">YAML loading</span></p>
+          <p>Version 0.2.x runtime commands use CLI flags and <code>PYVEIL_*</code> environment variables. They do
+          not automatically load <code>pyveil.yaml</code>; the generated file is a review and validation schema.</p>
+        </div>
 
         <pre><code><span class="tok-cmt"># set credentials once</span>
 export PYVEIL_SECRET="tenant-or-run-secret"
@@ -1102,6 +1117,7 @@ safe_resource = redact_resource(raw_resource, veil)         <span class="tok-cmt
             <tr><td>Email</td><td><code>alice@example.com</code></td><td><code>[EMAIL:c2c2a4d06bfa]</code></td><td><code>al***@e******.com</code></td></tr>
             <tr><td>Korean mobile</td><td><code>010-1234-5678</code></td><td><code>[PHONE:3b2b3e0e6c51]</code></td><td><code>010-****-5678</code></td></tr>
             <tr><td>International phone</td><td><code>+1 415 555 0199</code></td><td><code>[PHONE:018e583b4e44]</code></td><td><code>+1 415 *** 0199</code></td></tr>
+            <tr><td>Compact E.164 phone</td><td><code>+14155550199</code></td><td><code>[PHONE:7a882142329e]</code></td><td><code>+1415***0199</code></td></tr>
             <tr><td>Credit card (Luhn)</td><td><code>4242 4242 4242 4242</code></td><td><code>[CREDIT_CARD:630b6f1dd4d6]</code></td><td><code>**** **** **** 4242</code></td></tr>
             <tr><td>JWT</td><td><code>eyJ...</code></td><td><code>[JWT:7353c165390b]</code></td><td><code>[JWT]</code></td></tr>
             <tr><td>Auth header</td><td><code>Authorization: Bearer ...</code></td><td><code>[AUTH_HEADER:01c75f477708]</code></td><td><code>[AUTH_HEADER]</code></td></tr>
@@ -1111,6 +1127,13 @@ safe_resource = redact_resource(raw_resource, veil)         <span class="tok-cmt
             <tr><td>Key-value secret</td><td><code>password=...</code></td><td><code>password=[KV_SECRET:e114522dc1d3]</code></td><td><code>password=[KV_SECRET]</code></td></tr>
           </tbody>
         </table>
+
+        <p>Free-text authorization headers recognize the common <code>Bearer</code>, <code>Basic</code>,
+        <code>Token</code>, and <code>ApiKey</code> schemes. Phone detection covers common Korean, separated
+        international, and compact E.164 shapes; it is not a country-aware phone-number parser.</p>
+
+        <p>See the <a href="evaluation.html">reproducible synthetic detector evaluation</a> for the public corpus,
+        exact CI pass criteria, current supported-shape results, and limitations.</p>
 
         <h3>What is intentionally not detected</h3>
         <p>Core does not broadly discover personal names, postal addresses, or arbitrary domain-specific identifiers
@@ -1163,6 +1186,8 @@ safe_resource = redact_resource(raw_resource, veil)         <span class="tok-cmt
           guarantee or DLP replacement. &nbsp;&middot;&nbsp;
           <a href="https://github.com/hyeonsangjeon/pyveil">GitHub</a> &middot;
           <a href="https://pypi.org/project/pyveil/">PyPI</a> &middot;
+          <a href="guides/">Guides</a> &middot;
+          <a href="evaluation.html">Evaluation</a> &middot;
           <a href="cookbook.md">Cookbook</a> &middot;
           <a href="redaction-reference.md">Reference</a></p>
         </div>

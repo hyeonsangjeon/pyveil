@@ -26,6 +26,9 @@ jobs:
       - name: Typecheck
         run: python -m mypy pyveil tests
 
+      - name: Run synthetic detector evaluation
+        run: python evaluation/evaluate.py --check
+
       - name: Build package
         run: python -m build
 

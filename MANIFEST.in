@@ -11,12 +11,15 @@ include pyveil.yaml
 # Include examples
 recursive-include examples *.py
 
+# Include reproducible evaluation
+recursive-include evaluation *.py *.json *.md
+
 # Include tests
 recursive-include tests *.py
 
 # Include docs
 recursive-include docs *.md
-recursive-include docs *.html *.xml *.txt
+recursive-include docs *.html *.xml *.txt *.css *.svg
 recursive-include docs/media *.gif *.png
 
 # Exclude unnecessary files

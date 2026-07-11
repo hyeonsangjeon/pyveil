@@ -14,7 +14,9 @@ This roadmap is directional, not a compatibility promise.
 - Stabilize the `CustomRule` API for exact known values and domain identifiers.
 - Improve CLI and provider-neutral adoption paths without adding core
   dependencies.
-- Add reproducible detector and latency evaluation fixtures.
+- Maintain and expand the reproducible synthetic detector evaluation corpus.
+- Publish machine-dependent latency diagnostics without presenting them as an
+  SLA.
 
 ## Future Candidates
 

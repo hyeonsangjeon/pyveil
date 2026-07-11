@@ -1,5 +1,7 @@
 import io
 import json
+import subprocess
+import sys
 
 import pytest
 
@@ -165,4 +167,18 @@ def test_cli_reports_package_version(capsys):
 
     captured = capsys.readouterr()
     assert exc_info.value.code == 0
-    assert captured.out == "pyveil 0.2.0\n"
+    assert captured.out == "pyveil 0.2.1\n"
+
+
+def test_python_module_entrypoint_runs_demo():
+    completed = subprocess.run(
+        [sys.executable, "-m", "pyveil", "demo", "--format", "json"],
+        check=False,
+        capture_output=True,
+        text=True,
+    )
+
+    assert completed.returncode == 0
+    payload = json.loads(completed.stdout)
+    assert payload["counts_by_type"] == {"API_KEY": 1, "EMAIL": 1, "PHONE": 1}
+    assert completed.stderr == ""

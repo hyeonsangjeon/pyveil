@@ -16,8 +16,9 @@ Do not turn pyveil into a general DLP suite, gateway, Presidio clone, or prompt-
 - Run typecheck: `uv run --extra dev mypy pyveil tests`
 - Build package: `uv run --with build python -m build`
 - Check package: `uv run --with twine python -m twine check dist/*`
-- Run CLI demo: `python3 -m pyveil.cli demo`
-- Run CLI locally: `PYVEIL_SECRET=dev-secret python3 -m pyveil.cli redact <file>`
+- Run CLI demo: `python3 -m pyveil demo`
+- Run CLI locally: `PYVEIL_SECRET=dev-secret python3 -m pyveil redact <file>`
+- Run detector evaluation: `python3 evaluation/evaluate.py --check`
 
 ## Architecture
 
@@ -68,6 +69,8 @@ This repository includes files meant for coding agents and LLM readers:
 - [docs/detector-provenance.md](docs/detector-provenance.md)
 - [docs/roadmap.md](docs/roadmap.md)
 - [docs/release-checklist.md](docs/release-checklist.md)
+- [docs/evaluation.html](docs/evaluation.html)
+- [docs/guides/](docs/guides/)
 - [docs/integrations/mcp.md](docs/integrations/mcp.md)
 - [docs/integrations/logging.md](docs/integrations/logging.md)
 - [docs/integrations/tracing.md](docs/integrations/tracing.md)

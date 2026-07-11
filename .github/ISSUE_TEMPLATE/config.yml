@@ -1,5 +1,8 @@
 blank_issues_enabled: true
 contact_links:
+  - name: Integration questions and support
+    url: https://github.com/hyeonsangjeon/pyveil/discussions/categories/q-a
+    about: Ask how to place pyveil around prompts, tools, MCP, memory, logs, or traces.
   - name: Security report
     url: https://github.com/hyeonsangjeon/pyveil/security/advisories/new
     about: Please report vulnerabilities privately through GitHub Security Advisories.

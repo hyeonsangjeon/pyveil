@@ -10,14 +10,18 @@
   <a href="https://www.python.org/"><img alt="Python 3.8 to 3.14" src="https://img.shields.io/badge/python-3.8%20to%203.14-3776AB?style=flat-square"></a>
   <img alt="Zero core dependencies" src="https://img.shields.io/badge/core%20dependencies-zero-111827?style=flat-square">
   <img alt="Typed package" src="https://img.shields.io/badge/typed-py.typed-7C3AED?style=flat-square">
+  <a href="https://hyeonsangjeon.github.io/pyveil/evaluation.html"><img alt="Synthetic evaluation: 39 cases passing" src="https://img.shields.io/badge/synthetic%20evaluation-39%20cases%20passing-4ade80?style=flat-square"></a>
   <a href="LICENSE"><img alt="MIT license" src="https://img.shields.io/badge/license-MIT-green?style=flat-square"></a>
 </p>
 
 <p align="center">
   <a href="https://hyeonsangjeon.github.io/pyveil/manual.html">Documentation</a> &middot;
+  <a href="https://hyeonsangjeon.github.io/pyveil/guides/">Guides</a> &middot;
+  <a href="https://hyeonsangjeon.github.io/pyveil/evaluation.html">Evaluation</a> &middot;
   <a href="https://pypi.org/project/pyveil/">PyPI</a> &middot;
   <a href="https://github.com/hyeonsangjeon/pyveil/blob/main/docs/cookbook.md">Cookbook</a> &middot;
   <a href="https://github.com/hyeonsangjeon/pyveil/blob/main/docs/redaction-reference.md">Detection reference</a> &middot;
+  <a href="https://github.com/hyeonsangjeon/pyveil/discussions">Support</a> &middot;
   <a href="https://github.com/hyeonsangjeon/pyveil/security">Security</a>
 </p>
 
@@ -38,6 +42,7 @@ No network calls. No reversible vault. No raw values in findings by default.
 ```bash
 pip install pyveil
 pyveil demo
+# or: python -m pyveil demo
 ```
 
 Or run the synthetic demo in an isolated environment:
@@ -94,6 +99,25 @@ replaced before serialization or transmission.
 | Stop credentials in tool calls | Auth headers, private keys, API keys, JWTs, and tokens block by default |
 | Cover app-specific data | Exact known-value and trusted custom-regex rules |
 | Audit without leaking | Findings contain type, rule, path, placeholder, and fingerprint, not raw values |
+| Verify supported behavior | Public 39-case synthetic regression corpus, evaluator, and CI gate |
+
+## Reproducible Evidence
+
+The repository ships a public synthetic detector corpus and a standard-library
+evaluator:
+
+```bash
+python evaluation/evaluate.py --check
+```
+
+For corpus v1, pyveil 0.2.1 matches all 36 expected findings across 39 cases
+(33 positive, 6 negative), with no corpus false positives, false negatives,
+labeled-value leaks, or non-empty `Finding.raw` values.
+
+These numbers describe documented supported shapes only. They are **not** a
+real-world PII recall benchmark and do not cover unknown names, addresses,
+languages, documents, or images. Read the
+[methodology and limits](https://hyeonsangjeon.github.io/pyveil/evaluation.html).
 
 ## Known Names And Domain IDs
 
@@ -154,7 +178,7 @@ Core detection is intentionally conservative and high precision:
 | Type | Examples | HIGH output |
 | --- | --- | --- |
 | `EMAIL` | Email addresses | `[EMAIL:12hex]` |
-| `PHONE` | Korean and international-ish phone numbers | `[PHONE:12hex]` |
+| `PHONE` | Korean, separated international, and compact E.164 phone shapes | `[PHONE:12hex]` |
 | `CREDIT_CARD` | Card numbers that pass Luhn validation | `[CREDIT_CARD:12hex]` |
 | `JWT` | Compact JSON Web Tokens | `[JWT:12hex]` |
 | `AUTH_HEADER` | Bearer and Basic authorization headers | `[AUTH_HEADER:12hex]` |
@@ -249,6 +273,7 @@ Choose an enterprise DLP product when you need managed policy, document/image
 coverage, incident workflows, or compliance reporting.
 
 These tools can be layered. `pyveil` does not claim perfect recall.
+See the full [pyveil vs Presidio, NER, guardrails, and DLP decision guide](https://hyeonsangjeon.github.io/pyveil/guides/pyveil-vs-presidio.html).
 
 ## Safety Contract
 
@@ -269,10 +294,14 @@ before production use.
 ## Guides
 
 - [Complete manual](https://hyeonsangjeon.github.io/pyveil/manual.html)
+- [Python LLM PII redaction guide](https://hyeonsangjeon.github.io/pyveil/guides/python-llm-pii-redaction.html)
+- [MCP PII redaction guide](https://hyeonsangjeon.github.io/pyveil/guides/mcp-pii-redaction.html)
+- [pyveil vs Presidio / NER / DLP](https://hyeonsangjeon.github.io/pyveil/guides/pyveil-vs-presidio.html)
+- [Reproducible detector evaluation](https://hyeonsangjeon.github.io/pyveil/evaluation.html)
 - [English video guide](https://github.com/hyeonsangjeon/pyveil/releases/download/v0.1.2/pyveil-usage-guide-en.mp4)
 - [Korean video guide](https://github.com/hyeonsangjeon/pyveil/releases/download/v0.1.2/pyveil-usage-guide-ko.mp4)
 - [AGENTS.md](https://github.com/hyeonsangjeon/pyveil/blob/main/AGENTS.md) for coding agents
-- [llms.txt](https://github.com/hyeonsangjeon/pyveil/blob/main/llms.txt) for LLM-readable navigation
+- [llms.txt](https://hyeonsangjeon.github.io/pyveil/llms.txt) for LLM-readable navigation
 - [Contributing](https://github.com/hyeonsangjeon/pyveil/blob/main/CONTRIBUTING.md)
 
 ## Development
@@ -281,6 +310,7 @@ before production use.
 uv run --extra dev ruff check .
 uv run --extra dev mypy pyveil tests
 uv run --extra test pytest
+uv run --extra test python evaluation/evaluate.py --check
 ```
 
 CI runs the test suite on Python `3.8` through `3.14`. The core remains typed,

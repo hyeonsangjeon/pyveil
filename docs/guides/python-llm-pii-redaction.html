@@ -1,0 +1,219 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Python LLM PII redaction: protect prompts and tools | pyveil</title>
+  <meta name="description" content="A practical Python tutorial for redacting PII, API keys, tokens, and known sensitive values before LLM prompts, AI agent tool calls, memory, and logs.">
+  <link rel="canonical" href="https://hyeonsangjeon.github.io/pyveil/guides/python-llm-pii-redaction.html">
+  <link rel="icon" href="../media/favicon.svg" type="image/svg+xml">
+  <link rel="sitemap" href="../sitemap.xml" type="application/xml">
+  <link rel="alternate" href="../llms.txt" type="text/plain" title="LLM-readable documentation">
+  <meta property="og:type" content="article">
+  <meta property="og:site_name" content="pyveil">
+  <meta property="og:title" content="Python LLM PII redaction: a boundary-first guide">
+  <meta property="og:description" content="Copy-paste Python patterns for redacting sensitive data before models and AI agent tools see it.">
+  <meta property="og:url" content="https://hyeonsangjeon.github.io/pyveil/guides/python-llm-pii-redaction.html">
+  <meta property="og:image" content="https://hyeonsangjeon.github.io/pyveil/media/social-preview.png">
+  <meta name="twitter:card" content="summary_large_image">
+  <link rel="stylesheet" href="style.css">
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "TechArticle",
+    "headline": "Python LLM PII redaction: protect prompts, tools, memory, and logs",
+    "description": "A practical boundary-first tutorial for local PII and secret redaction in Python LLM applications.",
+    "datePublished": "2026-07-11",
+    "dateModified": "2026-07-11",
+    "author": {"@type": "Person", "name": "Hyeon Sang Jeon", "url": "https://github.com/hyeonsangjeon"},
+    "publisher": {"@type": "Organization", "name": "pyveil"},
+    "mainEntityOfPage": "https://hyeonsangjeon.github.io/pyveil/guides/python-llm-pii-redaction.html",
+    "about": ["Python", "PII redaction", "large language models", "AI agents", "data privacy"]
+  }
+  </script>
+</head>
+<body>
+  <header class="topbar">
+    <a class="brand" href="../">py<span>veil</span></a>
+    <nav class="nav" aria-label="Primary">
+      <a class="active" href="./">Guides</a>
+      <a href="../manual.html">Manual</a>
+      <a href="../evaluation.html">Evaluation</a>
+      <a href="https://github.com/hyeonsangjeon/pyveil">GitHub</a>
+      <a href="https://pypi.org/project/pyveil/">PyPI</a>
+    </nav>
+  </header>
+
+  <div class="hero">
+    <div class="shell">
+      <p class="eyebrow">Python LLM security guide</p>
+      <h1>PII redaction for Python LLM apps: <strong>protect the boundary</strong>.</h1>
+      <p class="lede">Redact high-confidence PII and credentials before a prompt, tool call, tool result, memory write, log, or trace leaves your application.</p>
+      <p class="meta">Published July 11, 2026 &middot; Uses pyveil 0.2.1 &middot; Synthetic examples only</p>
+    </div>
+  </div>
+
+  <main class="shell">
+    <article>
+      <nav class="toc" aria-label="On this page">
+        <a href="#problem">The problem</a>
+        <a href="#install">Install</a>
+        <a href="#prompt">Prompt boundary</a>
+        <a href="#structured">Structured data</a>
+        <a href="#tools">Tool calls</a>
+        <a href="#async">Async apps</a>
+        <a href="#test">Test it</a>
+        <a href="#limits">Limits</a>
+      </nav>
+
+      <section id="problem">
+        <h2>Redact before the provider call, not after</h2>
+        <p>Once an LLM provider or model-controlled tool receives raw data, application-side masking is too late. The useful control point is the last local boundary where your code still owns the payload.</p>
+        <div class="flow">
+          <span class="node">user / RAG / database</span>
+          <span class="arrow">&rarr;</span>
+          <span class="node veil">local redaction</span>
+          <span class="arrow">&rarr;</span>
+          <span class="node safe">LLM provider</span>
+        </div>
+        <p>pyveil keeps the operation local and replaces supported values with scoped HMAC placeholders such as <code>[EMAIL:12hex]</code>. Stable placeholders let the model refer to the same hidden value during a run without receiving the original value.</p>
+      </section>
+
+      <section id="install">
+        <h2>Install and prove it works</h2>
+        <pre><code>pip install pyveil
+python -m pyveil demo</code></pre>
+        <p>The demo uses synthetic values and needs no secret. Application redaction does require your own HMAC secret so placeholders cannot be correlated by an unknown global key.</p>
+      </section>
+
+      <section id="prompt">
+        <h2>Protect a provider-neutral LLM call</h2>
+        <pre><code>from pyveil import Channel, Veil
+
+veil = Veil.high(
+    secret=b"tenant-or-run-secret",
+    scope="tenant-123/session-456",
+)
+
+messages = [
+    {
+        "role": "user",
+        "content": "Email alice@example.com about account CUS-A1B2C3D4.",
+    }
+]
+
+safe = veil.redact_data(messages, channel=Channel.PROMPT_INPUT)
+response = call_llm(safe.data)  <span class="comment"># OpenAI, Anthropic, Gemini, or your gateway</span></code></pre>
+        <p>The list and dictionary shape is preserved. Only sensitive string values change. Use a <code>CustomRule</code> for identifiers or known values your application understands:</p>
+        <pre><code>from pyveil import CustomRule
+
+rules = [
+    CustomRule("CUSTOMER_ID", r"\bCUS-[A-Z0-9]{8}\b"),
+    CustomRule.exact("PERSON", ["Alice Kim", "Hong Gildong"]),
+]
+
+veil = Veil.high(secret=b"tenant-secret", rules=rules)</code></pre>
+      </section>
+
+      <section id="structured">
+        <h2>Use structured redaction for agent payloads</h2>
+        <p>Do not stringify tool or model payloads just to mask them. <code>redact_data</code> recursively handles dictionaries, lists, tuples, and JSON while keeping booleans, numbers, and null values intact.</p>
+        <pre><code>payload = {
+    "user": "alice@example.com",
+    "headers": {"Authorization": "Bearer DEMO_ONLY_CREDENTIAL_123456"},
+    "debug": True,
+}
+
+safe = veil.redact_data(payload, channel=Channel.TOOL_CALL_RESULT)
+
+assert safe.data["debug"] is True
+assert safe.data["user"].startswith("[EMAIL:")
+assert safe.data["headers"]["Authorization"].startswith("[AUTH_HEADER:")</code></pre>
+      </section>
+
+      <section id="tools">
+        <h2>Block credentials before model-controlled tools execute</h2>
+        <p>Tool arguments are a higher-risk boundary than an ordinary prompt. The default policy blocks credential-like findings on <code>tool.call.arguments</code> rather than silently forwarding them.</p>
+        <pre><code>from pyveil import BlockedSensitiveData, Channel
+
+try:
+    safe_args = veil.redact_data(
+        tool_args,
+        channel=Channel.TOOL_CALL_ARGUMENTS,
+    ).data
+except BlockedSensitiveData as exc:
+    audit(exc.summary())  <span class="comment"># counts only; no raw secret</span>
+else:
+    run_tool(**safe_args)</code></pre>
+        <div class="callout">
+          <strong>Boundary rule</strong>
+          <p>Redact model input, tool results, MCP resources, memory, logs, and traces. Block credentials before model-controlled tool execution.</p>
+        </div>
+      </section>
+
+      <section id="async">
+        <h2>Keep large redaction work off the event loop</h2>
+        <p>pyveil is synchronous and CPU-bound. For large payloads in FastAPI or another async server, run it in the default executor:</p>
+        <pre><code>import asyncio
+from functools import partial
+
+redact = partial(
+    veil.redact_data,
+    payload,
+    channel=Channel.PROMPT_INPUT,
+)
+safe = await asyncio.get_running_loop().run_in_executor(None, redact)</code></pre>
+        <p>For small request bodies the direct synchronous call is usually simpler. Keep <code>max_input_chars</code> enabled and enforce upstream request-size limits either way.</p>
+      </section>
+
+      <section id="test">
+        <h2>Test the boundary, not only the detector</h2>
+        <pre><code>def test_provider_never_receives_raw_email():
+    captured = {}
+
+    def fake_provider(messages):
+        captured["messages"] = messages
+
+    safe = veil.redact_data(
+        [{"role": "user", "content": "Email alice@example.com"}],
+        channel=Channel.PROMPT_INPUT,
+    )
+    fake_provider(safe.data)
+
+    assert "alice@example.com" not in str(captured)
+    assert "[EMAIL:" in str(captured)</code></pre>
+        <p>The repository also ships a <a href="../evaluation.html">reproducible synthetic detector evaluation</a> and runs it in CI.</p>
+      </section>
+
+      <section id="limits">
+        <h2>Know what local regex redaction does not solve</h2>
+        <table>
+          <thead><tr><th>Need</th><th>Recommended layer</th></tr></thead>
+          <tbody>
+            <tr><td>Known emails, phones, cards, credentials, domain IDs</td><td><strong>pyveil</strong> at the final application boundary</td></tr>
+            <tr><td>Unknown people, organizations, locations, addresses</td><td>NER or Presidio upstream, then pyveil at the boundary</td></tr>
+            <tr><td>Documents, images, incident workflows, managed policy</td><td>Enterprise DLP</td></tr>
+            <tr><td>Prompt injection and model behavior controls</td><td>A dedicated guardrail layer</td></tr>
+          </tbody>
+        </table>
+        <div class="callout warn">
+          <strong>No compliance guarantee</strong>
+          <p>Redaction reduces exposure. It does not prove GDPR, HIPAA, PCI, or any other compliance regime, and no detector has perfect recall.</p>
+        </div>
+      </section>
+
+      <div class="actions">
+        <a class="button primary" href="../manual.html">Read the full manual</a>
+        <a class="button" href="pyveil-vs-presidio.html">Compare approaches</a>
+      </div>
+    </article>
+
+    <footer class="footer">
+      <a href="./">All guides</a>
+      <a href="../manual.html">Manual</a>
+      <a href="../evaluation.html">Evaluation</a>
+      <a href="https://github.com/hyeonsangjeon/pyveil">Source</a>
+    </footer>
+  </main>
+</body>
+</html>

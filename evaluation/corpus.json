@@ -1,0 +1,244 @@
+{
+  "schema_version": 1,
+  "description": "Synthetic regression cases for pyveil built-in detectors. This is not a real-world PII benchmark.",
+  "cases": [
+    {
+      "id": "email-basic",
+      "text": "Contact alice@example.com.",
+      "expected": {"EMAIL": 1},
+      "sensitive": ["alice@example.com"]
+    },
+    {
+      "id": "email-plus-and-subdomain",
+      "text": "Route alerts to ops+demo@status.example.test",
+      "expected": {"EMAIL": 1},
+      "sensitive": ["ops+demo@status.example.test"]
+    },
+    {
+      "id": "email-multiple",
+      "text": "From alice@example.com to bob@example.org",
+      "expected": {"EMAIL": 2},
+      "sensitive": ["alice@example.com", "bob@example.org"]
+    },
+    {
+      "id": "email-e164-shaped-plus-tag",
+      "text": "Contact user+14155550199@example.com",
+      "expected": {"EMAIL": 1},
+      "sensitive": ["user+14155550199@example.com"]
+    },
+    {
+      "id": "phone-korean-mobile",
+      "text": "Call 010-1234-5678",
+      "expected": {"PHONE": 1},
+      "sensitive": ["010-1234-5678"]
+    },
+    {
+      "id": "phone-korean-local",
+      "text": "Office 02-1234-5678",
+      "expected": {"PHONE": 1},
+      "sensitive": ["02-1234-5678"]
+    },
+    {
+      "id": "phone-international-separated",
+      "text": "Call +1 415 555 0199",
+      "expected": {"PHONE": 1},
+      "sensitive": ["+1 415 555 0199"]
+    },
+    {
+      "id": "phone-e164-us",
+      "text": "Call +14155550199",
+      "expected": {"PHONE": 1},
+      "sensitive": ["+14155550199"]
+    },
+    {
+      "id": "phone-e164-korea",
+      "text": "Call +821012345678",
+      "expected": {"PHONE": 1},
+      "sensitive": ["+821012345678"]
+    },
+    {
+      "id": "phone-e164-minimum-length",
+      "text": "Call +67712345",
+      "expected": {"PHONE": 1},
+      "sensitive": ["+67712345"]
+    },
+    {
+      "id": "phone-e164-luhn-collision",
+      "text": "Call +8613812345678",
+      "expected": {"PHONE": 1},
+      "sensitive": ["+8613812345678"]
+    },
+    {
+      "id": "card-visa-test-number",
+      "text": "Card 4242 4242 4242 4242",
+      "expected": {"CREDIT_CARD": 1},
+      "sensitive": ["4242 4242 4242 4242"]
+    },
+    {
+      "id": "card-mastercard-test-number",
+      "text": "Card 5555-5555-5555-4444",
+      "expected": {"CREDIT_CARD": 1},
+      "sensitive": ["5555-5555-5555-4444"]
+    },
+    {
+      "id": "card-plus-prefixed-longer-than-e164",
+      "text": "Card +4242424242424242",
+      "expected": {"CREDIT_CARD": 1},
+      "sensitive": ["+4242424242424242"]
+    },
+    {
+      "id": "jwt-compact",
+      "text": "Token eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJkZW1vIn0.ZGVtb19zaWduYXR1cmU",
+      "expected": {"JWT": 1},
+      "sensitive": ["eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJkZW1vIn0.ZGVtb19zaWduYXR1cmU"]
+    },
+    {
+      "id": "auth-bearer",
+      "text": "Authorization: Bearer DEMO_ONLY_CREDENTIAL_123456",
+      "expected": {"AUTH_HEADER": 1},
+      "sensitive": ["DEMO_ONLY_CREDENTIAL_123456"]
+    },
+    {
+      "id": "auth-basic",
+      "text": "Authorization: Basic ZGVtbzpkZW1vX29ubHk=",
+      "expected": {"AUTH_HEADER": 1},
+      "sensitive": ["ZGVtbzpkZW1vX29ubHk="]
+    },
+    {
+      "id": "auth-token",
+      "text": "Authorization: Token demo_token_1234567890",
+      "expected": {"AUTH_HEADER": 1},
+      "sensitive": ["demo_token_1234567890"]
+    },
+    {
+      "id": "auth-apikey",
+      "text": "Authorization: ApiKey DEMO_ONLY_123456789",
+      "expected": {"AUTH_HEADER": 1},
+      "sensitive": ["DEMO_ONLY_123456789"]
+    },
+    {
+      "id": "auth-apikey-composite",
+      "text": "Authorization: ApiKey credential=client123,signature=demo-only-signature",
+      "expected": {"AUTH_HEADER": 1},
+      "sensitive": ["client123", "demo-only-signature"]
+    },
+    {
+      "id": "private-key-pem",
+      "text": "-----BEGIN PRIVATE KEY-----\nDEMOONLYDATA123\n-----END PRIVATE KEY-----",
+      "expected": {"PRIVATE_KEY": 1},
+      "sensitive": ["DEMOONLYDATA123"]
+    },
+    {
+      "id": "api-key-openai-shape",
+      "text": "key sk-proj-DEMO_ONLY_000000000000000000",
+      "expected": {"API_KEY": 1},
+      "sensitive": ["sk-proj-DEMO_ONLY_000000000000000000"]
+    },
+    {
+      "id": "api-key-github-shape",
+      "text": "key ghp_DEMO_ONLY_0000000000000000",
+      "expected": {"API_KEY": 1},
+      "sensitive": ["ghp_DEMO_ONLY_0000000000000000"]
+    },
+    {
+      "id": "api-key-github-pat-shape",
+      "text": "key github_pat_DEMO_ONLY_0000000000000000",
+      "expected": {"API_KEY": 1},
+      "sensitive": ["github_pat_DEMO_ONLY_0000000000000000"]
+    },
+    {
+      "id": "api-key-slack-shape",
+      "text": "key xoxb-DEMO-ONLY-0000000000",
+      "expected": {"API_KEY": 1},
+      "sensitive": ["xoxb-DEMO-ONLY-0000000000"]
+    },
+    {
+      "id": "api-key-google-shape",
+      "text": "key AIzaDEMO_ONLY_0000000000000000",
+      "expected": {"API_KEY": 1},
+      "sensitive": ["AIzaDEMO_ONLY_0000000000000000"]
+    },
+    {
+      "id": "api-key-aws-shape",
+      "text": "key AKIADEMOONLY00000000",
+      "expected": {"API_KEY": 1},
+      "sensitive": ["AKIADEMOONLY00000000"]
+    },
+    {
+      "id": "url-access-token",
+      "text": "https://example.test/callback?access_token=demo-only-token&state=ok",
+      "expected": {"URL_QUERY_SECRET": 1},
+      "sensitive": ["demo-only-token"]
+    },
+    {
+      "id": "url-api-key",
+      "text": "https://example.test/data?page=1&api_key=demo-only-key",
+      "expected": {"URL_QUERY_SECRET": 1},
+      "sensitive": ["demo-only-key"]
+    },
+    {
+      "id": "kv-password",
+      "text": "password=demo-only-password",
+      "expected": {"KV_SECRET": 1},
+      "sensitive": ["demo-only-password"]
+    },
+    {
+      "id": "kv-cookie",
+      "text": "cookie: demo-only-cookie",
+      "expected": {"KV_SECRET": 1},
+      "sensitive": ["demo-only-cookie"]
+    },
+    {
+      "id": "kv-secret",
+      "text": "secret='demo-only-secret'",
+      "expected": {"KV_SECRET": 1},
+      "sensitive": ["demo-only-secret"]
+    },
+    {
+      "id": "multiple-entities",
+      "text": "Email alice@example.com, call +14155550199, key sk-proj-DEMO_ONLY_000000000000000000",
+      "expected": {"API_KEY": 1, "EMAIL": 1, "PHONE": 1},
+      "sensitive": [
+        "alice@example.com",
+        "+14155550199",
+        "sk-proj-DEMO_ONLY_000000000000000000"
+      ]
+    },
+    {
+      "id": "negative-invalid-email",
+      "text": "This is not an email: alice@example",
+      "expected": {},
+      "sensitive": []
+    },
+    {
+      "id": "negative-invalid-card-luhn",
+      "text": "Reference 1234 5678 9012 3456",
+      "expected": {},
+      "sensitive": []
+    },
+    {
+      "id": "negative-short-auth-value",
+      "text": "Authorization: Token short",
+      "expected": {},
+      "sensitive": []
+    },
+    {
+      "id": "negative-short-plus-number",
+      "text": "Version +1415 is not a phone",
+      "expected": {},
+      "sensitive": []
+    },
+    {
+      "id": "negative-safe-query",
+      "text": "https://example.test/items?page=2&state=ready",
+      "expected": {},
+      "sensitive": []
+    },
+    {
+      "id": "negative-ordinary-identifiers",
+      "text": "Build 20260711, order ORD-1234, UUID 123e4567-e89b-12d3-a456-426614174000",
+      "expected": {},
+      "sensitive": []
+    }
+  ]
+}

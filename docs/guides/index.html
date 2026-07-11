@@ -1,0 +1,100 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Python LLM PII redaction guides | pyveil</title>
+  <meta name="description" content="Practical Python guides for redacting PII and secrets before LLM prompts, AI agent tool calls, MCP resources, memory, logs, and traces.">
+  <link rel="canonical" href="https://hyeonsangjeon.github.io/pyveil/guides/">
+  <link rel="icon" href="../media/favicon.svg" type="image/svg+xml">
+  <link rel="sitemap" href="../sitemap.xml" type="application/xml">
+  <link rel="alternate" href="../llms.txt" type="text/plain" title="LLM-readable documentation">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="pyveil">
+  <meta property="og:title" content="Python LLM PII redaction guides">
+  <meta property="og:description" content="Boundary-first tutorials for Python LLM apps, AI agents, MCP, and runtime secret redaction.">
+  <meta property="og:url" content="https://hyeonsangjeon.github.io/pyveil/guides/">
+  <meta property="og:image" content="https://hyeonsangjeon.github.io/pyveil/media/social-preview.png">
+  <meta name="twitter:card" content="summary_large_image">
+  <link rel="stylesheet" href="style.css">
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": "pyveil Python LLM PII redaction guides",
+    "url": "https://hyeonsangjeon.github.io/pyveil/guides/",
+    "description": "Practical Python guides for local PII and secret redaction at LLM and AI agent boundaries.",
+    "isPartOf": {"@type": "WebSite", "name": "pyveil", "url": "https://hyeonsangjeon.github.io/pyveil/"}
+  }
+  </script>
+</head>
+<body>
+  <header class="topbar">
+    <a class="brand" href="../">py<span>veil</span></a>
+    <nav class="nav" aria-label="Primary">
+      <a class="active" href="./">Guides</a>
+      <a href="../manual.html">Manual</a>
+      <a href="../evaluation.html">Evaluation</a>
+      <a href="https://github.com/hyeonsangjeon/pyveil">GitHub</a>
+      <a href="https://pypi.org/project/pyveil/">PyPI</a>
+    </nav>
+  </header>
+
+  <div class="hero">
+    <div class="shell">
+      <p class="eyebrow">Practical guides</p>
+      <h1>Redact PII and secrets at the <strong>boundary that matters</strong>.</h1>
+      <p class="lede">Search-focused, copy-paste tutorials for Python LLM applications, AI agents, MCP servers, and teams deciding between regex, NER, and DLP.</p>
+      <div class="actions">
+        <a class="button primary" href="python-llm-pii-redaction.html">Start with Python + LLMs</a>
+        <a class="button" href="../manual.html#quickstart">30-second quickstart</a>
+      </div>
+    </div>
+  </div>
+
+  <main class="shell">
+    <div class="cards">
+      <a class="card" href="python-llm-pii-redaction.html">
+        <h2>PII redaction for Python LLM apps</h2>
+        <p>Protect provider-neutral prompt payloads, tool arguments, results, memory, logs, and async web applications.</p>
+        <span class="more">Read the guide &rarr;</span>
+      </a>
+      <a class="card" href="mcp-pii-redaction.html">
+        <h2>MCP PII redaction</h2>
+        <p>Place a local redaction boundary around MCP tool calls, tool results, and resource content without changing protocol shape.</p>
+        <span class="more">Read the guide &rarr;</span>
+      </a>
+      <a class="card" href="pyveil-vs-presidio.html">
+        <h2>pyveil vs Presidio, NER, and DLP</h2>
+        <p>An honest decision guide: what each tool finds, its operational cost, and when the right answer is to layer them.</p>
+        <span class="more">Compare approaches &rarr;</span>
+      </a>
+      <a class="card" href="../evaluation.html">
+        <h2>Reproducible detector evaluation</h2>
+        <p>Inspect the public synthetic corpus, exact pass criteria, supported-shape results, and the claims it deliberately does not make.</p>
+        <span class="more">Inspect the evidence &rarr;</span>
+      </a>
+    </div>
+
+    <section>
+      <h2>What pyveil is optimized for</h2>
+      <div class="flow">
+        <span class="node">raw application context</span>
+        <span class="arrow">&rarr;</span>
+        <span class="node veil">pyveil</span>
+        <span class="arrow">&rarr;</span>
+        <span class="node safe">model / tool / MCP / memory / log</span>
+      </div>
+      <p>pyveil is a small, local boundary filter for high-confidence PII, credentials, known values, and domain identifiers. It does not pretend to discover every unknown person, address, or organization. When broad semantic recall is required, layer a dedicated NER system upstream and keep pyveil at the final agent boundary.</p>
+    </section>
+
+    <footer class="footer">
+      <a href="../">Home</a>
+      <a href="../manual.html">Manual</a>
+      <a href="../evaluation.html">Evaluation</a>
+      <a href="https://github.com/hyeonsangjeon/pyveil">Source</a>
+      <p>MIT licensed. Zero required runtime dependencies. No network calls in the core.</p>
+    </footer>
+  </main>
+</body>
+</html>

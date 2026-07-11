@@ -1,5 +1,33 @@
 # Changelog
 
+## 0.2.1 - 2026-07-11
+
+Evidence and organic-discovery release.
+
+### Added
+
+- Search-intent guides for Python LLM PII redaction, MCP redaction, and choosing
+  between pyveil, Presidio/NER, guardrail suites, and enterprise DLP.
+- A public 39-case synthetic built-in detector regression corpus, standard-library
+  evaluator, rendered methodology page, and CI gate.
+- `python -m pyveil` as an alternative CLI entry point.
+- Compact E.164 phone-number detection.
+- `Token` and `ApiKey` authorization-header scheme detection in free text.
+- A Pages-served `llms.txt`, site favicon, richer social metadata, and expanded
+  sitemap.
+- GitHub Discussions as a support and integration Q&A channel.
+
+### Changed
+
+- Expanded PyPI classifiers, keywords, and project links for guides, evaluation,
+  and funding.
+- FastAPI example moves redaction work to the default executor for large async
+  request payloads.
+- Clarified that generated `pyveil.yaml` is a reference/validation schema and is
+  not automatically loaded by 0.2.x CLI commands.
+- Documented detector evidence and limitations without claiming general-world
+  PII recall or compliance.
+
 ## 0.2.0 - 2026-07-10
 
 Discovery and production-adoption release.

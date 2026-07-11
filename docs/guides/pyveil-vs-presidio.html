@@ -1,0 +1,159 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>pyveil vs Presidio, llm-guard, NER, and DLP</title>
+  <meta name="description" content="An honest comparison of pyveil, Microsoft Presidio, llm-guard, NER models, secret scanners, and enterprise DLP for Python LLM PII redaction.">
+  <link rel="canonical" href="https://hyeonsangjeon.github.io/pyveil/guides/pyveil-vs-presidio.html">
+  <link rel="icon" href="../media/favicon.svg" type="image/svg+xml">
+  <link rel="sitemap" href="../sitemap.xml" type="application/xml">
+  <link rel="alternate" href="../llms.txt" type="text/plain" title="LLM-readable documentation">
+  <meta property="og:type" content="article">
+  <meta property="og:site_name" content="pyveil">
+  <meta property="og:title" content="pyveil vs Presidio, llm-guard, NER, and DLP">
+  <meta property="og:description" content="Choose the right PII redaction layer for Python LLM applications and AI agents.">
+  <meta property="og:url" content="https://hyeonsangjeon.github.io/pyveil/guides/pyveil-vs-presidio.html">
+  <meta property="og:image" content="https://hyeonsangjeon.github.io/pyveil/media/social-preview.png">
+  <meta name="twitter:card" content="summary_large_image">
+  <link rel="stylesheet" href="style.css">
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "TechArticle",
+    "headline": "pyveil vs Presidio, llm-guard, NER, and enterprise DLP",
+    "description": "A decision guide for selecting and layering PII redaction tools in Python LLM applications.",
+    "datePublished": "2026-07-11",
+    "dateModified": "2026-07-11",
+    "author": {"@type": "Person", "name": "Hyeon Sang Jeon", "url": "https://github.com/hyeonsangjeon"},
+    "mainEntityOfPage": "https://hyeonsangjeon.github.io/pyveil/guides/pyveil-vs-presidio.html",
+    "about": ["PII redaction", "Microsoft Presidio", "llm-guard", "named entity recognition", "DLP"]
+  }
+  </script>
+</head>
+<body>
+  <header class="topbar">
+    <a class="brand" href="../">py<span>veil</span></a>
+    <nav class="nav" aria-label="Primary">
+      <a class="active" href="./">Guides</a>
+      <a href="../manual.html">Manual</a>
+      <a href="../evaluation.html">Evaluation</a>
+      <a href="https://github.com/hyeonsangjeon/pyveil">GitHub</a>
+      <a href="https://pypi.org/project/pyveil/">PyPI</a>
+    </nav>
+  </header>
+
+  <div class="hero">
+    <div class="shell">
+      <p class="eyebrow">Decision guide</p>
+      <h1>pyveil vs Presidio, NER, guardrails, and <strong>enterprise DLP</strong>.</h1>
+      <p class="lede">These tools solve different layers of the sensitive-data problem. The honest answer is often to combine them.</p>
+      <p class="meta">Published July 11, 2026 &middot; No compliance claims &middot; Links to primary projects</p>
+    </div>
+  </div>
+
+  <main class="shell">
+    <article>
+      <nav class="toc" aria-label="On this page">
+        <a href="#short-answer">Short answer</a>
+        <a href="#matrix">Comparison</a>
+        <a href="#pyveil">Choose pyveil</a>
+        <a href="#presidio">Choose Presidio or NER</a>
+        <a href="#guardrails">Choose guardrails</a>
+        <a href="#dlp">Choose DLP</a>
+        <a href="#layer">Layer them</a>
+      </nav>
+
+      <section id="short-answer">
+        <h2>The short answer</h2>
+        <ul>
+          <li><strong>Choose pyveil</strong> for a small local runtime boundary around LLM prompts, tool calls, MCP, memory, logs, and traces.</li>
+          <li><strong>Choose <a href="https://microsoft.github.io/presidio/">Microsoft Presidio</a> or another NER system</strong> when you must discover unknown names, locations, organizations, or addresses.</li>
+          <li><strong>Choose <a href="https://github.com/protectai/llm-guard">llm-guard</a> or a validation framework</strong> when you need a broader family of model input/output scanners beyond sensitive-data redaction.</li>
+          <li><strong>Choose enterprise DLP</strong> for managed policy, files and images, incident workflows, central reporting, and compliance operations.</li>
+        </ul>
+      </section>
+
+      <section id="matrix">
+        <h2>Capability and operating-model comparison</h2>
+        <table>
+          <thead>
+            <tr><th>Dimension</th><th>pyveil</th><th>Presidio / NER</th><th>LLM guardrail suite</th><th>Enterprise DLP</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>Primary role</td><td>Final local agent boundary</td><td>Broad entity discovery</td><td>Input/output model safety</td><td>Organization-wide data control</td></tr>
+            <tr><td>Unknown names and addresses</td><td class="partial">Not built in</td><td class="yes">Core strength</td><td>Depends on scanner/model</td><td class="yes">Usually supported</td></tr>
+            <tr><td>API keys and auth headers</td><td class="yes">Built in</td><td>Custom recognizer</td><td>Depends on scanner</td><td class="yes">Usually supported</td></tr>
+            <tr><td>Agent channels</td><td class="yes">Prompt, tool, MCP, memory, log, trace</td><td>Application-defined</td><td>Prompt/input-output focused</td><td>Policy/product dependent</td></tr>
+            <tr><td>Structured dict/list/JSON shape</td><td class="yes">Preserved</td><td>Integration work required</td><td>Framework dependent</td><td>Product dependent</td></tr>
+            <tr><td>Stable scoped placeholders</td><td class="yes">HMAC-SHA256</td><td>Anonymizer strategy dependent</td><td>Scanner dependent</td><td>Product dependent</td></tr>
+            <tr><td>Required pyveil core dependencies</td><td class="yes">Zero</td><td>Multiple NLP dependencies</td><td>Often model/runtime dependencies</td><td>Managed service or agent</td></tr>
+            <tr><td>Network calls</td><td class="yes">None in core</td><td>Local by default</td><td>Configuration dependent</td><td>Common</td></tr>
+            <tr><td>Compliance guarantee</td><td>No</td><td>No</td><td>No</td><td>Depends on contract and deployment</td></tr>
+          </tbody>
+        </table>
+      </section>
+
+      <section id="pyveil">
+        <h2>Choose pyveil when the boundary is the product requirement</h2>
+        <p>pyveil's differentiator is not broad NLP. It is the combination of:</p>
+        <ul>
+          <li>channel-aware <code>REDACT</code>, <code>PASS</code>, and <code>BLOCK</code> decisions</li>
+          <li>recursive structured data redaction without flattening payloads</li>
+          <li>stable, scope-separated HMAC placeholders</li>
+          <li>credential blocking before model-controlled tools execute</li>
+          <li>zero required runtime dependencies and no core network calls</li>
+          <li>exact known-value and narrow domain-identifier rules</li>
+        </ul>
+        <p>That makes it useful as the last local control before data crosses into an agent-controlled surface.</p>
+      </section>
+
+      <section id="presidio">
+        <h2>Choose Presidio or NER when broad discovery matters</h2>
+        <p>Regex cannot infer that an arbitrary phrase is a person's name, organization, street address, or location. Presidio combines recognizers and NLP analysis for broader entity discovery, and NER models such as GLiNER can find semantic entities that pyveil deliberately does not attempt.</p>
+        <p>The tradeoff is a larger dependency and operational surface, model selection, language configuration, and different false-positive/false-negative behavior. If you need that recall, use it. Do not force a small regex package to imitate an NER system.</p>
+      </section>
+
+      <section id="guardrails">
+        <h2>Choose a guardrail suite for broader model risks</h2>
+        <p>PII is only one LLM safety concern. Prompt injection, toxicity, topic control, jailbreaks, hallucination checks, and output validation require different detectors and policies. A guardrail suite can coordinate those concerns; pyveil can remain the local sensitive-data boundary inside that architecture.</p>
+      </section>
+
+      <section id="dlp">
+        <h2>Choose enterprise DLP for managed organizational controls</h2>
+        <p>pyveil does not scan images, classify office documents, manage incidents, push centralized policy, retain audit cases, or certify compliance. Those are enterprise DLP responsibilities. A small Python library can complement that system at an application boundary but cannot replace it.</p>
+      </section>
+
+      <section id="layer">
+        <h2>A practical layered architecture</h2>
+        <div class="flow">
+          <span class="node">raw data</span>
+          <span class="arrow">&rarr;</span>
+          <span class="node">NER / DLP discovery</span>
+          <span class="arrow">&rarr;</span>
+          <span class="node veil">pyveil boundary policy</span>
+          <span class="arrow">&rarr;</span>
+          <span class="node safe">LLM / tool / MCP</span>
+        </div>
+        <p>Use upstream systems to discover broad semantic entities. Feed known sensitive values into <code>CustomRule.exact(...)</code> when helpful. Keep pyveil at the final boundary to apply channel policy, redact credentials and structured values, and produce stable placeholders.</p>
+        <div class="callout">
+          <strong>Selection principle</strong>
+          <p>Pick the smallest tool that meets the required recall and operating model. Layer tools when the requirements span multiple categories.</p>
+        </div>
+      </section>
+
+      <div class="actions">
+        <a class="button primary" href="python-llm-pii-redaction.html">Implement the Python boundary</a>
+        <a class="button" href="../evaluation.html">Inspect pyveil's evidence</a>
+      </div>
+    </article>
+
+    <footer class="footer">
+      <a href="./">All guides</a>
+      <a href="../manual.html">Manual</a>
+      <a href="../evaluation.html">Evaluation</a>
+      <a href="https://github.com/hyeonsangjeon/pyveil">Source</a>
+    </footer>
+  </main>
+</body>
+</html>
