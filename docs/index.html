@@ -7,12 +7,19 @@
   <meta name="description" content="Dependency-free Python middleware that redacts PII, API keys, tokens, and known sensitive values before LLM prompts, tool calls, MCP, memory, logs, and traces.">
   <meta name="keywords" content="Python PII redaction, LLM privacy, AI agent security, secret redaction, MCP security, tool call guardrail">
   <link rel="canonical" href="https://hyeonsangjeon.github.io/pyveil/">
+  <link rel="icon" href="media/favicon.svg" type="image/svg+xml">
+  <link rel="sitemap" href="sitemap.xml" type="application/xml">
+  <link rel="alternate" href="llms.txt" type="text/plain" title="LLM-readable documentation">
   <meta property="og:type" content="website">
+  <meta property="og:site_name" content="pyveil">
   <meta property="og:title" content="pyveil - PII and secret redaction for Python AI agents">
   <meta property="og:description" content="Local, dependency-free redaction before LLM prompts, tool calls, MCP, memory, logs, and traces.">
   <meta property="og:url" content="https://hyeonsangjeon.github.io/pyveil/">
   <meta property="og:image" content="https://hyeonsangjeon.github.io/pyveil/media/social-preview.png">
   <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="pyveil - PII and secret redaction for Python AI agents">
+  <meta name="twitter:description" content="Local, dependency-free redaction before LLM prompts, tool calls, MCP, memory, logs, and traces.">
+  <meta name="twitter:image" content="https://hyeonsangjeon.github.io/pyveil/media/social-preview.png">
   <script type="application/ld+json">
   {
     "@context": "https://schema.org",
@@ -20,7 +27,7 @@
     "name": "pyveil",
     "applicationCategory": "DeveloperApplication",
     "operatingSystem": "Any",
-    "softwareVersion": "0.2.0",
+    "softwareVersion": "0.2.1",
     "programmingLanguage": "Python",
     "description": "Local PII and secret redaction for Python LLM apps and AI agents.",
     "url": "https://hyeonsangjeon.github.io/pyveil/",
@@ -279,6 +286,16 @@
         flex-direction: column;
       }
 
+      .links a:nth-child(n+4) {
+        display: none;
+      }
+
+      h1 {
+        max-width: 340px;
+        font-size: clamp(40px, 11vw, 46px);
+        overflow-wrap: anywhere;
+      }
+
       main {
         padding: 32px 20px 56px;
       }
@@ -299,6 +316,17 @@
         min-width: 0;
       }
 
+      .section h2 {
+        font-size: 28px;
+        overflow-wrap: anywhere;
+      }
+
+      .recipe,
+      pre {
+        max-width: 100%;
+        min-width: 0;
+      }
+
       .actions {
         max-width: 340px;
       }
@@ -311,10 +339,10 @@
       <div class="brand">py<span>veil</span></div>
       <div class="links">
         <a class="primary" href="manual.html">Manual</a>
+        <a href="guides/">Guides</a>
+        <a href="evaluation.html">Evaluation</a>
         <a href="https://github.com/hyeonsangjeon/pyveil">GitHub</a>
         <a href="https://pypi.org/project/pyveil/">PyPI</a>
-        <a href="https://github.com/hyeonsangjeon/pyveil/blob/main/docs/cookbook.md">Cookbook</a>
-        <a href="https://github.com/hyeonsangjeon/pyveil/blob/main/docs/redaction-reference.md">Reference</a>
       </div>
     </nav>
     <div class="hero-inner">
@@ -397,6 +425,27 @@ API key [API_KEY:38ded98a17e7]</code></pre>
     </section>
 
     <section class="section">
+      <h2>Guides for the question you are solving</h2>
+      <div class="grid">
+        <a class="recipe" href="guides/python-llm-pii-redaction.html">
+          <h3>Python LLM PII redaction</h3>
+          <p>Protect prompts, provider payloads, tool calls, memory, and async web applications at the final local boundary.</p>
+          <span class="more">Read the guide &rarr;</span>
+        </a>
+        <a class="recipe" href="guides/mcp-pii-redaction.html">
+          <h3>MCP PII redaction</h3>
+          <p>Redact tool results and resources, and block credentials before model-controlled MCP tools execute.</p>
+          <span class="more">Read the guide &rarr;</span>
+        </a>
+        <a class="recipe" href="guides/pyveil-vs-presidio.html">
+          <h3>pyveil vs Presidio and DLP</h3>
+          <p>Choose between a local boundary filter, NER, a guardrail suite, and enterprise DLP without inflated claims.</p>
+          <span class="more">Compare approaches &rarr;</span>
+        </a>
+      </div>
+    </section>
+
+    <section class="section">
       <h2>Demo</h2>
       <p class="lead">The package keeps core behavior local, deterministic, and small: no network calls, no unmasking API, no third-party core dependency.</p>
       <img class="demo" src="media/pyveil-awesome-demo.gif" alt="pyveil redacts synthetic sensitive context before agent boundaries">
@@ -404,6 +453,11 @@ API key [API_KEY:38ded98a17e7]</code></pre>
 
     <footer class="section footer">
       <div>MIT licensed. Python 3.8 through 3.14. Designed for agent context boundaries, not as a compliance guarantee or DLP replacement.</div>
+      <div style="margin-top:10px;">
+        <a href="guides/">Guides</a> &middot;
+        <a href="evaluation.html">Evaluation</a> &middot;
+        <a href="llms.txt">llms.txt</a>
+      </div>
     </footer>
   </main>
 </body>

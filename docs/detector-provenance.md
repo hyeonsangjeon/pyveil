@@ -1,6 +1,7 @@
 # Detector Provenance
 
-pyveil v0.1 uses a clean-room detector set. The legacy Java masking files in `local.data/` are private reference material and are not copied into the package.
+pyveil uses a clean-room detector set. The legacy Java masking files in
+`local.data/` are private reference material and are not copied into the package.
 
 ## Rules
 
@@ -11,15 +12,15 @@ pyveil v0.1 uses a clean-room detector set. The legacy Java masking files in `lo
 - Do not add network calls to core detection.
 - Do not store raw findings by default.
 
-## v0.1 Detectors
+## Built-in Detectors
 
 | Detector | Entity | Provenance | Notes |
 | --- | --- | --- | --- |
 | `email` | `EMAIL` | Custom regex, synthetic tests | Shape-preserving LOW mask, HMAC HIGH placeholder |
-| `phone` | `PHONE` | Custom regex, synthetic Korean/international-ish tests | Not a complete phone-number parser |
+| `phone` | `PHONE` | Custom regex, synthetic Korean, separated international, and compact E.164 tests | Not a complete phone-number parser |
 | `credit_card` | `CREDIT_CARD` | Custom regex plus Luhn validation | Synthetic test numbers only |
 | `jwt` | `JWT` | Structural compact JWT detector | Blocked by default in `tool.call.arguments` |
-| `auth_header` | `AUTH_HEADER` | Authorization header regex | Blocked by default in `tool.call.arguments` |
+| `auth_header` | `AUTH_HEADER` | Authorization header regex for Bearer, Basic, Token, and ApiKey schemes | Blocked by default in `tool.call.arguments` |
 | `private_key` | `PRIVATE_KEY` | PEM block pattern | Blocked by default in `tool.call.arguments` |
 | `api_key` | `API_KEY` | High-signal provider prefixes | Blocked by default in `tool.call.arguments` |
 | `url_query_secret` | `URL_QUERY_SECRET` | Sensitive query parameter names | Blocked by default in `tool.call.arguments` |

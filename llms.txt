@@ -5,6 +5,11 @@
 ## Start Here
 
 - [README](README.md)
+- [Rendered guide hub](https://hyeonsangjeon.github.io/pyveil/guides/)
+- [Python LLM PII redaction guide](https://hyeonsangjeon.github.io/pyveil/guides/python-llm-pii-redaction.html)
+- [MCP PII redaction guide](https://hyeonsangjeon.github.io/pyveil/guides/mcp-pii-redaction.html)
+- [pyveil vs Presidio / NER / DLP](https://hyeonsangjeon.github.io/pyveil/guides/pyveil-vs-presidio.html)
+- [Reproducible detector evaluation](https://hyeonsangjeon.github.io/pyveil/evaluation.html)
 - [Threat model](docs/threat-model.md)
 - [FAQ](docs/faq.md)
 - [Cookbook](docs/cookbook.md)
@@ -27,6 +32,7 @@
 - Use `Channel` and `Entity` enums when writing policy examples.
 - Use `CustomRule.exact(...)` for values the application already knows are
   sensitive and `CustomRule(...)` for narrow domain identifier regexes.
+- Run `python evaluation/evaluate.py --check` before changing built-in detectors.
 - Do not expose unmasking functions to a model-controlled tool.
 - Do not claim pyveil guarantees compliance or perfect sensitive-data detection.
 - Keep integrations thin and the core local.

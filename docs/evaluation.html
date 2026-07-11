@@ -1,0 +1,139 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>pyveil detector evaluation: reproducible evidence</title>
+  <meta name="description" content="Reproduce pyveil's synthetic detector regression evaluation: 39 supported-shape cases, exact mismatch checks, raw-value leak checks, and honest limitations.">
+  <link rel="canonical" href="https://hyeonsangjeon.github.io/pyveil/evaluation.html">
+  <link rel="icon" href="media/favicon.svg" type="image/svg+xml">
+  <link rel="sitemap" href="sitemap.xml" type="application/xml">
+  <link rel="alternate" href="llms.txt" type="text/plain" title="LLM-readable documentation">
+  <meta property="og:type" content="article">
+  <meta property="og:site_name" content="pyveil">
+  <meta property="og:title" content="pyveil detector evaluation: reproducible evidence">
+  <meta property="og:description" content="A public synthetic corpus, exact CI gate, and explicit limits for pyveil's built-in detectors.">
+  <meta property="og:url" content="https://hyeonsangjeon.github.io/pyveil/evaluation.html">
+  <meta property="og:image" content="https://hyeonsangjeon.github.io/pyveil/media/social-preview.png">
+  <meta name="twitter:card" content="summary_large_image">
+  <link rel="stylesheet" href="guides/style.css">
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "TechArticle",
+    "headline": "pyveil detector evaluation: reproducible evidence",
+    "datePublished": "2026-07-11",
+    "dateModified": "2026-07-11",
+    "author": {"@type": "Person", "name": "Hyeon Sang Jeon"},
+    "mainEntityOfPage": "https://hyeonsangjeon.github.io/pyveil/evaluation.html",
+    "about": ["PII detection evaluation", "secret redaction", "Python testing"]
+  }
+  </script>
+</head>
+<body>
+  <header class="topbar">
+    <a class="brand" href="./">py<span>veil</span></a>
+    <nav class="nav" aria-label="Primary">
+      <a href="guides/">Guides</a>
+      <a href="manual.html">Manual</a>
+      <a class="active" href="evaluation.html">Evaluation</a>
+      <a href="https://github.com/hyeonsangjeon/pyveil">GitHub</a>
+      <a href="https://pypi.org/project/pyveil/">PyPI</a>
+    </nav>
+  </header>
+
+  <div class="hero">
+    <div class="shell">
+      <p class="eyebrow">Evidence, not promises</p>
+      <h1>A reproducible detector <strong>regression evaluation</strong>.</h1>
+      <p class="lede">The public corpus tests documented supported shapes, negative examples, labeled-value removal, and the no-raw-findings contract on every change.</p>
+      <p class="meta">Corpus v1 &middot; pyveil 0.2.1 &middot; Last run July 11, 2026</p>
+    </div>
+  </div>
+
+  <main class="shell">
+    <article>
+      <section>
+        <h2>Current result</h2>
+        <div class="cards">
+          <div class="card"><h3>39 cases</h3><p>33 positive and 6 negative synthetic regression cases.</p><span class="more">Public corpus</span></div>
+          <div class="card"><h3>36 expected findings</h3><p>Across email, phone, card, JWT, credentials, URL, and key-value shapes.</p><span class="more">Exact type counts</span></div>
+          <div class="card"><h3>1.000 precision</h3><p>Zero extra findings in this supported-shape corpus.</p><span class="more">0 false positives</span></div>
+          <div class="card"><h3>1.000 recall</h3><p>Every labeled supported-shape finding was detected.</p><span class="more">0 false negatives</span></div>
+        </div>
+        <div class="callout warn">
+          <strong>Read this before quoting the numbers</strong>
+          <p>This is a synthetic supported-shape regression corpus, not a representative real-world PII benchmark. It does not measure broad semantic names, addresses, languages, documents, images, or unknown provider formats.</p>
+        </div>
+      </section>
+
+      <section>
+        <h2>What CI checks</h2>
+        <p><code>python evaluation/evaluate.py --check</code> exits non-zero if any case has:</p>
+        <ul>
+          <li>a finding count or entity type different from the expected result</li>
+          <li>a labeled synthetic sensitive value left in redacted output</li>
+          <li>a non-empty <code>Finding.raw</code></li>
+          <li>a negative input mutated unexpectedly</li>
+        </ul>
+        <p>The gate runs alongside Ruff, mypy, the Python 3.8-3.14 test matrix, package build, and Twine metadata validation.</p>
+      </section>
+
+      <section>
+        <h2>Reproduce it locally</h2>
+        <pre><code>git clone https://github.com/hyeonsangjeon/pyveil.git
+cd pyveil
+python -m pip install -e .
+
+python evaluation/evaluate.py --check
+python evaluation/evaluate.py --json
+python evaluation/evaluate.py --benchmark</code></pre>
+        <pre class="out"><code>pyveil synthetic detector regression evaluation
+cases: 39 (33 positive, 6 negative)
+expected findings: 36
+precision: 1.000
+recall: 1.000
+false positives: 0
+false negatives: 0
+mismatches: 0
+scope: synthetic supported-shape regression only; not real-world PII recall</code></pre>
+        <p>The optional benchmark reports a machine-dependent median for a fixed synthetic payload. It is diagnostic only and is not a latency service-level objective.</p>
+      </section>
+
+      <section>
+        <h2>Built-in shapes covered by corpus v1</h2>
+        <table>
+          <thead><tr><th>Finding</th><th>Covered examples</th><th>Important limit</th></tr></thead>
+          <tbody>
+            <tr><td><code>EMAIL</code></td><td>Common addresses, plus tags, subdomains, multiples</td><td>Not a full RFC mailbox parser</td></tr>
+            <tr><td><code>PHONE</code></td><td>Korean, separated international, compact E.164</td><td>Not a country-aware phone library</td></tr>
+            <tr><td><code>CREDIT_CARD</code></td><td>Separated Luhn-valid test numbers</td><td>Luhn validation does not prove a real card</td></tr>
+            <tr><td><code>JWT</code></td><td>Compact three-segment shape</td><td>No signature or claims validation</td></tr>
+            <tr><td><code>AUTH_HEADER</code></td><td>Bearer, Basic, Token, ApiKey</td><td>Not every custom auth scheme</td></tr>
+            <tr><td><code>PRIVATE_KEY</code></td><td>PEM private-key block shape</td><td>No key validity check</td></tr>
+            <tr><td><code>API_KEY</code></td><td>High-signal OpenAI, GitHub, Slack, Google, AWS shapes</td><td>Not every provider format</td></tr>
+            <tr><td><code>URL_QUERY_SECRET</code></td><td>Token, key, and secret query parameters</td><td>Key-name driven</td></tr>
+            <tr><td><code>KV_SECRET</code></td><td>Password, cookie, secret, token pairs</td><td>Key-name driven</td></tr>
+          </tbody>
+        </table>
+      </section>
+
+      <section>
+        <h2>Source and contribution policy</h2>
+        <p>The corpus and evaluator are standard-library Python and ship in the source distribution. Detector changes must add focused synthetic positive and negative cases, preserve the no-raw-value contract, and document provenance.</p>
+        <div class="actions">
+          <a class="button primary" href="https://github.com/hyeonsangjeon/pyveil/tree/main/evaluation">View corpus and evaluator</a>
+          <a class="button" href="guides/pyveil-vs-presidio.html">Understand the limits</a>
+        </div>
+      </section>
+    </article>
+
+    <footer class="footer">
+      <a href="guides/">All guides</a>
+      <a href="manual.html">Manual</a>
+      <a href="https://github.com/hyeonsangjeon/pyveil">Source</a>
+      <p>Numbers describe corpus v1 only. pyveil does not claim perfect real-world recall or compliance.</p>
+    </footer>
+  </main>
+</body>
+</html>

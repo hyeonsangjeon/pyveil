@@ -1,3 +1,6 @@
+# Reference schema for review and validation.
+# pyveil 0.2.x CLI commands use flags and PYVEIL_* environment variables;
+# they do not automatically load this file.
 version: 1
 
 default_level: HIGH

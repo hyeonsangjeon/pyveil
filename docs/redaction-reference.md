@@ -35,7 +35,7 @@ Examples below use synthetic values with `secret=b"docs-secret"` and `scope="doc
 | Entity | Detector behavior |
 | --- | --- |
 | `EMAIL` | High-precision email regex for common address shapes |
-| `PHONE` | Korean mobile/local phone patterns and international-ish phone patterns |
+| `PHONE` | Korean mobile/local, separated international, and compact E.164 phone patterns |
 | `CREDIT_CARD` | Numeric card candidates that pass Luhn validation |
 | `JWT` | Compact JWT-like tokens beginning with the common encoded JSON header shape |
 | `AUTH_HEADER` | `Authorization: Bearer ...` and `Authorization: Basic ...` header values |
@@ -44,6 +44,10 @@ Examples below use synthetic values with `secret=b"docs-secret"` and `scope="doc
 | `URL_QUERY_SECRET` | Sensitive URL query parameter values such as `access_token`, `refresh_token`, `api_key`, `secret`, and `auth` |
 | `KV_SECRET` | Text or structured values under sensitive keys such as `password`, `secret`, `token`, `cookie`, and related names |
 | Custom entity | Exact values or trusted application regexes supplied through `CustomRule` |
+
+Free-text authorization headers recognize the common `Bearer`, `Basic`, `Token`,
+and `ApiKey` schemes. Phone detection includes compact E.164 shapes, but it is
+not a country-aware phone-number parser.
 
 ## Custom Rules
 

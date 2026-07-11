@@ -1,0 +1,50 @@
+# pyveil
+
+> Local, dependency-free PII and secret redaction for Python LLM apps, AI agents, tool calls, MCP resources, memory, logs, and traces.
+
+pyveil replaces high-confidence sensitive values with stable, scoped HMAC placeholders before data crosses an application boundary. The core makes no network calls and has no required runtime dependencies.
+
+## Start
+
+- Homepage: https://hyeonsangjeon.github.io/pyveil/
+- Manual: https://hyeonsangjeon.github.io/pyveil/manual.html
+- PyPI: https://pypi.org/project/pyveil/
+- Source: https://github.com/hyeonsangjeon/pyveil
+- Evaluation: https://hyeonsangjeon.github.io/pyveil/evaluation.html
+
+## Search-intent guides
+
+- Python LLM PII redaction: https://hyeonsangjeon.github.io/pyveil/guides/python-llm-pii-redaction.html
+- MCP PII redaction: https://hyeonsangjeon.github.io/pyveil/guides/mcp-pii-redaction.html
+- pyveil vs Presidio, NER, guardrails, and DLP: https://hyeonsangjeon.github.io/pyveil/guides/pyveil-vs-presidio.html
+
+## API
+
+- `Veil.high(secret, scope, policy, rules)`: recommended redactor for model, agent, tool, MCP, memory, trace, and log boundaries.
+- `Veil.low(...)`: shape-preserving human preview; not recommended across agent boundaries.
+- `redact_text(text, channel, ...)`: free-form text redaction.
+- `redact_data(data, channel, ...)`: recursive dict/list/tuple/JSON redaction that preserves structure.
+- `CustomRule.exact(entity, values)`: known values such as authenticated customer names.
+- `CustomRule(entity, pattern)`: narrow trusted application regexes.
+- `Policy.override(channel, entity, action)`: per-boundary REDACT, BLOCK, or PASS decisions.
+
+## Supported built-in findings
+
+EMAIL, PHONE, CREDIT_CARD, JWT, AUTH_HEADER, PRIVATE_KEY, API_KEY, URL_QUERY_SECRET, KV_SECRET.
+
+## Safety boundaries
+
+- Findings do not retain raw sensitive values by default.
+- Credential-like values are blocked by default in `tool.call.arguments`.
+- pyveil has no reversible vault or unmasking API.
+- pyveil is not enterprise DLP, a compliance guarantee, a secret scanner, an NER system, or a prompt-injection firewall.
+- For unknown names, organizations, locations, and addresses, use Presidio or another NER layer upstream.
+
+## Repository documents
+
+- Cookbook: https://github.com/hyeonsangjeon/pyveil/blob/main/docs/cookbook.md
+- Redaction reference: https://github.com/hyeonsangjeon/pyveil/blob/main/docs/redaction-reference.md
+- Threat model: https://github.com/hyeonsangjeon/pyveil/blob/main/docs/threat-model.md
+- Known limitations: https://github.com/hyeonsangjeon/pyveil/blob/main/docs/known-limitations.md
+- Detector provenance: https://github.com/hyeonsangjeon/pyveil/blob/main/docs/detector-provenance.md
+- Agent instructions: https://github.com/hyeonsangjeon/pyveil/blob/main/AGENTS.md

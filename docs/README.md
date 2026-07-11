@@ -6,6 +6,9 @@ traces cross application boundaries.
 
 Start with:
 
+- [Rendered guide hub](https://hyeonsangjeon.github.io/pyveil/guides/)
+- [Reproducible evaluation](https://hyeonsangjeon.github.io/pyveil/evaluation.html)
+- [LLM-readable navigation](https://hyeonsangjeon.github.io/pyveil/llms.txt)
 - [Threat model](threat-model.md)
 - [FAQ](faq.md)
 - [Cookbook](cookbook.md)
@@ -30,4 +33,6 @@ Applications can add known sensitive values and narrow domain identifiers with
 the public `CustomRule` API while keeping semantic NER out of the dependency-free
 core.
 
-`index.html` is a static GitHub Pages landing page. Serve GitHub Pages from the repository `/docs` directory to publish it.
+`index.html`, `manual.html`, `evaluation.html`, and `guides/` are static GitHub
+Pages content. Serve GitHub Pages from the repository `/docs` directory to
+publish them.

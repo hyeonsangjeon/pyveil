@@ -44,8 +44,10 @@ def _mask_phone_low(value: str) -> str:
     digits = [char for char in value if char.isdigit()]
     if len(digits) < 7:
         return "[PHONE]"
-    prefix_keep = 4 if value.strip().startswith("+") else 3
-    last_keep = 4
+    visible_budget = len(digits) - 2
+    prefix_target = 4 if value.strip().startswith("+") else 3
+    prefix_keep = min(prefix_target, max(1, visible_budget // 2))
+    last_keep = min(4, visible_budget - prefix_keep)
     digit_index = 0
     result = []
     for char in value:

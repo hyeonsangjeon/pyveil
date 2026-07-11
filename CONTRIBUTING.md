@@ -2,6 +2,13 @@
 
 Thanks for helping improve pyveil.
 
+## Questions And Integration Help
+
+Use [GitHub Discussions](https://github.com/hyeonsangjeon/pyveil/discussions)
+for setup questions, architecture tradeoffs, and integration help. Use Issues
+for reproducible bugs and focused feature requests. Report vulnerabilities
+privately through the security policy.
+
 ## Scope
 
 pyveil is agent-native redaction middleware. Good contributions usually improve

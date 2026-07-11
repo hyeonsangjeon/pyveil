@@ -8,7 +8,9 @@ The middleware stores a redacted JSON preview on `request.state` so downstream
 handlers can log or inspect a safe version without changing the original body.
 """
 
+import asyncio
 import json
+from functools import partial
 from typing import Any
 
 try:
@@ -33,10 +35,13 @@ if FastAPI is not None:
                 payload = json.loads(body)
             except json.JSONDecodeError:
                 payload = body.decode("utf-8", errors="replace")
-            request.state.pyveil_safe_body = veil.redact_data(
+            redact = partial(
+                veil.redact_data,
                 payload,
                 channel=Channel.TOOL_CALL_ARGUMENTS,
-            ).data
+            )
+            safe = await asyncio.get_running_loop().run_in_executor(None, redact)
+            request.state.pyveil_safe_body = safe.data
         return await call_next(request)
 
     @app.post("/demo")

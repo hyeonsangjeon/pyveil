@@ -15,6 +15,9 @@ from .levels import Level
 from .utils import looks_like_json
 
 DEFAULT_CONFIG = """# pyveil.yaml
+# Reference schema for review and validation.
+# pyveil 0.2.x CLI commands use flags and PYVEIL_* environment variables;
+# they do not automatically load this file.
 version: 1
 default_level: HIGH
 placeholder:
@@ -75,10 +78,10 @@ def main(argv: Optional[Iterable[str]] = None) -> int:
         "--scope", default=None, help="Placeholder scope. Defaults to PYVEIL_SCOPE or 'default'."
     )
 
-    init = subcommands.add_parser("init", help="Write a default pyveil.yaml")
+    init = subcommands.add_parser("init", help="Write a reference pyveil.yaml schema")
     init.add_argument("path", nargs="?", default="pyveil.yaml")
 
-    test_config = subcommands.add_parser("test-config", help="Validate a pyveil.yaml shape")
+    test_config = subcommands.add_parser("test-config", help="Validate a reference pyveil.yaml shape")
     test_config.add_argument("path", nargs="?", default="pyveil.yaml")
 
     demo = subcommands.add_parser("demo", help="Run a synthetic before/after redaction demo")

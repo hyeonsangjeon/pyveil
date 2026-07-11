@@ -1,0 +1,182 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>MCP PII redaction in Python: tools and resources | pyveil</title>
+  <meta name="description" content="Protect Model Context Protocol tool arguments, tool results, and resource content with local Python PII and secret redaction before AI agents see it.">
+  <link rel="canonical" href="https://hyeonsangjeon.github.io/pyveil/guides/mcp-pii-redaction.html">
+  <link rel="icon" href="../media/favicon.svg" type="image/svg+xml">
+  <link rel="sitemap" href="../sitemap.xml" type="application/xml">
+  <link rel="alternate" href="../llms.txt" type="text/plain" title="LLM-readable documentation">
+  <meta property="og:type" content="article">
+  <meta property="og:site_name" content="pyveil">
+  <meta property="og:title" content="MCP PII redaction in Python">
+  <meta property="og:description" content="Boundary-first redaction for MCP tool arguments, results, and resources.">
+  <meta property="og:url" content="https://hyeonsangjeon.github.io/pyveil/guides/mcp-pii-redaction.html">
+  <meta property="og:image" content="https://hyeonsangjeon.github.io/pyveil/media/social-preview.png">
+  <meta name="twitter:card" content="summary_large_image">
+  <link rel="stylesheet" href="style.css">
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "TechArticle",
+    "headline": "MCP PII redaction in Python: protect tools and resources",
+    "description": "A practical guide to local PII and secret redaction around Model Context Protocol boundaries.",
+    "datePublished": "2026-07-11",
+    "dateModified": "2026-07-11",
+    "author": {"@type": "Person", "name": "Hyeon Sang Jeon", "url": "https://github.com/hyeonsangjeon"},
+    "mainEntityOfPage": "https://hyeonsangjeon.github.io/pyveil/guides/mcp-pii-redaction.html",
+    "about": ["Model Context Protocol", "MCP security", "PII redaction", "AI agents"]
+  }
+  </script>
+</head>
+<body>
+  <header class="topbar">
+    <a class="brand" href="../">py<span>veil</span></a>
+    <nav class="nav" aria-label="Primary">
+      <a class="active" href="./">Guides</a>
+      <a href="../manual.html">Manual</a>
+      <a href="../evaluation.html">Evaluation</a>
+      <a href="https://github.com/hyeonsangjeon/pyveil">GitHub</a>
+      <a href="https://pypi.org/project/pyveil/">PyPI</a>
+    </nav>
+  </header>
+
+  <div class="hero">
+    <div class="shell">
+      <p class="eyebrow">Model Context Protocol guide</p>
+      <h1>MCP PII redaction: protect <strong>tools, results, and resources</strong>.</h1>
+      <p class="lede">Keep protocol payloads structurally intact while removing sensitive values before they enter an AI agent's context.</p>
+      <p class="meta">Published July 11, 2026 &middot; Uses pyveil 0.2.1 &middot; Provider-neutral</p>
+    </div>
+  </div>
+
+  <main class="shell">
+    <article>
+      <nav class="toc" aria-label="On this page">
+        <a href="#surfaces">Risk surfaces</a>
+        <a href="#setup">Setup</a>
+        <a href="#arguments">Tool arguments</a>
+        <a href="#results">Tool results</a>
+        <a href="#resources">Resources</a>
+        <a href="#test">Test</a>
+        <a href="#limits">Limits</a>
+      </nav>
+
+      <section id="surfaces">
+        <h2>MCP has more than one sensitive-data boundary</h2>
+        <p>An MCP server can move data in both directions. Treat each direction separately:</p>
+        <table>
+          <thead><tr><th>Surface</th><th>Risk</th><th>pyveil channel</th></tr></thead>
+          <tbody>
+            <tr><td>Tool arguments</td><td>A model attempts to send credentials into a tool</td><td><code>tool.call.arguments</code></td></tr>
+            <tr><td>Tool results</td><td>An API or database returns PII or hidden tokens</td><td><code>tool.call.result</code></td></tr>
+            <tr><td>Resource content</td><td>Files, records, or logs enter agent context</td><td><code>mcp.resource.content</code></td></tr>
+          </tbody>
+        </table>
+        <div class="flow">
+          <span class="node">MCP payload</span>
+          <span class="arrow">&rarr;</span>
+          <span class="node veil">channel policy</span>
+          <span class="arrow">&rarr;</span>
+          <span class="node safe">agent-safe payload</span>
+        </div>
+      </section>
+
+      <section id="setup">
+        <h2>Create one scoped redactor for the server</h2>
+        <pre><code>from pyveil import Veil
+
+veil = Veil.high(
+    secret=b"tenant-secret-from-your-secret-manager",
+    scope="tenant-123/mcp-server",
+)</code></pre>
+        <p>Use separate instances or scopes when tenants or runs must not share stable placeholder identities.</p>
+      </section>
+
+      <section id="arguments">
+        <h2>Block credential-like tool arguments</h2>
+        <p>The default high policy blocks authorization headers, API keys, private keys, JWTs, and token-like values before model-controlled tools execute.</p>
+        <pre><code>from pyveil import BlockedSensitiveData, Channel
+
+def run_mcp_tool(name: str, arguments: dict) -> object:
+    try:
+        safe = veil.redact_data(
+            arguments,
+            channel=Channel.TOOL_CALL_ARGUMENTS,
+        )
+    except BlockedSensitiveData as exc:
+        raise PermissionError(exc.summary()) from exc
+
+    return dispatch_tool(name, safe.data)</code></pre>
+        <p>Do not catch the exception and then run the tool with the original arguments. A block is a refusal decision, not a warning.</p>
+      </section>
+
+      <section id="results">
+        <h2>Redact tool results before returning them to the model</h2>
+        <pre><code>from pyveil.integrations.mcp import redact_tool_result
+
+raw_result = {
+    "owner": "alice@example.com",
+    "callback": "https://example.test/cb?access_token=demo-only-token",
+}
+
+safe_result = redact_tool_result(raw_result, veil)
+return safe_result</code></pre>
+        <p>The helper uses <code>tool.call.result</code>. You can call <code>veil.redact_data(...)</code> directly when your server needs a custom channel or policy.</p>
+      </section>
+
+      <section id="resources">
+        <h2>Redact resource content at read time</h2>
+        <pre><code>from pyveil.integrations.mcp import redact_resource
+
+def read_resource_for_agent(uri: str) -> object:
+    raw = resource_store.read(uri)
+    safe = redact_resource(raw, veil)
+    return safe</code></pre>
+        <p>Apply the boundary after authorization and retrieval, but before content is serialized into an MCP response. This avoids storing a second redacted copy while still keeping raw data out of agent context.</p>
+      </section>
+
+      <section id="test">
+        <h2>Test the response object the agent receives</h2>
+        <pre><code>def test_mcp_resource_hides_email():
+    raw = {"text": "Owner alice@example.com"}
+    result = veil.redact_data(raw, channel="mcp.resource.content")
+
+    assert "alice@example.com" not in str(result.data)
+    assert "[EMAIL:" in result.data["text"]
+    assert result.findings[0].path == "/text"
+    assert result.findings[0].raw is None</code></pre>
+        <p>Also test the block path for tool arguments and ensure logs contain only <code>exc.summary()</code>, never the original payload.</p>
+      </section>
+
+      <section id="limits">
+        <h2>What this MCP boundary does not do</h2>
+        <ul>
+          <li>It does not authorize the caller or resource. Run normal auth checks first.</li>
+          <li>It does not stop prompt injection or malicious tool selection.</li>
+          <li>It does not discover every unknown name or address. Add known-value rules or an upstream NER layer.</li>
+          <li>It does not provide reversible unmasking to the model.</li>
+        </ul>
+        <div class="callout warn">
+          <strong>Keep raw data server-side</strong>
+          <p>Do not expose an "unmask" MCP tool. That turns the redaction layer into a model-accessible secret oracle.</p>
+        </div>
+      </section>
+
+      <div class="actions">
+        <a class="button primary" href="../manual.html#integrations">MCP integration reference</a>
+        <a class="button" href="python-llm-pii-redaction.html">Python LLM guide</a>
+      </div>
+    </article>
+
+    <footer class="footer">
+      <a href="./">All guides</a>
+      <a href="../manual.html">Manual</a>
+      <a href="../evaluation.html">Evaluation</a>
+      <a href="https://github.com/hyeonsangjeon/pyveil">Source</a>
+    </footer>
+  </main>
+</body>
+</html>
