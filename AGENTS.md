@@ -87,6 +87,7 @@ Examples:
 - [examples/openai_agents_guardrail.py](examples/openai_agents_guardrail.py)
 - [examples/fastapi_middleware.py](examples/fastapi_middleware.py)
 - [examples/litellm_proxy_filter.py](examples/litellm_proxy_filter.py)
+- [examples/azure_openai.py](examples/azure_openai.py)
 
 ## Development
 

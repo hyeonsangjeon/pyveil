@@ -12,6 +12,7 @@ Start with:
 - [Threat model](threat-model.md)
 - [FAQ](faq.md)
 - [Cookbook](cookbook.md)
+- [Azure OpenAI env/YAML integration](../pyveil/integrations/azure_openai.py)
 - [Redaction reference](redaction-reference.md)
 - [Known limitations](known-limitations.md)
 - [Detector provenance](detector-provenance.md)

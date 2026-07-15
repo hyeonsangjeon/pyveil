@@ -1,5 +1,14 @@
 # Changelog
 
+## Unreleased
+
+### Added
+
+- Runnable Azure OpenAI v1 Responses API integration with environment, `.env`,
+  and non-secret YAML configuration.
+- Dry-run output that proves the raw prompt is redacted before the provider
+  SDK call, plus tested `.env` and YAML templates.
+
 ## 0.2.1 - 2026-07-11
 
 Evidence and organic-discovery release.

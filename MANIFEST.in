@@ -9,7 +9,7 @@ include llms.txt
 include pyveil.yaml
 
 # Include examples
-recursive-include examples *.py
+recursive-include examples *.py *.yaml *.example
 
 # Include reproducible evaluation
 recursive-include evaluation *.py *.json *.md

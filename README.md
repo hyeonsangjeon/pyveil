@@ -81,6 +81,63 @@ response = call_llm(safe.data)  # Your provider SDK call
 The provider receives the same list and dictionary shape, with sensitive values
 replaced before serialization or transmission.
 
+## Azure OpenAI: End To End
+
+Install the optional Azure example dependencies, then load configuration from
+environment variables, `.env`, or YAML:
+
+```bash
+pip install "pyveil[azure-openai]"
+```
+
+```python
+from pyveil.integrations.azure_openai import ask_azure_openai, load_settings
+
+settings = load_settings()  # AZURE_OPENAI_* + PYVEIL_* environment variables
+result = ask_azure_openai(
+    "Write a follow-up for alice@example.com or 010-1234-5678.",
+    settings,
+)
+
+print(result.redacted_input)  # The exact text sent to Azure OpenAI
+print(result.output_text)     # The model response
+```
+
+The integration uses Azure OpenAI's v1 endpoint and Responses API. The
+deployment name is passed as `model`; pyveil redacts the prompt before
+`client.responses.create(...)` runs.
+
+Prove the boundary without an Azure request:
+
+```bash
+PYVEIL_SECRET=docs-demo-secret \
+  python -m pyveil.integrations.azure_openai --dry-run
+```
+
+```text
+mode: dry-run
+deployment: not configured
+sent-to-azure: Write a one-sentence support follow-up for [EMAIL:347ab11285a3] or [PHONE:548017338f6f].
+findings: EMAIL=1, PHONE=1
+azure-response: skipped (--dry-run)
+```
+
+For a live call, either export `AZURE_OPENAI_ENDPOINT`,
+`AZURE_OPENAI_DEPLOYMENT`, `AZURE_OPENAI_API_KEY`, `PYVEIL_SECRET`, and
+optionally `PYVEIL_SCOPE`, or use the checked-in
+[`.env` template](https://github.com/hyeonsangjeon/pyveil/blob/main/examples/azure_openai.env.example)
+and [YAML template](https://github.com/hyeonsangjeon/pyveil/blob/main/examples/azure_openai.example.yaml):
+
+```bash
+python -m pyveil.integrations.azure_openai --env-file .env
+python -m pyveil.integrations.azure_openai \
+  --config examples/azure_openai.example.yaml --env-file .env
+```
+
+Process environment variables override `.env`, which overrides non-secret YAML
+settings. API keys and the pyveil HMAC secret are rejected if placed directly
+in YAML; YAML names the environment variables that contain them.
+
 <p align="center">
   <img src="https://raw.githubusercontent.com/hyeonsangjeon/pyveil/main/docs/media/pyveil-awesome-demo.gif"
        alt="pyveil redacts synthetic PII and secrets before an AI agent boundary"
@@ -252,7 +309,7 @@ is parsed and traversed structurally.
 | --- | --- |
 | Any LLM provider | [Provider-neutral client wrapper](https://github.com/hyeonsangjeon/pyveil/blob/main/examples/llm_client_boundary.py) |
 | OpenAI Agents SDK | [Input guardrail example](https://github.com/hyeonsangjeon/pyveil/blob/main/examples/openai_agents_guardrail.py) |
-| Azure OpenAI | Use the provider-neutral wrapper; only `call_llm` changes |
+| Azure OpenAI | [Runnable env/YAML integration](https://github.com/hyeonsangjeon/pyveil/blob/main/pyveil/integrations/azure_openai.py) and [short example](https://github.com/hyeonsangjeon/pyveil/blob/main/examples/azure_openai.py) |
 | LiteLLM | [Proxy filter example](https://github.com/hyeonsangjeon/pyveil/blob/main/examples/litellm_proxy_filter.py) |
 | FastAPI | [Request middleware example](https://github.com/hyeonsangjeon/pyveil/blob/main/examples/fastapi_middleware.py) |
 | MCP | [Server wrapper](https://github.com/hyeonsangjeon/pyveil/blob/main/examples/mcp_server_wrapper.py) and [integration guide](https://hyeonsangjeon.github.io/pyveil/manual.html#integrations) |
