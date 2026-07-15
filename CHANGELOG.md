@@ -1,5 +1,28 @@
 # Changelog
 
+## 0.2.2 - 2026-07-15
+
+Azure OpenAI adoption release.
+
+### Added
+
+- Runnable Azure OpenAI v1 Responses API integration with environment, `.env`,
+  and non-secret YAML configuration.
+- Dry-run output that proves the raw prompt is redacted before the provider
+  SDK call, plus tested `.env` and YAML templates.
+
+### Changed
+
+- Added an optional `azure-openai` dependency group while keeping the core
+  package dependency-free.
+- Expanded the README, Cookbook, web Manual, Pages entry point, and agent-facing
+  navigation with a complete Azure OpenAI request path and observed output.
+
+### Fixed
+
+- Kept the Azure OpenAI Manual anchor visible below the fixed navigation bar on
+  desktop and mobile layouts.
+
 ## 0.2.1 - 2026-07-11
 
 Evidence and organic-discovery release.

@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "pyveil"
-version = "0.2.1"
+version = "0.2.2"
 description = "Local PII and secret redaction for Python LLM apps, AI agents, tool calls, and MCP"
 readme = "README.md"
 requires-python = ">=3.8"
@@ -70,6 +70,11 @@ classifiers = [
 dependencies = []
 
 [project.optional-dependencies]
+azure-openai = [
+    "openai>=1.66.0",
+    "python-dotenv>=1.0.0",
+    "PyYAML>=6.0.0",
+]
 dev = [
     "build>=1.2.0",
     "pytest>=7.0.0",
@@ -78,10 +83,16 @@ dev = [
     "ruff>=0.1.0",
     "twine>=5.0.0",
     "mypy>=1.0.0",
+    "openai>=1.66.0",
+    "python-dotenv>=1.0.0",
+    "PyYAML>=6.0.0",
+    "types-PyYAML>=6.0.0",
 ]
 test = [
     "pytest>=7.0.0",
     "pytest-cov>=4.0.0",
+    "python-dotenv>=1.0.0",
+    "PyYAML>=6.0.0",
 ]
 
 [project.urls]

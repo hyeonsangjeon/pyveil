@@ -13,6 +13,8 @@
 - [Threat model](docs/threat-model.md)
 - [FAQ](docs/faq.md)
 - [Cookbook](docs/cookbook.md)
+- [Azure OpenAI integration](pyveil/integrations/azure_openai.py)
+- [Azure OpenAI example](examples/azure_openai.py)
 - [Redaction reference](docs/redaction-reference.md)
 - [Known limitations](docs/known-limitations.md)
 - [Detector provenance](docs/detector-provenance.md)

@@ -48,37 +48,94 @@ response = call_with_redaction(
 print(response)
 ```
 
-## 2. Azure OpenAI Or OpenAI-Compatible Adapter
+## 2. Azure OpenAI With Environment Or YAML Configuration
 
-pyveil does not need to know which provider is behind the client. Keep the provider-specific code inside `call_llm`.
+Install the optional dependencies:
+
+```bash
+pip install "pyveil[azure-openai]"
+```
+
+The installable helper uses the Azure OpenAI v1 endpoint and Responses API. It
+returns both the exact redacted input sent to Azure and the model output:
 
 ```python
-from typing import Dict, List, cast
+from pyveil.integrations.azure_openai import ask_azure_openai, load_settings
 
+
+def answer_with_azure(prompt: str) -> str:
+    settings = load_settings()
+    result = ask_azure_openai(prompt, settings)
+    print("sent-to-azure:", result.redacted_input)
+    return result.output_text or ""
+
+
+answer = answer_with_azure(
+    "Write a follow-up for alice@example.com or 010-1234-5678."
+)
+```
+
+Under the hood, the provider boundary is deliberately small:
+
+```python
+from openai import OpenAI
 from pyveil import Channel, Veil
 
-Message = Dict[str, str]
+client = OpenAI(
+    api_key=settings.api_key,
+    base_url=settings.endpoint.rstrip("/") + "/openai/v1/",
+)
+veil = Veil.high(
+    secret=settings.pyveil_secret,
+    scope=settings.pyveil_scope,
+)
 
-
-def safe_chat(messages: List[Message]) -> str:
-    veil = Veil.high(secret=b"tenant-secret", scope="tenant-123/session-456")
-    safe = veil.redact_data(messages, channel=Channel.PROMPT_INPUT)
-    return call_llm_provider(cast(List[Message], safe.data))
-
-
-def call_llm_provider(messages: List[Message]) -> str:
-    # Example shape only:
-    #
-    # response = client.chat.completions.create(
-    #     model=deployment_or_model_name,
-    #     messages=messages,
-    # )
-    # return response.choices[0].message.content
-    #
-    # Use the same function body for Azure OpenAI, OpenAI-compatible gateways,
-    # or your internal proxy. pyveil stays one layer above the provider.
-    return "replace with provider response"
+safe = veil.redact_text(prompt, channel=Channel.PROMPT_INPUT)
+response = client.responses.create(
+    model=settings.deployment,  # Azure deployment name
+    input=safe.text,            # Raw prompt never enters this call
+)
 ```
+
+Use environment variables directly:
+
+```bash
+export AZURE_OPENAI_ENDPOINT="https://YOUR-RESOURCE-NAME.openai.azure.com"
+export AZURE_OPENAI_DEPLOYMENT="YOUR_DEPLOYMENT_NAME"
+export AZURE_OPENAI_API_KEY="..."
+export PYVEIL_SECRET="a-long-random-hmac-secret"
+export PYVEIL_SCOPE="tenant-123/session-456"
+
+python -m pyveil.integrations.azure_openai --dry-run
+python -m pyveil.integrations.azure_openai
+```
+
+Or load `.env` and non-secret YAML settings:
+
+```bash
+python -m pyveil.integrations.azure_openai --env-file .env
+python -m pyveil.integrations.azure_openai \
+  --config examples/azure_openai.example.yaml --env-file .env
+```
+
+Configuration priority is process environment, `.env`, YAML, then defaults.
+YAML may contain endpoint, deployment, scope, and the names of secret-bearing
+environment variables. Plaintext `api_key` and `secret` YAML fields are
+rejected.
+
+Dry-run output from the synthetic default prompt:
+
+```text
+mode: dry-run
+deployment: not configured
+sent-to-azure: Write a one-sentence support follow-up for [EMAIL:347ab11285a3] or [PHONE:548017338f6f].
+findings: EMAIL=1, PHONE=1
+azure-response: skipped (--dry-run)
+```
+
+See [`pyveil/integrations/azure_openai.py`](../pyveil/integrations/azure_openai.py),
+[`examples/azure_openai.env.example`](../examples/azure_openai.env.example), and
+[`examples/azure_openai.example.yaml`](../examples/azure_openai.example.yaml).
 
 ## 3. Block Credentials Before Model-Controlled Tool Calls
 

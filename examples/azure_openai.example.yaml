@@ -1,0 +1,10 @@
+# Non-secret Azure OpenAI and pyveil settings.
+# Environment variables override endpoint, deployment, and scope.
+azure_openai:
+  endpoint: https://YOUR-RESOURCE-NAME.openai.azure.com
+  deployment: YOUR_DEPLOYMENT_NAME
+  api_key_env: AZURE_OPENAI_API_KEY
+
+pyveil:
+  secret_env: PYVEIL_SECRET
+  scope: tenant-123/session-456
