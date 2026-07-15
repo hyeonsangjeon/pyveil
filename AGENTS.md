@@ -19,6 +19,7 @@ Do not turn pyveil into a general DLP suite, gateway, Presidio clone, or prompt-
 - Run CLI demo: `python3 -m pyveil demo`
 - Run CLI locally: `PYVEIL_SECRET=dev-secret python3 -m pyveil redact <file>`
 - Run detector evaluation: `python3 evaluation/evaluate.py --check`
+- Run the Ollama boundary without a model call: `PYVEIL_SECRET=dev-secret python3 -m pyveil.integrations.ollama --dry-run`
 
 ## Architecture
 
@@ -72,6 +73,7 @@ This repository includes files meant for coding agents and LLM readers:
 - [docs/evaluation.html](docs/evaluation.html)
 - [docs/guides/](docs/guides/)
 - [docs/integrations/mcp.md](docs/integrations/mcp.md)
+- [docs/integrations/ollama.md](docs/integrations/ollama.md)
 - [docs/integrations/logging.md](docs/integrations/logging.md)
 - [docs/integrations/tracing.md](docs/integrations/tracing.md)
 
@@ -88,6 +90,7 @@ Examples:
 - [examples/fastapi_middleware.py](examples/fastapi_middleware.py)
 - [examples/litellm_proxy_filter.py](examples/litellm_proxy_filter.py)
 - [examples/azure_openai.py](examples/azure_openai.py)
+- [examples/ollama.py](examples/ollama.py)
 
 ## Development
 

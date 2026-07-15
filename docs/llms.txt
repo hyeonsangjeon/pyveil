@@ -43,6 +43,7 @@ EMAIL, PHONE, CREDIT_CARD, JWT, AUTH_HEADER, PRIVATE_KEY, API_KEY, URL_QUERY_SEC
 ## Repository documents
 
 - Cookbook: https://github.com/hyeonsangjeon/pyveil/blob/main/docs/cookbook.md
+- Ollama integration: https://github.com/hyeonsangjeon/pyveil/blob/main/docs/integrations/ollama.md
 - Redaction reference: https://github.com/hyeonsangjeon/pyveil/blob/main/docs/redaction-reference.md
 - Threat model: https://github.com/hyeonsangjeon/pyveil/blob/main/docs/threat-model.md
 - Known limitations: https://github.com/hyeonsangjeon/pyveil/blob/main/docs/known-limitations.md

@@ -1,5 +1,22 @@
 # Changelog
 
+## 0.2.3 - 2026-07-16
+
+Local Ollama boundary release.
+
+### Added
+
+- Installable Ollama chat integration with env, `.env`, and YAML configuration,
+  a dry-run boundary, response metrics, and configurable context/keep-alive limits.
+- A tested `qwen3.5:4b` local-model recipe sized for a 16GB Apple silicon Mac.
+
+### Changed
+
+- Added an optional `ollama` dependency group while keeping the core package
+  dependency-free.
+- Expanded the README, Cookbook, web Manual, and agent-facing navigation with
+  a complete local-model request path and measured memory/latency trade-offs.
+
 ## 0.2.2 - 2026-07-15
 
 Azure OpenAI adoption release.

@@ -81,6 +81,70 @@ response = call_llm(safe.data)  # Your provider SDK call
 The provider receives the same list and dictionary shape, with sensitive values
 replaced before serialization or transmission.
 
+## Ollama: Local End To End
+
+Run a local model behind the same redaction boundary. The optional integration
+uses Ollama's official Python client and defaults to `qwen3.5:4b`, a Q4_K_M
+4.7B model that fits comfortably on a 16GB Apple silicon Mac with a 4K context:
+
+```bash
+pip install "pyveil[ollama]"
+ollama pull qwen3.5:4b
+```
+
+```python
+from pyveil.integrations.ollama import ask_ollama, load_settings
+
+settings = load_settings()  # OLLAMA_* + PYVEIL_* environment variables
+result = ask_ollama(
+    "Write a follow-up for alice@example.com or 010-1234-5678.",
+    settings,
+)
+
+print(result.redacted_input)  # The exact prompt sent to Ollama
+print(result.output_text)     # The local model response
+```
+
+Prove the boundary without loading a model:
+
+```bash
+PYVEIL_SECRET=docs-demo-secret \
+  python -m pyveil.integrations.ollama --dry-run
+```
+
+```text
+mode: dry-run
+model: qwen3.5:4b
+host: http://127.0.0.1:11434
+sent-to-ollama: Write a one-sentence support follow-up for [EMAIL:71c6727a7fa2] or [PHONE:b4b889df07ce].
+findings: EMAIL=1, PHONE=1
+ollama-response: skipped (--dry-run)
+```
+
+For a live local call, set `PYVEIL_SECRET` and run the module. Configuration
+priority is process environment, `.env`, YAML, then defaults:
+
+```bash
+PYVEIL_SECRET=a-long-random-hmac-secret \
+  python -m pyveil.integrations.ollama
+
+python -m pyveil.integrations.ollama \
+  --config examples/ollama.example.yaml --env-file .env
+```
+
+The checked-in [`.env` template](examples/ollama.env.example) and
+[YAML template](examples/ollama.example.yaml) expose model, host, context,
+output length, temperature, timeout, and keep-alive. pyveil caps the default
+context at 4096 and uses `keep_alive=0`, so one-shot calls release model memory;
+set `OLLAMA_KEEP_ALIVE=5m` for faster repeated calls.
+
+Observed on this project's M1 Mac mini with 16GB memory and Ollama 0.31.2:
+`qwen3.5:4b` used about 3.2GB at a 4096-token context, a cold request took
+8.1 seconds, and a warm request took 1.3 seconds. These are local measurements,
+not portable performance guarantees. See the
+[Ollama integration guide](docs/integrations/ollama.md) for the full setup and
+memory trade-offs.
+
 ## Azure OpenAI: End To End
 
 Install the optional Azure example dependencies, then load configuration from
@@ -167,7 +231,7 @@ evaluator:
 python evaluation/evaluate.py --check
 ```
 
-For corpus v1, pyveil 0.2.2 matches all 36 expected findings across 39 cases
+For corpus v1, pyveil 0.2.3 matches all 36 expected findings across 39 cases
 (33 positive, 6 negative), with no corpus false positives, false negatives,
 labeled-value leaks, or non-empty `Finding.raw` values.
 
