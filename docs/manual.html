@@ -424,6 +424,7 @@
         <a href="#structured">Structured redaction</a>
         <a href="#custom-rules">Custom rules</a>
         <a href="#recipes">Recipes</a>
+        <a href="#ollama">Ollama</a>
         <a href="#azure-openai">Azure OpenAI</a>
         <a href="#cli">Command line</a>
         <a href="#integrations">Integrations</a>
@@ -480,7 +481,12 @@
         <h3>From PyPI (recommended)</h3>
         <pre><code>pip install pyveil</code></pre>
 
-        <h3>Azure OpenAI example</h3>
+        <h3>Ollama local-model integration</h3>
+        <p>Install the official Ollama client and optional env/YAML loaders while keeping the core dependency-free:</p>
+        <pre><code>pip install "pyveil[ollama]"
+ollama pull qwen3.5:4b</code></pre>
+
+        <h3>Azure OpenAI integration</h3>
         <p>Keep the zero-dependency core, and install provider/config packages only when needed:</p>
         <pre><code>pip install "pyveil[azure-openai]"</code></pre>
 
@@ -488,7 +494,7 @@
         <p>Install the latest <code>main</code> directly from GitHub:</p>
         <pre><code>pip install "git+https://github.com/hyeonsangjeon/pyveil.git"</code></pre>
         <p>Pin to a released tag for reproducible builds:</p>
-        <pre><code>pip install "git+https://github.com/hyeonsangjeon/pyveil.git@v0.2.2"</code></pre>
+        <pre><code>pip install "git+https://github.com/hyeonsangjeon/pyveil.git@v0.2.3"</code></pre>
 
         <h3>For development (editable clone)</h3>
         <pre><code>git clone https://github.com/hyeonsangjeon/pyveil.git
@@ -846,7 +852,62 @@ def call_with_redaction(messages: List[Message], call_llm: LLMCall) -> str:
     safe = veil.redact_data(messages, channel=Channel.PROMPT_INPUT)
     return call_llm(cast(List[Message], safe.data))</code></pre>
 
-        <h3 id="azure-openai">2. Azure OpenAI, end to end</h3>
+        <h3 id="ollama">2. Ollama, local and memory-aware</h3>
+        <p>The installable Ollama helper redacts the prompt immediately before the official
+        <code>Client.chat(...)</code> call. It returns the exact model input, response text, timing, and token counts.
+        The default <code>qwen3.5:4b</code> profile limits context to 4096 tokens and unloads after each response.</p>
+        <pre><code>from pyveil.integrations.ollama import ask_ollama, load_settings
+
+settings = load_settings()
+result = ask_ollama(
+    "Write a follow-up for alice@example.com or 010-1234-5678.",
+    settings,
+)
+
+print(result.redacted_input)    <span class="tok-cmt"># exact prompt sent to Ollama</span>
+print(result.output_text)       <span class="tok-cmt"># local model response</span>
+print(result.total_duration_ms) <span class="tok-cmt"># optional server metric</span></code></pre>
+
+        <h4>Prove the boundary without loading a model</h4>
+        <pre><code>PYVEIL_SECRET=docs-demo-secret \
+  python -m pyveil.integrations.ollama --dry-run</code></pre>
+        <pre class="output"><code>mode: dry-run
+model: qwen3.5:4b
+host: http://127.0.0.1:11434
+sent-to-ollama: Write a one-sentence support follow-up for [EMAIL:71c6727a7fa2] or [PHONE:b4b889df07ce].
+findings: EMAIL=1, PHONE=1
+ollama-response: skipped (--dry-run)</code></pre>
+
+        <h4>Environment, .env, or YAML</h4>
+        <pre><code><span class="tok-cmt"># One-shot live call; the default keep_alive=0 releases memory</span>
+export PYVEIL_SECRET="a-long-random-hmac-secret"
+python -m pyveil.integrations.ollama
+
+<span class="tok-cmt"># Or .env combined with non-secret YAML</span>
+python -m pyveil.integrations.ollama \
+  --config examples/ollama.example.yaml --env-file .env
+
+<span class="tok-cmt"># Keep the model warm for repeated agent turns</span>
+export OLLAMA_KEEP_ALIVE=5m</code></pre>
+
+        <table>
+          <thead><tr><th>16GB M1 Mac mini check</th><th>Observed</th></tr></thead>
+          <tbody>
+            <tr><td>Model / quantization</td><td><code>qwen3.5:4b</code> / Q4_K_M</td></tr>
+            <tr><td>Resident size / context</td><td>3.2GB / 4096 tokens</td></tr>
+            <tr><td>Cold request</td><td>8.1s total, 5.2s load</td></tr>
+            <tr><td>Warm request</td><td>1.3s total, 0.25s load</td></tr>
+          </tbody>
+        </table>
+        <div class="callout tip">
+          <p><span class="c-label">Memory choice</span></p>
+          <p>Use <code>OLLAMA_KEEP_ALIVE=0</code> on a memory-busy 16GB machine, or <code>5m</code> when repeated-call
+          latency matters more. The measurements above are one-machine smoke results, not a benchmark. See the
+          <a href="https://github.com/hyeonsangjeon/pyveil/blob/main/docs/integrations/ollama.md">full Ollama guide</a>
+          and checked-in <a href="https://github.com/hyeonsangjeon/pyveil/blob/main/examples/ollama.example.yaml">YAML template</a>.</p>
+        </div>
+
+        <h3 id="azure-openai">3. Azure OpenAI, end to end</h3>
         <p>The installable Azure helper loads environment, <code>.env</code>, or YAML settings, redacts the prompt,
         then calls the Azure OpenAI v1 Responses API. <code>redacted_input</code> is the exact value that crossed the
         provider boundary.</p>
@@ -891,7 +952,7 @@ python -m pyveil.integrations.azure_openai \
         <a href="https://github.com/hyeonsangjeon/pyveil/blob/main/examples/azure_openai.env.example">.env template</a>
         and <a href="https://github.com/hyeonsangjeon/pyveil/blob/main/examples/azure_openai.example.yaml">YAML template</a>.</p>
 
-        <h3>3. Block credentials before model-controlled tool calls</h3>
+        <h3>4. Block credentials before model-controlled tool calls</h3>
         <p>The default policy blocks credential-like material in <code>tool.call.arguments</code>. Catch the block and
         refuse to run the tool.</p>
         <pre><code>from pyveil import BlockedSensitiveData, Channel, Veil
@@ -910,7 +971,7 @@ except BlockedSensitiveData as exc:
 else:
     run_tool(**safe_args)</code></pre>
 
-        <h3>4. Redact tool results before returning them to the model</h3>
+        <h3>5. Redact tool results before returning them to the model</h3>
         <p>Tool results often carry customer records, URLs, headers, or hidden tokens.</p>
         <pre><code>veil = Veil.high(secret=b"tenant-secret", scope="tenant-123/tool-result")
 
@@ -920,14 +981,14 @@ raw_result = {
 }
 safe_result = veil.redact_data(raw_result, channel="tool.call.result").data</code></pre>
 
-        <h3>5. Redact MCP resource content</h3>
+        <h3>6. Redact MCP resource content</h3>
         <pre><code>veil = Veil.high(secret=b"tenant-secret", scope="tenant-123/mcp")
 
 def read_resource_for_agent(resource_id: str) -> object:
     raw_resource = read_resource(resource_id)
     return veil.redact_data(raw_resource, channel="mcp.resource.content").data</code></pre>
 
-        <h3>6. Redact memory before embedding or persistence</h3>
+        <h3>7. Redact memory before embedding or persistence</h3>
         <pre><code>veil = Veil.high(secret=b"tenant-secret", scope="tenant-123/memory")
 
 def write_memory(text: str) -> None:
@@ -935,7 +996,7 @@ def write_memory(text: str) -> None:
     embedding = embed(safe.text)
     memory_store.save(text=safe.text, embedding=embedding)</code></pre>
 
-        <h3>7. Redact logs before export</h3>
+        <h3>8. Redact logs before export</h3>
         <pre><code>import logging
 from pyveil import Veil
 from pyveil.integrations import PyVeilLogFilter
@@ -946,7 +1007,7 @@ logger.addFilter(PyVeilLogFilter(Veil.high(secret=b"log-secret", scope="prod/log
 logger.warning("failed request for alice@example.com")
 <span class="tok-cmt"># handlers see: failed request for [EMAIL:...]</span></code></pre>
 
-        <h3>8. CLI preflight in CI or local scripts</h3>
+        <h3>9. CLI preflight in CI or local scripts</h3>
         <pre><code>export PYVEIL_SECRET="tenant-or-run-secret"
 export PYVEIL_SCOPE="tenant/session"
 
@@ -1015,6 +1076,11 @@ echo '{"user":"alice@example.com"}' | pyveil redact --channel tool.call.result -
         <h2>Integrations</h2>
         <p>Thin helpers under <code>pyveil.integrations</code> wrap common boundaries. They wrap a <code>Veil</code>
         you build, so secret, scope, and policy stay in your control.</p>
+
+        <h3>LLM provider boundaries</h3>
+        <p>The Ollama and Azure OpenAI helpers provide runnable client boundaries with dry-run inspection,
+        env/.env/YAML loading, and the exact redacted input returned to the caller. See
+        <a href="#ollama">Ollama</a> and <a href="#azure-openai">Azure OpenAI</a>.</p>
 
         <h3>Standard logging</h3>
         <p><code>PyVeilLogFilter</code> is a <code>logging.Filter</code> that redacts each record's message before

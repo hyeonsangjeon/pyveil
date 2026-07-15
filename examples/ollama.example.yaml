@@ -1,0 +1,15 @@
+# Non-secret Ollama and pyveil settings.
+# Environment variables override every value below.
+ollama:
+  host: http://127.0.0.1:11434
+  model: qwen3.5:4b
+  num_ctx: 4096
+  num_predict: 128
+  temperature: 0.2
+  # Use 5m for faster repeated calls; 0 releases memory after each response.
+  keep_alive: 0
+  timeout_seconds: 120
+
+pyveil:
+  secret_env: PYVEIL_SECRET
+  scope: tenant-123/local-ollama

@@ -1,10 +1,13 @@
 import io
 import json
+import re
 import subprocess
 import sys
+from pathlib import Path
 
 import pytest
 
+from pyveil import __version__
 from pyveil.cli import main
 
 
@@ -167,7 +170,19 @@ def test_cli_reports_package_version(capsys):
 
     captured = capsys.readouterr()
     assert exc_info.value.code == 0
-    assert captured.out == "pyveil 0.2.2\n"
+    assert captured.out == "pyveil 0.2.3\n"
+
+
+def test_package_version_matches_project_metadata():
+    pyproject = Path(__file__).resolve().parents[1] / "pyproject.toml"
+    match = re.search(
+        r'^version = "([^"]+)"$',
+        pyproject.read_text(encoding="utf-8"),
+        re.MULTILINE,
+    )
+
+    assert match is not None
+    assert __version__ == match.group(1)
 
 
 def test_python_module_entrypoint_runs_demo():

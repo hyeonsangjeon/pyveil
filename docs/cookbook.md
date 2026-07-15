@@ -48,7 +48,92 @@ response = call_with_redaction(
 print(response)
 ```
 
-## 2. Azure OpenAI With Environment Or YAML Configuration
+## 2. Ollama With A Memory-Aware Local Model
+
+Install the optional dependencies and pull the recommended 16GB-Mac model:
+
+```bash
+pip install "pyveil[ollama]"
+ollama pull qwen3.5:4b
+```
+
+The helper redacts before `Client.chat(...)` and returns the exact local-model
+input, response text, and available timing/token metrics:
+
+```python
+from pyveil.integrations.ollama import ask_ollama, load_settings
+
+
+def answer_with_ollama(prompt: str) -> str:
+    settings = load_settings()
+    result = ask_ollama(prompt, settings)
+    print("sent-to-ollama:", result.redacted_input)
+    print("total-ms:", result.total_duration_ms)
+    return result.output_text or ""
+
+
+answer = answer_with_ollama(
+    "Write a follow-up for alice@example.com or 010-1234-5678."
+)
+```
+
+Under the hood, the boundary stays deliberately small:
+
+```python
+from ollama import Client
+from pyveil import Channel, Veil
+
+client = Client(host=settings.host, timeout=settings.timeout_seconds)
+veil = Veil.high(
+    secret=settings.pyveil_secret,
+    scope=settings.pyveil_scope,
+)
+
+safe = veil.redact_text(prompt, channel=Channel.PROMPT_INPUT)
+response = client.chat(
+    model=settings.model,
+    messages=[{"role": "user", "content": safe.text}],
+    stream=False,
+    think=False,
+    options={"num_ctx": 4096, "num_predict": 128, "temperature": 0.2},
+    keep_alive="0",
+)
+```
+
+Try the non-model and live paths:
+
+```bash
+export PYVEIL_SECRET="a-long-random-hmac-secret"
+
+python -m pyveil.integrations.ollama --dry-run
+python -m pyveil.integrations.ollama
+python -m pyveil.integrations.ollama \
+  --config examples/ollama.example.yaml --env-file .env
+```
+
+Configuration priority is process environment, `.env`, YAML, then defaults.
+The default `qwen3.5:4b` configuration uses a 4096-token context and
+`keep_alive=0` to release memory after each response. Use
+`OLLAMA_KEEP_ALIVE=5m` when repeated-call latency matters more than reclaiming
+roughly 3.2GB immediately on a 16GB Apple silicon Mac.
+
+Dry-run output from the synthetic default prompt:
+
+```text
+mode: dry-run
+model: qwen3.5:4b
+host: http://127.0.0.1:11434
+sent-to-ollama: Write a one-sentence support follow-up for [EMAIL:71c6727a7fa2] or [PHONE:b4b889df07ce].
+findings: EMAIL=1, PHONE=1
+ollama-response: skipped (--dry-run)
+```
+
+See [`pyveil/integrations/ollama.py`](../pyveil/integrations/ollama.py),
+[`examples/ollama.env.example`](../examples/ollama.env.example),
+[`examples/ollama.example.yaml`](../examples/ollama.example.yaml), and the
+[full Ollama integration guide](integrations/ollama.md).
+
+## 3. Azure OpenAI With Environment Or YAML Configuration
 
 Install the optional dependencies:
 
@@ -137,7 +222,7 @@ See [`pyveil/integrations/azure_openai.py`](../pyveil/integrations/azure_openai.
 [`examples/azure_openai.env.example`](../examples/azure_openai.env.example), and
 [`examples/azure_openai.example.yaml`](../examples/azure_openai.example.yaml).
 
-## 3. Block Credentials Before Model-Controlled Tool Calls
+## 4. Block Credentials Before Model-Controlled Tool Calls
 
 The default policy blocks credential-like material in `tool.call.arguments`.
 
@@ -160,7 +245,7 @@ else:
     run_tool(**safe_args)
 ```
 
-## 4. Redact Tool Results Before Returning Them To The Model
+## 5. Redact Tool Results Before Returning Them To The Model
 
 Tool results often contain customer records, logs, URLs, headers, or hidden tokens.
 
@@ -177,7 +262,7 @@ raw_result = {
 safe_result = veil.redact_data(raw_result, channel=Channel.TOOL_CALL_RESULT).data
 ```
 
-## 5. Redact MCP Resource Content
+## 6. Redact MCP Resource Content
 
 MCP resources can expose files, database rows, logs, or API payloads. Redact before the resource content enters an agent context.
 
@@ -192,7 +277,7 @@ def read_resource_for_agent(resource_id: str) -> object:
     return veil.redact_data(raw_resource, channel=Channel.MCP_RESOURCE_CONTENT).data
 ```
 
-## 6. Redact Memory Before Embedding Or Persistence
+## 7. Redact Memory Before Embedding Or Persistence
 
 Memory stores create long-lived recall. Redact before embedding and before persistence.
 
@@ -208,7 +293,7 @@ def write_memory(text: str) -> None:
     memory_store.save(text=safe.text, embedding=embedding)
 ```
 
-## 7. Redact Logs Before Export
+## 8. Redact Logs Before Export
 
 Use the built-in logging integration for application logs.
 
@@ -224,7 +309,7 @@ logger.addFilter(PyVeilLogFilter(Veil.high(secret=b"log-secret", scope="prod/log
 logger.warning("failed request for alice@example.com")
 ```
 
-## 8. CLI Preflight In CI Or Local Scripts
+## 9. CLI Preflight In CI Or Local Scripts
 
 Use `pyveil scan` to count findings and `pyveil redact` to create a redacted artifact.
 
@@ -239,7 +324,7 @@ pyveil redact prompt.txt --channel prompt.input > prompt.safe.txt
 pyveil redact request.json --channel tool.call.result --format json > request.safe.json
 ```
 
-## 9. Redact Known Names And Domain Identifiers
+## 10. Redact Known Names And Domain Identifiers
 
 The dependency-free core does not guess unknown names. Add values that your
 application already knows are sensitive, plus narrow identifiers from your own
