@@ -167,7 +167,7 @@ def test_cli_reports_package_version(capsys):
 
     captured = capsys.readouterr()
     assert exc_info.value.code == 0
-    assert captured.out == "pyveil 0.2.1\n"
+    assert captured.out == "pyveil 0.2.2\n"
 
 
 def test_python_module_entrypoint_runs_demo():
