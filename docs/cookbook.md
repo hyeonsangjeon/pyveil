@@ -48,7 +48,114 @@ response = call_with_redaction(
 print(response)
 ```
 
-## 2. Ollama With A Memory-Aware Local Model
+## 2. OpenAI Responses API With A Keyless Dry Run
+
+Install the official SDK integration on Python 3.9+:
+
+```bash
+pip install "pyveil[openai]"
+```
+
+The helper redacts before `client.responses.create(...)` and returns the exact
+input, response text, request ID, and available token metrics:
+
+```python
+from pyveil.integrations.openai import ask_openai, load_settings
+
+
+def answer_with_openai(prompt: str) -> str:
+    settings = load_settings()
+    result = ask_openai(prompt, settings)
+    print("sent-to-openai:", result.redacted_input)
+    print("tokens:", result.input_tokens, result.output_tokens)
+    return result.output_text or ""
+
+
+answer = answer_with_openai(
+    "Write a follow-up for alice@example.com or 010-1234-5678."
+)
+```
+
+Prove the boundary without an API key, network request, or spend:
+
+```bash
+PYVEIL_SECRET=docs-demo-secret \
+OPENAI_MODEL=gpt-5.6-luna \
+  python -m pyveil.integrations.openai --dry-run
+```
+
+```text
+mode: dry-run
+model: gpt-5.6-luna
+sent-to-openai: Write a one-sentence support follow-up for [EMAIL:17c25f8a4fe3] or [PHONE:3f6dc5a3c9f3].
+findings: EMAIL=1, PHONE=1
+openai-response: skipped (--dry-run)
+```
+
+Configuration priority is process environment, `.env`, YAML, then defaults.
+The API key and model are required only for live calls. Plaintext secrets in
+YAML are rejected. The real official SDK is also tested against a local mock
+HTTP transport, so `/v1/responses` serialization is covered without credentials.
+
+See [`pyveil/integrations/openai.py`](../pyveil/integrations/openai.py),
+[`examples/openai.env.example`](../examples/openai.env.example),
+[`examples/openai.example.yaml`](../examples/openai.example.yaml), and the
+[full OpenAI integration guide](integrations/openai.md).
+
+## 3. Anthropic Messages API With A Keyless Dry Run
+
+Install the official Claude SDK integration on Python 3.9+:
+
+```bash
+pip install "pyveil[anthropic]"
+```
+
+The helper redacts the user content before `client.messages.create(...)`:
+
+```python
+from pyveil.integrations.anthropic import ask_anthropic, load_settings
+
+
+def answer_with_claude(prompt: str) -> str:
+    settings = load_settings()
+    result = ask_anthropic(prompt, settings)
+    print("sent-to-anthropic:", result.redacted_input)
+    print("tokens:", result.input_tokens, result.output_tokens)
+    return result.output_text or ""
+
+
+answer = answer_with_claude(
+    "Write a follow-up for alice@example.com or 010-1234-5678."
+)
+```
+
+Prove the boundary without an API key, network request, or usage credits:
+
+```bash
+PYVEIL_SECRET=docs-demo-secret \
+ANTHROPIC_MODEL=claude-haiku-4-5 \
+  python -m pyveil.integrations.anthropic --dry-run
+```
+
+```text
+mode: dry-run
+model: claude-haiku-4-5
+sent-to-anthropic: Write a one-sentence support follow-up for [EMAIL:0b77abd1b26b] or [PHONE:ec56e2456ba2].
+findings: EMAIL=1, PHONE=1
+anthropic-response: skipped (--dry-run)
+```
+
+The official Anthropic SDK contract test asserts against the locally captured
+`/v1/messages` JSON body. No live paid request is claimed. Set
+`ANTHROPIC_API_KEY` and an available `ANTHROPIC_MODEL` only when an account has
+usage credits.
+
+See [`pyveil/integrations/anthropic.py`](../pyveil/integrations/anthropic.py),
+[`examples/anthropic.env.example`](../examples/anthropic.env.example),
+[`examples/anthropic.example.yaml`](../examples/anthropic.example.yaml), and the
+[full Anthropic / Claude integration guide](integrations/anthropic.md).
+
+## 4. Ollama With A Memory-Aware Local Model
 
 Install the optional dependencies and pull the recommended 16GB-Mac model:
 
@@ -133,7 +240,7 @@ See [`pyveil/integrations/ollama.py`](../pyveil/integrations/ollama.py),
 [`examples/ollama.example.yaml`](../examples/ollama.example.yaml), and the
 [full Ollama integration guide](integrations/ollama.md).
 
-## 3. Azure OpenAI With Environment Or YAML Configuration
+## 5. Azure OpenAI With Environment Or YAML Configuration
 
 Install the optional dependencies:
 
@@ -222,7 +329,7 @@ See [`pyveil/integrations/azure_openai.py`](../pyveil/integrations/azure_openai.
 [`examples/azure_openai.env.example`](../examples/azure_openai.env.example), and
 [`examples/azure_openai.example.yaml`](../examples/azure_openai.example.yaml).
 
-## 4. Block Credentials Before Model-Controlled Tool Calls
+## 6. Block Credentials Before Model-Controlled Tool Calls
 
 The default policy blocks credential-like material in `tool.call.arguments`.
 
@@ -245,7 +352,7 @@ else:
     run_tool(**safe_args)
 ```
 
-## 5. Redact Tool Results Before Returning Them To The Model
+## 7. Redact Tool Results Before Returning Them To The Model
 
 Tool results often contain customer records, logs, URLs, headers, or hidden tokens.
 
@@ -262,7 +369,7 @@ raw_result = {
 safe_result = veil.redact_data(raw_result, channel=Channel.TOOL_CALL_RESULT).data
 ```
 
-## 6. Redact MCP Resource Content
+## 8. Redact MCP Resource Content
 
 MCP resources can expose files, database rows, logs, or API payloads. Redact before the resource content enters an agent context.
 
@@ -277,7 +384,7 @@ def read_resource_for_agent(resource_id: str) -> object:
     return veil.redact_data(raw_resource, channel=Channel.MCP_RESOURCE_CONTENT).data
 ```
 
-## 7. Redact Memory Before Embedding Or Persistence
+## 9. Redact Memory Before Embedding Or Persistence
 
 Memory stores create long-lived recall. Redact before embedding and before persistence.
 
@@ -293,7 +400,7 @@ def write_memory(text: str) -> None:
     memory_store.save(text=safe.text, embedding=embedding)
 ```
 
-## 8. Redact Logs Before Export
+## 10. Redact Logs Before Export
 
 Use the built-in logging integration for application logs.
 
@@ -309,7 +416,7 @@ logger.addFilter(PyVeilLogFilter(Veil.high(secret=b"log-secret", scope="prod/log
 logger.warning("failed request for alice@example.com")
 ```
 
-## 9. CLI Preflight In CI Or Local Scripts
+## 11. CLI Preflight In CI Or Local Scripts
 
 Use `pyveil scan` to count findings and `pyveil redact` to create a redacted artifact.
 
@@ -324,7 +431,7 @@ pyveil redact prompt.txt --channel prompt.input > prompt.safe.txt
 pyveil redact request.json --channel tool.call.result --format json > request.safe.json
 ```
 
-## 10. Redact Known Names And Domain Identifiers
+## 12. Redact Known Names And Domain Identifiers
 
 The dependency-free core does not guess unknown names. Add values that your
 application already knows are sensitive, plus narrow identifiers from your own

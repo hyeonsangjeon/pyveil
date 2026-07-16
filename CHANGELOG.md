@@ -1,5 +1,16 @@
 # Changelog
 
+## 0.2.4 - 2026-07-16
+
+### Added
+
+- Installable OpenAI Responses API and Anthropic Messages API redaction
+  templates with env, `.env`, YAML, and keyless dry-run support.
+- Offline contract tests that exercise the official provider SDKs through
+  local mock HTTP transports without credentials, network requests, or spend.
+- A Python 3.9 through 3.14 provider-contract CI matrix while preserving the
+  dependency-free Python 3.8 through 3.14 core matrix.
+
 ## 0.2.3 - 2026-07-16
 
 Local Ollama boundary release.

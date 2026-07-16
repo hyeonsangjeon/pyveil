@@ -424,6 +424,8 @@
         <a href="#structured">Structured redaction</a>
         <a href="#custom-rules">Custom rules</a>
         <a href="#recipes">Recipes</a>
+        <a href="#openai">OpenAI</a>
+        <a href="#anthropic">Claude</a>
         <a href="#ollama">Ollama</a>
         <a href="#azure-openai">Azure OpenAI</a>
         <a href="#cli">Command line</a>
@@ -481,6 +483,12 @@
         <h3>From PyPI (recommended)</h3>
         <pre><code>pip install pyveil</code></pre>
 
+        <h3>OpenAI and Anthropic integrations</h3>
+        <p>Install only the provider SDK you use. The current official SDKs require Python 3.9 or newer;
+        pyveil core and both keyless dry-runs still support Python 3.8.</p>
+        <pre><code>pip install "pyveil[openai]"
+pip install "pyveil[anthropic]"</code></pre>
+
         <h3>Ollama local-model integration</h3>
         <p>Install the official Ollama client and optional env/YAML loaders while keeping the core dependency-free:</p>
         <pre><code>pip install "pyveil[ollama]"
@@ -494,7 +502,7 @@ ollama pull qwen3.5:4b</code></pre>
         <p>Install the latest <code>main</code> directly from GitHub:</p>
         <pre><code>pip install "git+https://github.com/hyeonsangjeon/pyveil.git"</code></pre>
         <p>Pin to a released tag for reproducible builds:</p>
-        <pre><code>pip install "git+https://github.com/hyeonsangjeon/pyveil.git@v0.2.3"</code></pre>
+        <pre><code>pip install "git+https://github.com/hyeonsangjeon/pyveil.git@v0.2.4"</code></pre>
 
         <h3>For development (editable clone)</h3>
         <pre><code>git clone https://github.com/hyeonsangjeon/pyveil.git
@@ -852,7 +860,73 @@ def call_with_redaction(messages: List[Message], call_llm: LLMCall) -> str:
     safe = veil.redact_data(messages, channel=Channel.PROMPT_INPUT)
     return call_llm(cast(List[Message], safe.data))</code></pre>
 
-        <h3 id="ollama">2. Ollama, local and memory-aware</h3>
+        <h3 id="openai">2. OpenAI Responses API, keyless first</h3>
+        <p>The installable OpenAI helper redacts a prompt immediately before the official SDK serializes a
+        <code>client.responses.create(...)</code> request. The returned <code>redacted_input</code> is the exact
+        value allowed to cross that boundary.</p>
+        <pre><code>from pyveil.integrations.openai import ask_openai, load_settings
+
+settings = load_settings()
+result = ask_openai(
+    "Write a follow-up for alice@example.com or 010-1234-5678.",
+    settings,
+)
+
+print(result.redacted_input)  <span class="tok-cmt"># exact Responses API input</span>
+print(result.output_text)
+print(result.input_tokens, result.output_tokens, result.total_tokens)</code></pre>
+
+        <h4>Prove the boundary without an API key</h4>
+        <pre><code>PYVEIL_SECRET=docs-demo-secret \
+OPENAI_MODEL=gpt-5.6-luna \
+  python -m pyveil.integrations.openai --dry-run</code></pre>
+        <pre class="output"><code>mode: dry-run
+model: gpt-5.6-luna
+sent-to-openai: Write a one-sentence support follow-up for [EMAIL:17c25f8a4fe3] or [PHONE:3f6dc5a3c9f3].
+findings: EMAIL=1, PHONE=1
+openai-response: skipped (--dry-run)</code></pre>
+        <p>No provider key or network request is used here. The repository also sends the same synthetic prompt
+        through the real OpenAI SDK into a local mock HTTP transport and asserts that its serialized
+        <code>/v1/responses</code> body contains placeholders but no raw email or phone. This verifies the SDK
+        contract without claiming a paid live request.</p>
+        <p>For live use, set <code>OPENAI_API_KEY</code>, <code>OPENAI_MODEL</code>, and <code>PYVEIL_SECRET</code>.
+        Process environment overrides optional <code>.env</code> and non-secret YAML settings. Model access changes
+        over time, so the model remains configuration rather than a pyveil runtime default. Historical model IDs
+        are not a free testing tier and may be retired. See the
+        <a href="https://github.com/hyeonsangjeon/pyveil/blob/main/docs/integrations/openai.md">full OpenAI guide</a>.</p>
+
+        <h3 id="anthropic">3. Anthropic Messages API, keyless first</h3>
+        <p>The Anthropic helper applies the same boundary immediately before the official SDK serializes
+        <code>client.messages.create(...)</code>. It extracts text response blocks and returns safe request metadata.</p>
+        <pre><code>from pyveil.integrations.anthropic import ask_anthropic, load_settings
+
+settings = load_settings()
+result = ask_anthropic(
+    "Write a follow-up for alice@example.com or 010-1234-5678.",
+    settings,
+)
+
+print(result.redacted_input)  <span class="tok-cmt"># exact Messages API user content</span>
+print(result.output_text)
+print(result.input_tokens, result.output_tokens)</code></pre>
+
+        <h4>Prove the boundary without an API key</h4>
+        <pre><code>PYVEIL_SECRET=docs-demo-secret \
+ANTHROPIC_MODEL=claude-haiku-4-5 \
+  python -m pyveil.integrations.anthropic --dry-run</code></pre>
+        <pre class="output"><code>mode: dry-run
+model: claude-haiku-4-5
+sent-to-anthropic: Write a one-sentence support follow-up for [EMAIL:0b77abd1b26b] or [PHONE:ec56e2456ba2].
+findings: EMAIL=1, PHONE=1
+anthropic-response: skipped (--dry-run)</code></pre>
+        <p>The offline contract test uses the real Anthropic SDK with a local mock HTTP transport and checks the
+        serialized <code>/v1/messages</code> body. No API key, network request, or Claude credit is consumed.</p>
+        <p>For live use, set <code>ANTHROPIC_API_KEY</code>, <code>ANTHROPIC_MODEL</code>, and
+        <code>PYVEIL_SECRET</code>. Older Claude models are not free and may be retired, so keep the model ID
+        configurable. See the
+        <a href="https://github.com/hyeonsangjeon/pyveil/blob/main/docs/integrations/anthropic.md">full Claude guide</a>.</p>
+
+        <h3 id="ollama">4. Ollama, local and memory-aware</h3>
         <p>The installable Ollama helper redacts the prompt immediately before the official
         <code>Client.chat(...)</code> call. It returns the exact model input, response text, timing, and token counts.
         The default <code>qwen3.5:4b</code> profile limits context to 4096 tokens and unloads after each response.</p>
@@ -907,7 +981,7 @@ export OLLAMA_KEEP_ALIVE=5m</code></pre>
           and checked-in <a href="https://github.com/hyeonsangjeon/pyveil/blob/main/examples/ollama.example.yaml">YAML template</a>.</p>
         </div>
 
-        <h3 id="azure-openai">3. Azure OpenAI, end to end</h3>
+        <h3 id="azure-openai">5. Azure OpenAI, end to end</h3>
         <p>The installable Azure helper loads environment, <code>.env</code>, or YAML settings, redacts the prompt,
         then calls the Azure OpenAI v1 Responses API. <code>redacted_input</code> is the exact value that crossed the
         provider boundary.</p>
@@ -952,7 +1026,7 @@ python -m pyveil.integrations.azure_openai \
         <a href="https://github.com/hyeonsangjeon/pyveil/blob/main/examples/azure_openai.env.example">.env template</a>
         and <a href="https://github.com/hyeonsangjeon/pyveil/blob/main/examples/azure_openai.example.yaml">YAML template</a>.</p>
 
-        <h3>4. Block credentials before model-controlled tool calls</h3>
+        <h3>6. Block credentials before model-controlled tool calls</h3>
         <p>The default policy blocks credential-like material in <code>tool.call.arguments</code>. Catch the block and
         refuse to run the tool.</p>
         <pre><code>from pyveil import BlockedSensitiveData, Channel, Veil
@@ -971,7 +1045,7 @@ except BlockedSensitiveData as exc:
 else:
     run_tool(**safe_args)</code></pre>
 
-        <h3>5. Redact tool results before returning them to the model</h3>
+        <h3>7. Redact tool results before returning them to the model</h3>
         <p>Tool results often carry customer records, URLs, headers, or hidden tokens.</p>
         <pre><code>veil = Veil.high(secret=b"tenant-secret", scope="tenant-123/tool-result")
 
@@ -981,14 +1055,14 @@ raw_result = {
 }
 safe_result = veil.redact_data(raw_result, channel="tool.call.result").data</code></pre>
 
-        <h3>6. Redact MCP resource content</h3>
+        <h3>8. Redact MCP resource content</h3>
         <pre><code>veil = Veil.high(secret=b"tenant-secret", scope="tenant-123/mcp")
 
 def read_resource_for_agent(resource_id: str) -> object:
     raw_resource = read_resource(resource_id)
     return veil.redact_data(raw_resource, channel="mcp.resource.content").data</code></pre>
 
-        <h3>7. Redact memory before embedding or persistence</h3>
+        <h3>9. Redact memory before embedding or persistence</h3>
         <pre><code>veil = Veil.high(secret=b"tenant-secret", scope="tenant-123/memory")
 
 def write_memory(text: str) -> None:
@@ -996,7 +1070,7 @@ def write_memory(text: str) -> None:
     embedding = embed(safe.text)
     memory_store.save(text=safe.text, embedding=embedding)</code></pre>
 
-        <h3>8. Redact logs before export</h3>
+        <h3>10. Redact logs before export</h3>
         <pre><code>import logging
 from pyveil import Veil
 from pyveil.integrations import PyVeilLogFilter
@@ -1007,7 +1081,7 @@ logger.addFilter(PyVeilLogFilter(Veil.high(secret=b"log-secret", scope="prod/log
 logger.warning("failed request for alice@example.com")
 <span class="tok-cmt"># handlers see: failed request for [EMAIL:...]</span></code></pre>
 
-        <h3>9. CLI preflight in CI or local scripts</h3>
+        <h3>11. CLI preflight in CI or local scripts</h3>
         <pre><code>export PYVEIL_SECRET="tenant-or-run-secret"
 export PYVEIL_SCOPE="tenant/session"
 
@@ -1078,9 +1152,11 @@ echo '{"user":"alice@example.com"}' | pyveil redact --channel tool.call.result -
         you build, so secret, scope, and policy stay in your control.</p>
 
         <h3>LLM provider boundaries</h3>
-        <p>The Ollama and Azure OpenAI helpers provide runnable client boundaries with dry-run inspection,
-        env/.env/YAML loading, and the exact redacted input returned to the caller. See
-        <a href="#ollama">Ollama</a> and <a href="#azure-openai">Azure OpenAI</a>.</p>
+        <p>The OpenAI, Anthropic, Ollama, and Azure OpenAI helpers provide runnable client boundaries with dry-run
+        inspection, env/.env/YAML loading, and the exact redacted input returned to the caller. OpenAI and
+        Anthropic add offline tests against the real SDK serialization contracts. See
+        <a href="#openai">OpenAI</a>, <a href="#anthropic">Claude</a>, <a href="#ollama">Ollama</a>, and
+        <a href="#azure-openai">Azure OpenAI</a>.</p>
 
         <h3>Standard logging</h3>
         <p><code>PyVeilLogFilter</code> is a <code>logging.Filter</code> that redacts each record's message before

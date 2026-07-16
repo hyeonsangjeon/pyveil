@@ -1,0 +1,12 @@
+# Non-secret Anthropic and pyveil settings.
+# Environment variables override every value below.
+anthropic:
+  model: claude-haiku-4-5
+  max_tokens: 256
+  timeout_seconds: 120
+  api_key_env: ANTHROPIC_API_KEY
+  # base_url: https://api.anthropic.com
+
+pyveil:
+  secret_env: PYVEIL_SECRET
+  scope: tenant-123/anthropic
