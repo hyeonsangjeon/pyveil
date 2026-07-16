@@ -13,6 +13,12 @@
 - [Threat model](docs/threat-model.md)
 - [FAQ](docs/faq.md)
 - [Cookbook](docs/cookbook.md)
+- [OpenAI integration](pyveil/integrations/openai.py)
+- [OpenAI example](examples/openai.py)
+- [OpenAI keyless and live guide](docs/integrations/openai.md)
+- [Anthropic integration](pyveil/integrations/anthropic.py)
+- [Anthropic example](examples/anthropic.py)
+- [Anthropic keyless and live guide](docs/integrations/anthropic.md)
 - [Ollama integration](pyveil/integrations/ollama.py)
 - [Ollama example](examples/ollama.py)
 - [Ollama setup and memory guide](docs/integrations/ollama.md)
@@ -41,3 +47,4 @@
 - Do not expose unmasking functions to a model-controlled tool.
 - Do not claim pyveil guarantees compliance or perfect sensitive-data detection.
 - Keep integrations thin and the core local.
+- OpenAI and Anthropic SDK contract tests use local mock HTTP transports; they require no API keys or provider usage.

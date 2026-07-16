@@ -19,7 +19,10 @@ Do not turn pyveil into a general DLP suite, gateway, Presidio clone, or prompt-
 - Run CLI demo: `python3 -m pyveil demo`
 - Run CLI locally: `PYVEIL_SECRET=dev-secret python3 -m pyveil redact <file>`
 - Run detector evaluation: `python3 evaluation/evaluate.py --check`
+- Run the OpenAI boundary without a key: `PYVEIL_SECRET=dev-secret OPENAI_MODEL=gpt-5.6-luna python3 -m pyveil.integrations.openai --dry-run`
+- Run the Anthropic boundary without a key: `PYVEIL_SECRET=dev-secret ANTHROPIC_MODEL=claude-haiku-4-5 python3 -m pyveil.integrations.anthropic --dry-run`
 - Run the Ollama boundary without a model call: `PYVEIL_SECRET=dev-secret python3 -m pyveil.integrations.ollama --dry-run`
+- Run offline provider SDK contracts: `uv run --extra openai --extra anthropic --extra test pytest tests/test_provider_contracts.py -m provider_contract --no-cov`
 
 ## Architecture
 
@@ -73,6 +76,8 @@ This repository includes files meant for coding agents and LLM readers:
 - [docs/evaluation.html](docs/evaluation.html)
 - [docs/guides/](docs/guides/)
 - [docs/integrations/mcp.md](docs/integrations/mcp.md)
+- [docs/integrations/openai.md](docs/integrations/openai.md)
+- [docs/integrations/anthropic.md](docs/integrations/anthropic.md)
 - [docs/integrations/ollama.md](docs/integrations/ollama.md)
 - [docs/integrations/logging.md](docs/integrations/logging.md)
 - [docs/integrations/tracing.md](docs/integrations/tracing.md)
@@ -90,6 +95,8 @@ Examples:
 - [examples/fastapi_middleware.py](examples/fastapi_middleware.py)
 - [examples/litellm_proxy_filter.py](examples/litellm_proxy_filter.py)
 - [examples/azure_openai.py](examples/azure_openai.py)
+- [examples/openai.py](examples/openai.py)
+- [examples/anthropic.py](examples/anthropic.py)
 - [examples/ollama.py](examples/ollama.py)
 
 ## Development
@@ -98,13 +105,26 @@ Examples:
 uv run --extra dev ruff check .
 uv run --extra dev mypy pyveil tests
 uv run --extra test pytest
+uv run --extra openai --extra anthropic --extra test \
+  pytest tests/test_provider_contracts.py -m provider_contract --no-cov
 ```
+
+The dependency-free core is tested on Python 3.8 through 3.14. The current
+official OpenAI and Anthropic SDKs require Python 3.9+, so their serialization
+contract matrix covers Python 3.9 through 3.14. Their keyless dry-runs remain
+usable on Python 3.8 because provider SDK imports happen only for live calls.
 
 Full local release check:
 
 ```bash
 for v in 3.8 3.9 3.10 3.11 3.12 3.13 3.14; do
   UV_PROJECT_ENVIRONMENT="/tmp/pyveil-venv-$v" uv run --python "$v" --extra test pytest -q --disable-warnings --no-cov
+done
+
+for v in 3.9 3.10 3.11 3.12 3.13 3.14; do
+  UV_PROJECT_ENVIRONMENT="/tmp/pyveil-provider-$v" uv run --python "$v" \
+    --extra openai --extra anthropic --extra test \
+    pytest tests/test_provider_contracts.py -m provider_contract -q --no-cov
 done
 
 uv run --extra dev python -m build

@@ -81,6 +81,74 @@ response = call_llm(safe.data)  # Your provider SDK call
 The provider receives the same list and dictionary shape, with sensitive values
 replaced before serialization or transmission.
 
+## OpenAI And Claude: Keyless Contract-Tested Templates
+
+Install provider-specific templates without adding either SDK to pyveil's
+zero-dependency core:
+
+```bash
+pip install "pyveil[openai]"     # OpenAI Responses API
+pip install "pyveil[anthropic]"  # Claude Messages API
+```
+
+Both integrations redact locally at the final SDK boundary and return the exact
+provider input for inspection:
+
+```python
+from pyveil.integrations.openai import ask_openai, load_settings
+
+settings = load_settings()
+result = ask_openai(
+    "Write a follow-up for alice@example.com or 010-1234-5678.",
+    settings,
+)
+
+print(result.redacted_input)  # exact client.responses.create(...) input
+print(result.output_text)
+```
+
+```python
+from pyveil.integrations.anthropic import ask_anthropic, load_settings
+
+settings = load_settings()
+result = ask_anthropic(
+    "Write a follow-up for alice@example.com or 010-1234-5678.",
+    settings,
+)
+
+print(result.redacted_input)  # exact client.messages.create(...) content
+print(result.output_text)
+```
+
+No API key is needed to prove either boundary:
+
+```bash
+PYVEIL_SECRET=docs-demo-secret OPENAI_MODEL=gpt-5.6-luna \
+  python -m pyveil.integrations.openai --dry-run
+
+PYVEIL_SECRET=docs-demo-secret ANTHROPIC_MODEL=claude-haiku-4-5 \
+  python -m pyveil.integrations.anthropic --dry-run
+```
+
+```text
+sent-to-openai:    ... [EMAIL:17c25f8a4fe3] ... [PHONE:3f6dc5a3c9f3].
+sent-to-anthropic: ... [EMAIL:0b77abd1b26b] ... [PHONE:ec56e2456ba2].
+provider-response: skipped (--dry-run)
+```
+
+The repository also exercises the real official SDKs through local mock HTTP
+transports and asserts against the serialized `/v1/responses` and `/v1/messages`
+JSON bodies. These tests use no credentials, make no network requests, and
+cannot incur provider spend. A live paid API call has **not** been claimed.
+Historical provider models are not a free fallback and may be retired; keep the
+model ID configurable and use dry-run or mock contracts for cost-free checks.
+
+Current OpenAI and Anthropic SDKs require Python 3.9+. The pyveil core and both
+keyless dry-run paths remain compatible with Python 3.8 through 3.14. Use the
+checked-in [OpenAI guide](docs/integrations/openai.md) and
+[Anthropic / Claude guide](docs/integrations/anthropic.md) for configuration,
+offline verification, and boundary notes.
+
 ## Ollama: Local End To End
 
 Run a local model behind the same redaction boundary. The optional integration
@@ -231,7 +299,7 @@ evaluator:
 python evaluation/evaluate.py --check
 ```
 
-For corpus v1, pyveil 0.2.3 matches all 36 expected findings across 39 cases
+For corpus v1, pyveil 0.2.4 matches all 36 expected findings across 39 cases
 (33 positive, 6 negative), with no corpus false positives, false negatives,
 labeled-value leaks, or non-empty `Finding.raw` values.
 
@@ -373,6 +441,8 @@ is parsed and traversed structurally.
 | --- | --- |
 | Any LLM provider | [Provider-neutral client wrapper](https://github.com/hyeonsangjeon/pyveil/blob/main/examples/llm_client_boundary.py) |
 | OpenAI Agents SDK | [Input guardrail example](https://github.com/hyeonsangjeon/pyveil/blob/main/examples/openai_agents_guardrail.py) |
+| OpenAI Responses API | [Installable integration](https://github.com/hyeonsangjeon/pyveil/blob/main/pyveil/integrations/openai.py) and [keyless contract guide](https://github.com/hyeonsangjeon/pyveil/blob/main/docs/integrations/openai.md) |
+| Anthropic / Claude | [Installable integration](https://github.com/hyeonsangjeon/pyveil/blob/main/pyveil/integrations/anthropic.py) and [keyless contract guide](https://github.com/hyeonsangjeon/pyveil/blob/main/docs/integrations/anthropic.md) |
 | Azure OpenAI | [Runnable env/YAML integration](https://github.com/hyeonsangjeon/pyveil/blob/main/pyveil/integrations/azure_openai.py) and [short example](https://github.com/hyeonsangjeon/pyveil/blob/main/examples/azure_openai.py) |
 | LiteLLM | [Proxy filter example](https://github.com/hyeonsangjeon/pyveil/blob/main/examples/litellm_proxy_filter.py) |
 | FastAPI | [Request middleware example](https://github.com/hyeonsangjeon/pyveil/blob/main/examples/fastapi_middleware.py) |

@@ -43,9 +43,17 @@ EMAIL, PHONE, CREDIT_CARD, JWT, AUTH_HEADER, PRIVATE_KEY, API_KEY, URL_QUERY_SEC
 ## Repository documents
 
 - Cookbook: https://github.com/hyeonsangjeon/pyveil/blob/main/docs/cookbook.md
+- OpenAI integration: https://github.com/hyeonsangjeon/pyveil/blob/main/docs/integrations/openai.md
+- Anthropic integration: https://github.com/hyeonsangjeon/pyveil/blob/main/docs/integrations/anthropic.md
 - Ollama integration: https://github.com/hyeonsangjeon/pyveil/blob/main/docs/integrations/ollama.md
 - Redaction reference: https://github.com/hyeonsangjeon/pyveil/blob/main/docs/redaction-reference.md
 - Threat model: https://github.com/hyeonsangjeon/pyveil/blob/main/docs/threat-model.md
 - Known limitations: https://github.com/hyeonsangjeon/pyveil/blob/main/docs/known-limitations.md
 - Detector provenance: https://github.com/hyeonsangjeon/pyveil/blob/main/docs/detector-provenance.md
 - Agent instructions: https://github.com/hyeonsangjeon/pyveil/blob/main/AGENTS.md
+
+## Provider verification
+
+- OpenAI and Anthropic have keyless CLI dry-runs.
+- Offline contract tests pass redacted prompts through the official SDKs into local mock HTTP transports.
+- No live provider request, API key, or usage credit is required for those checks.

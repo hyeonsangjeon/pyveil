@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "pyveil"
-version = "0.2.3"
+version = "0.2.4"
 description = "Local PII and secret redaction for Python LLM apps, AI agents, tool calls, and MCP"
 readme = "README.md"
 requires-python = ">=3.8"
@@ -71,7 +71,17 @@ dependencies = []
 
 [project.optional-dependencies]
 azure-openai = [
-    "openai>=1.66.0",
+    "openai>=1.66.0,<3.0.0",
+    "python-dotenv>=1.0.0",
+    "PyYAML>=6.0.0",
+]
+openai = [
+    "openai>=2.45.0,<3.0.0; python_version >= '3.9'",
+    "python-dotenv>=1.0.0",
+    "PyYAML>=6.0.0",
+]
+anthropic = [
+    "anthropic>=0.116.0,<1.0.0; python_version >= '3.9'",
     "python-dotenv>=1.0.0",
     "PyYAML>=6.0.0",
 ]
@@ -89,7 +99,8 @@ dev = [
     "twine>=5.0.0",
     "mypy>=1.0.0",
     "ollama>=0.6.2,<1.0.0",
-    "openai>=1.66.0",
+    "openai>=2.45.0,<3.0.0; python_version >= '3.9'",
+    "anthropic>=0.116.0,<1.0.0; python_version >= '3.9'",
     "python-dotenv>=1.0.0",
     "PyYAML>=6.0.0",
     "types-PyYAML>=6.0.0",
@@ -132,6 +143,9 @@ addopts = [
     "--cov=pyveil",
     "--cov-report=term-missing",
     "--cov-report=html",
+]
+markers = [
+    "provider_contract: exercises an official provider SDK through a local mock HTTP transport",
 ]
 
 [tool.black]
