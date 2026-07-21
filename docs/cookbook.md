@@ -10,6 +10,23 @@ raw context -> pyveil -> model/tool/memory/log/trace
 
 Use `HIGH` for agent-facing or provider-facing boundaries. Use `LOW` only for human-facing diagnostic previews.
 
+## Find Your Integration
+
+| Stack | Runnable starting point | What to verify |
+| --- | --- | --- |
+| OpenAI Agents SDK | [`examples/openai_agents_guardrail.py`](../examples/openai_agents_guardrail.py) | Redaction finishes before `Runner.run`; the SDK's input guardrail is not used as an input transformer |
+| LiteLLM SDK or Proxy | [`examples/litellm_proxy_filter.py`](../examples/litellm_proxy_filter.py) | Messages are replaced before `completion(...)` or the Proxy forwards the request |
+| OpenAI Responses API | [OpenAI integration guide](integrations/openai.md) | Inspect the exact serialized request with the keyless contract test |
+| Anthropic / Claude | [Anthropic integration guide](integrations/anthropic.md) | Inspect the exact serialized Messages API request without credentials |
+| Azure OpenAI | [`examples/azure_openai.py`](../examples/azure_openai.py) | Keep API keys in environment variables, not YAML |
+| Ollama | [Ollama integration guide](integrations/ollama.md) | Start with dry-run before loading a local model |
+| MCP | [MCP integration guide](integrations/mcp.md) | Redact both tool results and resource content |
+| Logging and tracing | [Logging guide](integrations/logging.md) and [tracing guide](integrations/tracing.md) | Redact before records leave the process |
+
+Every starting point uses synthetic values. Review the
+[supported detection shapes](redaction-reference.md), [known limitations](known-limitations.md),
+and [security policy](../SECURITY.md) before adapting one to production data.
+
 ## 1. Redact Before Any LLM Client
 
 Keep pyveil outside the provider-specific client. OpenAI, Azure OpenAI, Anthropic, Gemini, LiteLLM, and internal gateways can all use the same boundary shape.

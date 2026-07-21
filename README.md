@@ -57,6 +57,26 @@ after:  Email [EMAIL:...], call [PHONE:...], and use API key [API_KEY:...]
 found:  API_KEY, EMAIL, PHONE
 ```
 
+## Start With Your Integration
+
+Choose the boundary you need and begin with a runnable example. The keyless
+paths use synthetic input and stop before a provider request.
+
+| You use | Install | Start here | Protected boundary |
+| --- | --- | --- | --- |
+| OpenAI Agents SDK | `pip install pyveil openai-agents` | [Pre-dispatch Runner wrapper](https://github.com/hyeonsangjeon/pyveil/blob/main/examples/openai_agents_guardrail.py) | Input is redacted before `Runner.run`; Python 3.10+ for the current SDK |
+| LiteLLM SDK or Proxy | `pip install pyveil litellm` or `pip install pyveil "litellm[proxy]"` | [SDK wrapper and Proxy pre-call hook](https://github.com/hyeonsangjeon/pyveil/blob/main/examples/litellm_proxy_filter.py) | Messages before `completion(...)` or proxy provider dispatch; Python 3.10+ for current LiteLLM |
+| OpenAI Responses API | `pip install "pyveil[openai]"` | [Keyless contract guide](https://github.com/hyeonsangjeon/pyveil/blob/main/docs/integrations/openai.md) | Exact input before `client.responses.create(...)` |
+| Anthropic / Claude | `pip install "pyveil[anthropic]"` | [Keyless contract guide](https://github.com/hyeonsangjeon/pyveil/blob/main/docs/integrations/anthropic.md) | Exact content before `client.messages.create(...)` |
+| Azure OpenAI | `pip install "pyveil[azure-openai]"` | [Environment and YAML example](https://github.com/hyeonsangjeon/pyveil/blob/main/examples/azure_openai.py) | Prompt before the Azure Responses API request |
+| Ollama | `pip install "pyveil[ollama]"` | [Local end-to-end guide](https://github.com/hyeonsangjeon/pyveil/blob/main/docs/integrations/ollama.md) | Prompt before the local model call |
+| MCP | `pip install pyveil` | [Server wrapper](https://github.com/hyeonsangjeon/pyveil/blob/main/examples/mcp_server_wrapper.py) | Tool results and resource content before agent context |
+| FastAPI, logs, or memory | `pip install pyveil` | [Cookbook](https://github.com/hyeonsangjeon/pyveil/blob/main/docs/cookbook.md) | Request payloads, log records, and memory writes |
+
+Before production use, confirm the supported [detection shapes](https://github.com/hyeonsangjeon/pyveil/blob/main/docs/redaction-reference.md)
+and read the [security contract](https://github.com/hyeonsangjeon/pyveil/blob/main/SECURITY.md). The examples demonstrate where
+to place the boundary; they do not claim perfect PII recall or compliance.
+
 ## Protect An LLM Call
 
 Put `pyveil` immediately before the provider call. The same code works with
@@ -440,11 +460,11 @@ is parsed and traversed structurally.
 | Stack or boundary | Copy-paste example |
 | --- | --- |
 | Any LLM provider | [Provider-neutral client wrapper](https://github.com/hyeonsangjeon/pyveil/blob/main/examples/llm_client_boundary.py) |
-| OpenAI Agents SDK | [Input guardrail example](https://github.com/hyeonsangjeon/pyveil/blob/main/examples/openai_agents_guardrail.py) |
+| OpenAI Agents SDK | [Pre-dispatch `Runner.run` wrapper](https://github.com/hyeonsangjeon/pyveil/blob/main/examples/openai_agents_guardrail.py) |
 | OpenAI Responses API | [Installable integration](https://github.com/hyeonsangjeon/pyveil/blob/main/pyveil/integrations/openai.py) and [keyless contract guide](https://github.com/hyeonsangjeon/pyveil/blob/main/docs/integrations/openai.md) |
 | Anthropic / Claude | [Installable integration](https://github.com/hyeonsangjeon/pyveil/blob/main/pyveil/integrations/anthropic.py) and [keyless contract guide](https://github.com/hyeonsangjeon/pyveil/blob/main/docs/integrations/anthropic.md) |
 | Azure OpenAI | [Runnable env/YAML integration](https://github.com/hyeonsangjeon/pyveil/blob/main/pyveil/integrations/azure_openai.py) and [short example](https://github.com/hyeonsangjeon/pyveil/blob/main/examples/azure_openai.py) |
-| LiteLLM | [Proxy filter example](https://github.com/hyeonsangjeon/pyveil/blob/main/examples/litellm_proxy_filter.py) |
+| LiteLLM | [SDK wrapper and Proxy pre-call hook](https://github.com/hyeonsangjeon/pyveil/blob/main/examples/litellm_proxy_filter.py) |
 | FastAPI | [Request middleware example](https://github.com/hyeonsangjeon/pyveil/blob/main/examples/fastapi_middleware.py) |
 | MCP | [Server wrapper](https://github.com/hyeonsangjeon/pyveil/blob/main/examples/mcp_server_wrapper.py) and [integration guide](https://hyeonsangjeon.github.io/pyveil/manual.html#integrations) |
 | Python logging | [Logging filter example](https://github.com/hyeonsangjeon/pyveil/blob/main/examples/log_filter.py) |

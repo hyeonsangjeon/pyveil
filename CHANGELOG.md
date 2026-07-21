@@ -1,5 +1,19 @@
 # Changelog
 
+## Unreleased
+
+### Added
+
+- Keyless contract tests for the OpenAI Agents pre-dispatch wrapper and the
+  LiteLLM SDK and Proxy redaction boundaries.
+
+### Changed
+
+- Added an integration-first README and Cookbook index for visitors arriving
+  through OpenAI Agents, LiteLLM, provider SDK, MCP, logging, and memory paths.
+- Replaced the abstract OpenAI Agents and LiteLLM snippets with runnable
+  examples that redact immediately before the actual SDK or Proxy boundary.
+
 ## 0.2.4 - 2026-07-16
 
 ### Added
