@@ -43,6 +43,7 @@ EMAIL, PHONE, CREDIT_CARD, JWT, AUTH_HEADER, PRIVATE_KEY, API_KEY, URL_QUERY_SEC
 ## Repository documents
 
 - Cookbook: https://github.com/hyeonsangjeon/pyveil/blob/main/docs/cookbook.md
+- OpenAI Agents SDK vs LiteLLM comparison: https://github.com/hyeonsangjeon/pyveil/blob/main/docs/integrations/openai-agents-vs-litellm.md
 - OpenAI Agents SDK boundary: https://github.com/hyeonsangjeon/pyveil/blob/main/examples/openai_agents_guardrail.py
 - LiteLLM SDK and Proxy boundary: https://github.com/hyeonsangjeon/pyveil/blob/main/examples/litellm_proxy_filter.py
 - OpenAI integration: https://github.com/hyeonsangjeon/pyveil/blob/main/docs/integrations/openai.md

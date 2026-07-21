@@ -11,6 +11,8 @@
 
 - Added an integration-first README and Cookbook index for visitors arriving
   through OpenAI Agents, LiteLLM, provider SDK, MCP, logging, and memory paths.
+- Added a side-by-side OpenAI Agents and LiteLLM comparison covering detection
+  location, inputs, provider-bound outputs, bypass risks, and unsupported paths.
 - Replaced the abstract OpenAI Agents and LiteLLM snippets with runnable
   examples that redact immediately before the actual SDK or Proxy boundary.
 

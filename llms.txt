@@ -13,6 +13,7 @@
 - [Threat model](docs/threat-model.md)
 - [FAQ](docs/faq.md)
 - [Cookbook](docs/cookbook.md)
+- [OpenAI Agents SDK vs LiteLLM boundary comparison](docs/integrations/openai-agents-vs-litellm.md)
 - [OpenAI Agents SDK pre-dispatch wrapper](examples/openai_agents_guardrail.py)
 - [LiteLLM SDK and Proxy boundary](examples/litellm_proxy_filter.py)
 - [OpenAI integration](pyveil/integrations/openai.py)

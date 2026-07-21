@@ -27,6 +27,10 @@ Every starting point uses synthetic values. Review the
 [supported detection shapes](redaction-reference.md), [known limitations](known-limitations.md),
 and [security policy](../SECURITY.md) before adapting one to production data.
 
+For a direct comparison of detection location, accepted input, provider-bound
+output, bypass risk, and unsupported payloads, read
+[OpenAI Agents SDK vs LiteLLM redaction boundaries](integrations/openai-agents-vs-litellm.md).
+
 ## 1. Redact Before Any LLM Client
 
 Keep pyveil outside the provider-specific client. OpenAI, Azure OpenAI, Anthropic, Gemini, LiteLLM, and internal gateways can all use the same boundary shape.

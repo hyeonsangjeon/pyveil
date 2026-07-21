@@ -12,6 +12,7 @@ Start with:
 - [Threat model](threat-model.md)
 - [FAQ](faq.md)
 - [Cookbook](cookbook.md)
+- [OpenAI Agents SDK vs LiteLLM boundary comparison](integrations/openai-agents-vs-litellm.md)
 - [OpenAI keyless and live integration](integrations/openai.md)
 - [Anthropic / Claude keyless and live integration](integrations/anthropic.md)
 - [Ollama local-model integration](integrations/ollama.md)

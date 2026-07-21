@@ -77,6 +77,20 @@ Before production use, confirm the supported [detection shapes](https://github.c
 and read the [security contract](https://github.com/hyeonsangjeon/pyveil/blob/main/SECURITY.md). The examples demonstrate where
 to place the boundary; they do not claim perfect PII recall or compliance.
 
+### OpenAI Agents And LiteLLM, Side By Side
+
+| | OpenAI Agents SDK | LiteLLM Python SDK | LiteLLM Proxy |
+| --- | --- | --- | --- |
+| Detection point | Before `Runner.run` | Before `litellm.completion` | `async_pre_call_hook` before provider dispatch |
+| Input | String or structured agent input | Message list | `data["messages"]` when list-valued |
+| Safe output | Same shape passed to `Runner.run` | Redacted message list passed to `completion(...)` | Payload copy with redacted `messages` |
+| Bypass risk | Direct `Runner.run` calls | Direct `completion(...)` calls | Non-message payloads and fields |
+| Example limit | Does not cover later tools, memory, logs, or traces | Does not cover other LiteLLM APIs | Only completion-style `messages` are handled |
+
+See the [full comparison](https://github.com/hyeonsangjeon/pyveil/blob/main/docs/integrations/openai-agents-vs-litellm.md)
+for install commands, failure behavior, expected output, detector scope, and
+security limitations.
+
 ## Protect An LLM Call
 
 Put `pyveil` immediately before the provider call. The same code works with
