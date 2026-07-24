@@ -333,7 +333,7 @@ evaluator:
 python evaluation/evaluate.py --check
 ```
 
-For corpus v1, pyveil 0.2.4 matches all 36 expected findings across 39 cases
+For corpus v1, pyveil 0.2.5 matches all 36 expected findings across 39 cases
 (33 positive, 6 negative), with no corpus false positives, false negatives,
 labeled-value leaks, or non-empty `Finding.raw` values.
 

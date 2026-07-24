@@ -170,7 +170,7 @@ def test_cli_reports_package_version(capsys):
 
     captured = capsys.readouterr()
     assert exc_info.value.code == 0
-    assert captured.out == "pyveil 0.2.4\n"
+    assert captured.out == "pyveil 0.2.5\n"
 
 
 def test_package_version_matches_project_metadata():

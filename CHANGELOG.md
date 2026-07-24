@@ -1,11 +1,17 @@
 # Changelog
 
-## Unreleased
+## 0.2.5 - 2026-07-24
 
 ### Added
 
 - Keyless contract tests for the OpenAI Agents pre-dispatch wrapper and the
   LiteLLM SDK and Proxy redaction boundaries.
+- A machine-readable compatibility manifest and 16 synthetic per-channel
+  fixtures covering every protection surface, with a validator that fails on
+  manifest or documentation drift.
+- A privacy-safe Proof-of-Compatibility Receipt (redaction counts and output
+  hashes only) and a reproducible zero-runtime-dependency check, both wired
+  into CI.
 
 ### Changed
 
@@ -15,6 +21,9 @@
   location, inputs, provider-bound outputs, bypass risks, and unsupported paths.
 - Replaced the abstract OpenAI Agents and LiteLLM snippets with runnable
   examples that redact immediately before the actual SDK or Proxy boundary.
+- Hardened CI by pinning GitHub Actions to verified commit SHAs, applying
+  least-privilege permissions and concurrency, and adding Dependabot to keep
+  the pinned actions current.
 
 ## 0.2.4 - 2026-07-16
 

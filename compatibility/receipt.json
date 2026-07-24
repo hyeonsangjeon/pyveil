@@ -5,11 +5,11 @@
     "system": "Linux"
   },
   "gate": "pass",
-  "generated_at": "2026-07-24T09:24:52Z",
-  "git_commit": "caaed4d91347f5bd5ecf30cc4016070257743875",
+  "generated_at": "2026-07-24T10:20:35Z",
+  "git_commit": "03f2fac5d423bac0b1ba3b9396965fd726c808b4",
   "privacy_note": "Redaction counts and output hashes only. No raw prompt, PII, or secret is included. Placeholders are scoped HMAC digests.",
   "project": "pyveil",
-  "pyveil_version": "0.2.4",
+  "pyveil_version": "0.2.5",
   "redaction_summary": {
     "API_KEY": 2,
     "AUTH_HEADER": 1,

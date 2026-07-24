@@ -2,9 +2,9 @@
 
 Privacy-safe evidence for the synthetic protection-surface set. Counts and hashes only; no raw prompt, PII, or secret.
 
-- Generated: `2026-07-24T09:24:52Z`
-- pyveil: `0.2.4`
-- Commit: `caaed4d91347f5bd5ecf30cc4016070257743875`
+- Generated: `2026-07-24T10:20:35Z`
+- pyveil: `0.2.5`
+- Commit: `03f2fac5d423bac0b1ba3b9396965fd726c808b4`
 - Environment: CPython 3.10.12 on Linux
 - Gate: **pass** (16/16 fixtures across 8 surfaces)
 

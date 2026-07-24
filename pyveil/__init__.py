@@ -1,6 +1,6 @@
 """pyveil: local PII and secret redaction for Python AI agents."""
 
-__version__ = "0.2.4"
+__version__ = "0.2.5"
 __author__ = "Hyeon Sang Jeon"
 __license__ = "MIT"
 
