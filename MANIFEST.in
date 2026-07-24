@@ -14,6 +14,10 @@ recursive-include examples *.py *.yaml *.example
 # Include reproducible evaluation
 recursive-include evaluation *.py *.json *.md
 
+# Include compatibility contract and tooling
+recursive-include compatibility *.json *.md
+recursive-include scripts *.py
+
 # Include tests
 recursive-include tests *.py
 

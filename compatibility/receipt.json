@@ -1,0 +1,229 @@
+{
+  "environment": {
+    "implementation": "CPython",
+    "python_version": "3.10.12",
+    "system": "Linux"
+  },
+  "gate": "pass",
+  "generated_at": "2026-07-24T09:24:52Z",
+  "git_commit": "caaed4d91347f5bd5ecf30cc4016070257743875",
+  "privacy_note": "Redaction counts and output hashes only. No raw prompt, PII, or secret is included. Placeholders are scoped HMAC digests.",
+  "project": "pyveil",
+  "pyveil_version": "0.2.4",
+  "redaction_summary": {
+    "API_KEY": 2,
+    "AUTH_HEADER": 1,
+    "CREDIT_CARD": 2,
+    "EMAIL": 9,
+    "JWT": 1,
+    "KV_SECRET": 1,
+    "PHONE": 3,
+    "PRIVATE_KEY": 1,
+    "URL_QUERY_SECRET": 1
+  },
+  "schema_version": 1,
+  "surfaces": {
+    "log.record": [
+      {
+        "blocked": false,
+        "category": "basic",
+        "fixture_id": "log_record_basic",
+        "gate": "pass",
+        "output_sha256": "0a42d444ea448c175f35c257629d63bc65d2747b00a0d0cbe6ed45807949f0d4",
+        "reasons": [],
+        "redaction_counts": {
+          "AUTH_HEADER": 1,
+          "EMAIL": 1
+        }
+      },
+      {
+        "blocked": false,
+        "category": "broken_json",
+        "fixture_id": "log_record_broken_json",
+        "gate": "pass",
+        "output_sha256": "2a2d9579261e3f852f7b75804533710baab010f80b5f6fc796b4466ba609ee6c",
+        "reasons": [],
+        "redaction_counts": {
+          "EMAIL": 1
+        }
+      }
+    ],
+    "mcp.resource.content": [
+      {
+        "blocked": false,
+        "category": "nested",
+        "fixture_id": "mcp_resource_nested",
+        "gate": "pass",
+        "output_sha256": "956f4b2a085b7da5909ca562387170a18315fc4b9f85c4e5c1fe1ee072443099",
+        "reasons": [],
+        "redaction_counts": {
+          "EMAIL": 1,
+          "URL_QUERY_SECRET": 1
+        }
+      },
+      {
+        "blocked": false,
+        "category": "unicode",
+        "fixture_id": "mcp_resource_unicode",
+        "gate": "pass",
+        "output_sha256": "de6f0c647f5b6b9322361b3a08c063e9dbf836d45e98a099ad04ca641a9aa9cb",
+        "reasons": [],
+        "redaction_counts": {
+          "EMAIL": 1,
+          "PHONE": 1
+        }
+      }
+    ],
+    "memory.write": [
+      {
+        "blocked": false,
+        "category": "basic",
+        "fixture_id": "memory_write_card",
+        "gate": "pass",
+        "output_sha256": "6d95bb6161dcb037a2ad5691b6a74c81d77aa59b1f70a5fd66febb78494ce9f5",
+        "reasons": [],
+        "redaction_counts": {
+          "CREDIT_CARD": 1
+        }
+      },
+      {
+        "blocked": false,
+        "category": "basic",
+        "fixture_id": "memory_write_jwt",
+        "gate": "pass",
+        "output_sha256": "d465c676960fcc8355e44d8313bb496a3b5df369b4129b130f042fa9130d4db4",
+        "reasons": [],
+        "redaction_counts": {
+          "JWT": 1
+        }
+      },
+      {
+        "blocked": false,
+        "category": "basic",
+        "fixture_id": "memory_write_kv_secret",
+        "gate": "pass",
+        "output_sha256": "a200b2a50c7aac7d7dede4efa125765c88d5db860dd009a8a661d822c1893b9e",
+        "reasons": [],
+        "redaction_counts": {
+          "KV_SECRET": 1
+        }
+      }
+    ],
+    "prompt.input": [
+      {
+        "blocked": false,
+        "category": "basic",
+        "fixture_id": "prompt_input_basic",
+        "gate": "pass",
+        "output_sha256": "50150487a70ac2d16631e0c092a235566c5d2fbf411665f7e15bbe5b852553e7",
+        "reasons": [],
+        "redaction_counts": {
+          "EMAIL": 1,
+          "PHONE": 1
+        }
+      },
+      {
+        "blocked": false,
+        "category": "unicode",
+        "fixture_id": "prompt_input_unicode",
+        "gate": "pass",
+        "output_sha256": "426950e89bbf35f3c21c7c2b84d80e18af6002abe0ec50c94f1ef3533345bfa4",
+        "reasons": [],
+        "redaction_counts": {
+          "CREDIT_CARD": 1,
+          "EMAIL": 1
+        }
+      }
+    ],
+    "prompt.output": [
+      {
+        "blocked": false,
+        "category": "basic",
+        "fixture_id": "prompt_output_basic",
+        "gate": "pass",
+        "output_sha256": "283d46ed4ead27b92eec77e623b3a5ddb36d222b315bfaff4dece6f4e118993a",
+        "reasons": [],
+        "redaction_counts": {
+          "API_KEY": 1
+        }
+      }
+    ],
+    "tool.call.arguments": [
+      {
+        "blocked": true,
+        "category": "fail_closed",
+        "fixture_id": "tool_arguments_fail_closed",
+        "gate": "pass",
+        "output_sha256": "",
+        "reasons": [],
+        "redaction_counts": {
+          "API_KEY": 1
+        }
+      },
+      {
+        "blocked": false,
+        "category": "basic",
+        "fixture_id": "tool_arguments_pii_redacted",
+        "gate": "pass",
+        "output_sha256": "bcc7ba817a54b594a5968d2e03c0a9a0eb3ca74e996aacf445f8a4dae0fc46d5",
+        "reasons": [],
+        "redaction_counts": {
+          "EMAIL": 1
+        }
+      }
+    ],
+    "tool.call.result": [
+      {
+        "blocked": false,
+        "category": "nested",
+        "fixture_id": "tool_result_nested",
+        "gate": "pass",
+        "output_sha256": "beb09db7925b3746fa87b67953c918199d83be81fbedce06a1cb515786fc75ee",
+        "reasons": [],
+        "redaction_counts": {
+          "EMAIL": 1,
+          "PHONE": 1
+        }
+      },
+      {
+        "blocked": false,
+        "category": "basic",
+        "fixture_id": "tool_result_private_key",
+        "gate": "pass",
+        "output_sha256": "f314788bc95cff1a1793f5be668f861ae9f10a81c93792dfed003d463feac7ab",
+        "reasons": [],
+        "redaction_counts": {
+          "PRIVATE_KEY": 1
+        }
+      }
+    ],
+    "trace.span.attributes": [
+      {
+        "blocked": false,
+        "category": "basic",
+        "fixture_id": "trace_span_basic",
+        "gate": "pass",
+        "output_sha256": "72c35d789877fce973260708317300f89c28fed97457040bb305e192a6d39593",
+        "reasons": [],
+        "redaction_counts": {
+          "EMAIL": 1
+        }
+      },
+      {
+        "blocked": false,
+        "category": "false_positive",
+        "fixture_id": "trace_span_false_positive",
+        "gate": "pass",
+        "output_sha256": "4af979b0512c57178c37fb03ae0ae77a3823e2dfdbde4b4327dffff5ddce1044",
+        "reasons": [],
+        "redaction_counts": {}
+      }
+    ]
+  },
+  "totals": {
+    "failed": 0,
+    "fixtures": 16,
+    "passed": 16,
+    "surfaces": 8
+  }
+}

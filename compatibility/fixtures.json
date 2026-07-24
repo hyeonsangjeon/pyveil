@@ -1,0 +1,225 @@
+{
+  "schema_version": 1,
+  "note": "Synthetic protection-surface fixtures. Every value here is fabricated for redaction testing. No real personal data, live credentials, or personal filesystem paths are present. These fixtures are the single source of truth for tests/test_compatibility_surfaces.py, scripts/validate_compatibility.py, and scripts/compatibility_receipt.py.",
+  "secret": "synthetic-compatibility-secret",
+  "scope": "compatibility/v1",
+  "fixtures": [
+    {
+      "id": "prompt_input_basic",
+      "channel": "prompt.input",
+      "category": "basic",
+      "mode": "text",
+      "description": "User prompt with an email and a Korean mobile number before the model call.",
+      "input": "Please draft onboarding for alice@example.com and call 010-1234-5678 today.",
+      "expect_entities": ["EMAIL", "PHONE"],
+      "expect_absent": ["alice@example.com", "010-1234-5678"],
+      "expect_preserved": ["onboarding", "today"]
+    },
+    {
+      "id": "prompt_input_unicode",
+      "channel": "prompt.input",
+      "category": "unicode",
+      "mode": "text",
+      "description": "Korean prompt mixing an email and a Luhn-valid test card among non-Latin text.",
+      "input": "고객 alice@example.com 님께 결제 카드 4242 4242 4242 4242 확인을 요청하세요.",
+      "expect_entities": ["EMAIL", "CREDIT_CARD"],
+      "expect_absent": ["alice@example.com", "4242 4242 4242 4242"],
+      "expect_preserved": ["고객", "결제", "요청하세요"]
+    },
+    {
+      "id": "prompt_output_basic",
+      "channel": "prompt.output",
+      "category": "basic",
+      "mode": "text",
+      "description": "Model draft that accidentally echoes a synthetic OpenAI-style key before display.",
+      "input": "Draft reply reminds the agent to rotate sk-proj-EXAMPLEabcdefghijklmnopqrstuvwx now.",
+      "expect_entities": ["API_KEY"],
+      "expect_absent": ["sk-proj-EXAMPLEabcdefghijklmnopqrstuvwx"],
+      "expect_preserved": ["Draft reply", "rotate"]
+    },
+    {
+      "id": "tool_arguments_fail_closed",
+      "channel": "tool.call.arguments",
+      "category": "fail_closed",
+      "mode": "data",
+      "description": "Model-controlled tool arguments carrying a credential must fail closed (block), not silently pass.",
+      "input": {
+        "tool": "http_get",
+        "url": "https://api.example.com/v1/data",
+        "headers": {"api_key": "sk-proj-EXAMPLEabcdefghijklmnopqrstuvwx"}
+      },
+      "expect_entities": ["API_KEY"],
+      "expect_absent": ["sk-proj-EXAMPLEabcdefghijklmnopqrstuvwx"],
+      "expect_preserved": [],
+      "expect_blocked": true
+    },
+    {
+      "id": "tool_arguments_pii_redacted",
+      "channel": "tool.call.arguments",
+      "category": "basic",
+      "mode": "data",
+      "description": "Non-credential PII in tool arguments is redacted while non-sensitive scalars survive.",
+      "input": {"query": "lookup alice@example.com", "limit": 10, "include_archived": true},
+      "expect_entities": ["EMAIL"],
+      "expect_absent": ["alice@example.com"],
+      "expect_preserved": ["lookup", "10", "true"]
+    },
+    {
+      "id": "tool_result_nested",
+      "channel": "tool.call.result",
+      "category": "nested",
+      "mode": "data",
+      "description": "Nested tool result rows with mixed sensitive and non-sensitive fields.",
+      "input": {
+        "rows": [
+          {"email": "alice@example.com", "name": "Synthetic User"},
+          {"phone": "010-1234-5678", "name": "Second Synthetic"}
+        ],
+        "count": 2,
+        "ok": true
+      },
+      "expect_entities": ["EMAIL", "PHONE"],
+      "expect_absent": ["alice@example.com", "010-1234-5678"],
+      "expect_preserved": ["Synthetic User", "Second Synthetic", "2"]
+    },
+    {
+      "id": "tool_result_private_key",
+      "channel": "tool.call.result",
+      "category": "basic",
+      "mode": "data",
+      "description": "PEM private-key block captured in tool stdout is redacted before returning to the model.",
+      "input": {
+        "stdout": "-----BEGIN PRIVATE KEY-----\nMIIBExampleSyntheticKeyBodyLineOne\nMIIBExampleSyntheticKeyBodyLineTwo\n-----END PRIVATE KEY-----",
+        "exit_code": 0
+      },
+      "expect_entities": ["PRIVATE_KEY"],
+      "expect_absent": ["MIIBExampleSyntheticKeyBodyLineOne", "MIIBExampleSyntheticKeyBodyLineTwo"],
+      "expect_preserved": ["exit_code"]
+    },
+    {
+      "id": "mcp_resource_nested",
+      "channel": "mcp.resource.content",
+      "category": "nested",
+      "mode": "data",
+      "description": "MCP resource content with an email and a token-bearing callback URL.",
+      "input": {
+        "uri": "file://synthetic/notes.txt",
+        "text": "Contact alice@example.com or resume via https://api.example.com/cb?access_token=EXAMPLEsecrettoken12345",
+        "meta": {"lang": "en"}
+      },
+      "expect_entities": ["EMAIL", "URL_QUERY_SECRET"],
+      "expect_absent": ["alice@example.com", "EXAMPLEsecrettoken12345"],
+      "expect_preserved": ["file://synthetic/notes.txt", "lang", "en"]
+    },
+    {
+      "id": "mcp_resource_unicode",
+      "channel": "mcp.resource.content",
+      "category": "unicode",
+      "mode": "data",
+      "description": "MCP resource with Korean keys and values around an email and a compact E.164 number.",
+      "input": {
+        "제목": "연락처",
+        "본문": "이메일 alice@example.com 및 전화 +14155550199 로 확인",
+        "태그": ["개인정보", "합성"]
+      },
+      "expect_entities": ["EMAIL", "PHONE"],
+      "expect_absent": ["alice@example.com", "+14155550199"],
+      "expect_preserved": ["제목", "연락처", "개인정보", "합성"]
+    },
+    {
+      "id": "memory_write_card",
+      "channel": "memory.write",
+      "category": "basic",
+      "mode": "data",
+      "description": "Memory note that embeds a Luhn-valid test card among non-sensitive metadata.",
+      "input": {
+        "note": "User paid an invoice with card 4242 4242 4242 4242 last cycle",
+        "recorded_on": "2026-07-24",
+        "kind": "payment"
+      },
+      "expect_entities": ["CREDIT_CARD"],
+      "expect_absent": ["4242 4242 4242 4242"],
+      "expect_preserved": ["2026-07-24", "payment"]
+    },
+    {
+      "id": "memory_write_kv_secret",
+      "channel": "memory.write",
+      "category": "basic",
+      "mode": "data",
+      "description": "Memory note with an inline key-value password that must not be embedded.",
+      "input": {
+        "log_line": "config loaded password=EXAMPLEpass1234 for billing db",
+        "service": "billing"
+      },
+      "expect_entities": ["KV_SECRET"],
+      "expect_absent": ["EXAMPLEpass1234"],
+      "expect_preserved": ["billing", "config loaded"]
+    },
+    {
+      "id": "memory_write_jwt",
+      "channel": "memory.write",
+      "category": "basic",
+      "mode": "data",
+      "description": "Memory note holding a compact JWT session token under a non-sensitive key.",
+      "input": {
+        "session": "eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiIxMjM0NTY3ODkwIn0.dozjgNryP4J3jVmNHl0w5N_XgL0n3I9PlFUP0THsR8U",
+        "user": "synthetic"
+      },
+      "expect_entities": ["JWT"],
+      "expect_absent": ["eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiIxMjM0NTY3ODkwIn0.dozjgNryP4J3jVmNHl0w5N_XgL0n3I9PlFUP0THsR8U"],
+      "expect_preserved": ["synthetic"]
+    },
+    {
+      "id": "trace_span_basic",
+      "channel": "trace.span.attributes",
+      "category": "basic",
+      "mode": "data",
+      "description": "Trace span attribute leaking an email through a SQL statement.",
+      "input": {
+        "db.statement": "SELECT id FROM users WHERE email = 'alice@example.com'",
+        "db.system": "postgres"
+      },
+      "expect_entities": ["EMAIL"],
+      "expect_absent": ["alice@example.com"],
+      "expect_preserved": ["postgres", "SELECT id FROM users"]
+    },
+    {
+      "id": "trace_span_false_positive",
+      "channel": "trace.span.attributes",
+      "category": "false_positive",
+      "mode": "data",
+      "description": "Non-sensitive span attributes (a non-Luhn order id and enum values) must pass through unchanged.",
+      "input": {
+        "http.status_code": 200,
+        "order.id": "1234 5678 9012 3456",
+        "user.tier": "gold",
+        "span.name": "checkout"
+      },
+      "expect_entities": [],
+      "expect_absent": [],
+      "expect_preserved": ["1234 5678 9012 3456", "gold", "checkout"]
+    },
+    {
+      "id": "log_record_basic",
+      "channel": "log.record",
+      "category": "basic",
+      "mode": "text",
+      "description": "Log line combining an email with an authorization header.",
+      "input": "2026-07-24 ERROR user alice@example.com auth failed with Authorization: Bearer abcdefgh12345678ZZ",
+      "expect_entities": ["EMAIL", "AUTH_HEADER"],
+      "expect_absent": ["alice@example.com", "abcdefgh12345678ZZ"],
+      "expect_preserved": ["ERROR", "auth failed"]
+    },
+    {
+      "id": "log_record_broken_json",
+      "channel": "log.record",
+      "category": "broken_json",
+      "mode": "data",
+      "description": "A malformed JSON-shaped log payload must fall back to text redaction without raising.",
+      "input": "{\"event\":\"login\",\"email\":\"alice@example.com\",\"ok\":true",
+      "expect_entities": ["EMAIL"],
+      "expect_absent": ["alice@example.com"],
+      "expect_preserved": ["event", "login"]
+    }
+  ]
+}

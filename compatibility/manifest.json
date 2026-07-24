@@ -1,0 +1,162 @@
+{
+  "schema_version": 1,
+  "project": "pyveil",
+  "generated_note": "Machine-readable protection-surface contract. Each surface maps a public pyveil Channel to synthetic fixtures and a reproducible verification command. A surface is 'verified' only when it has policy support, at least one synthetic fixture, and a passing verification command. Do not mark a surface 'verified' without fixture evidence.",
+  "status_vocabulary": ["verified", "experimental", "unsupported"],
+  "surfaces": [
+    {
+      "id": "prompt-input",
+      "display_name": "LLM prompt input",
+      "status": "verified",
+      "channel": "prompt.input",
+      "install": "pip install pyveil",
+      "entrypoint": "pyveil.Veil.redact_text / redact_data (channel=Channel.PROMPT_INPUT)",
+      "capabilities": [
+        "Redact high-precision EMAIL, PHONE, CREDIT_CARD, and credential shapes in user, RAG, or application context before it reaches a model."
+      ],
+      "constraints": [
+        "High-precision detectors only; not full PII recall.",
+        "Unknown names and addresses require CustomRule or an upstream NER system."
+      ],
+      "fixture_ids": ["prompt_input_basic", "prompt_input_unicode"],
+      "verification_command": "python -m pytest tests/test_compatibility_surfaces.py",
+      "security_boundary": "Application-to-model. No network egress; deterministic scoped HMAC placeholders.",
+      "evidence": "compatibility/receipt.json",
+      "last_verified": "2026-07-24"
+    },
+    {
+      "id": "prompt-output",
+      "display_name": "Model output",
+      "status": "verified",
+      "channel": "prompt.output",
+      "install": "pip install pyveil",
+      "entrypoint": "pyveil.Veil.redact_text / redact_data (channel=Channel.PROMPT_OUTPUT)",
+      "capabilities": [
+        "Redact sensitive values a model echoes before the output is displayed or chained into another step."
+      ],
+      "constraints": [
+        "Does not evaluate model output for correctness, safety, or prompt injection."
+      ],
+      "fixture_ids": ["prompt_output_basic"],
+      "verification_command": "python -m pytest tests/test_compatibility_surfaces.py",
+      "security_boundary": "Model-to-consumer. Applied after the model call, before display or chaining.",
+      "evidence": "compatibility/receipt.json",
+      "last_verified": "2026-07-24"
+    },
+    {
+      "id": "tool-call-arguments",
+      "display_name": "Tool call arguments",
+      "status": "verified",
+      "channel": "tool.call.arguments",
+      "install": "pip install pyveil",
+      "entrypoint": "pyveil.Veil.redact_data (channel=Channel.TOOL_CALL_ARGUMENTS)",
+      "capabilities": [
+        "Redact PII in model-controlled tool arguments and fail closed on credentials (AUTH_HEADER, PRIVATE_KEY, API_KEY, JWT, KV_SECRET, URL_QUERY_SECRET) by raising BlockedSensitiveData."
+      ],
+      "constraints": [
+        "Fail-closed blocking applies only to the default credential set; extend via Policy.override.",
+        "Cannot infer application-specific identifiers without CustomRule."
+      ],
+      "fixture_ids": ["tool_arguments_fail_closed", "tool_arguments_pii_redacted"],
+      "verification_command": "python -m pytest tests/test_compatibility_surfaces.py",
+      "security_boundary": "Model-to-tool. Credentials block before a tool executes.",
+      "evidence": "compatibility/receipt.json",
+      "last_verified": "2026-07-24"
+    },
+    {
+      "id": "tool-call-result",
+      "display_name": "Tool call result",
+      "status": "verified",
+      "channel": "tool.call.result",
+      "install": "pip install pyveil",
+      "entrypoint": "pyveil.Veil.redact_data (channel=Channel.TOOL_CALL_RESULT)",
+      "capabilities": [
+        "Redact sensitive values in nested tool output before it returns to the model, preserving JSON structure and non-sensitive fields."
+      ],
+      "constraints": [
+        "Redacts rather than blocks by default so tool output can still be summarized."
+      ],
+      "fixture_ids": ["tool_result_nested", "tool_result_private_key"],
+      "verification_command": "python -m pytest tests/test_compatibility_surfaces.py",
+      "security_boundary": "Tool-to-model. Applied to tool output before it re-enters context.",
+      "evidence": "compatibility/receipt.json",
+      "last_verified": "2026-07-24"
+    },
+    {
+      "id": "mcp-resource-content",
+      "display_name": "MCP resource content",
+      "status": "verified",
+      "channel": "mcp.resource.content",
+      "install": "pip install pyveil",
+      "entrypoint": "pyveil.Veil.redact_data (channel=Channel.MCP_RESOURCE_CONTENT)",
+      "capabilities": [
+        "Redact sensitive values in MCP resource payloads, including token-bearing URLs, before content enters agent context."
+      ],
+      "constraints": [
+        "Operates on the payload pyveil receives; it does not fetch or authenticate MCP resources."
+      ],
+      "fixture_ids": ["mcp_resource_nested", "mcp_resource_unicode"],
+      "verification_command": "python -m pytest tests/test_compatibility_surfaces.py",
+      "security_boundary": "Resource-to-agent. Applied to resource content before context assembly.",
+      "evidence": "compatibility/receipt.json",
+      "last_verified": "2026-07-24"
+    },
+    {
+      "id": "memory-write",
+      "display_name": "Memory write",
+      "status": "verified",
+      "channel": "memory.write",
+      "install": "pip install pyveil",
+      "entrypoint": "pyveil.Veil.redact_data (channel=Channel.MEMORY_WRITE)",
+      "capabilities": [
+        "Redact sensitive values before text is embedded or persisted to a memory store."
+      ],
+      "constraints": [
+        "Placeholders are stable within a scope; use distinct scopes to avoid cross-tenant linkage."
+      ],
+      "fixture_ids": ["memory_write_card", "memory_write_kv_secret", "memory_write_jwt"],
+      "verification_command": "python -m pytest tests/test_compatibility_surfaces.py",
+      "security_boundary": "Application-to-store. Applied before embedding or persistence.",
+      "evidence": "compatibility/receipt.json",
+      "last_verified": "2026-07-24"
+    },
+    {
+      "id": "trace-span-attributes",
+      "display_name": "Trace span attributes",
+      "status": "verified",
+      "channel": "trace.span.attributes",
+      "install": "pip install pyveil",
+      "entrypoint": "pyveil.Veil.redact_data (channel=Channel.TRACE_SPAN_ATTRIBUTES)",
+      "capabilities": [
+        "Redact sensitive values in span attributes before they leave through telemetry, while passing non-sensitive attributes through unchanged."
+      ],
+      "constraints": [
+        "Does not instrument tracing; the caller applies pyveil to attribute values."
+      ],
+      "fixture_ids": ["trace_span_basic", "trace_span_false_positive"],
+      "verification_command": "python -m pytest tests/test_compatibility_surfaces.py",
+      "security_boundary": "Application-to-telemetry. Applied before span export.",
+      "evidence": "compatibility/receipt.json",
+      "last_verified": "2026-07-24"
+    },
+    {
+      "id": "log-record",
+      "display_name": "Log record",
+      "status": "verified",
+      "channel": "log.record",
+      "install": "pip install pyveil",
+      "entrypoint": "pyveil.Veil.redact_text / redact_data (channel=Channel.LOG_RECORD)",
+      "capabilities": [
+        "Redact sensitive values in log messages, including malformed JSON-shaped payloads, before records reach handlers or external sinks."
+      ],
+      "constraints": [
+        "Malformed JSON falls back to text redaction and returns a string."
+      ],
+      "fixture_ids": ["log_record_basic", "log_record_broken_json"],
+      "verification_command": "python -m pytest tests/test_compatibility_surfaces.py",
+      "security_boundary": "Application-to-sink. Applied before log handlers run.",
+      "evidence": "compatibility/receipt.json",
+      "last_verified": "2026-07-24"
+    }
+  ]
+}

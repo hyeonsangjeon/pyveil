@@ -337,6 +337,17 @@ For corpus v1, pyveil 0.2.4 matches all 36 expected findings across 39 cases
 (33 positive, 6 negative), with no corpus false positives, false negatives,
 labeled-value leaks, or non-empty `Finding.raw` values.
 
+The repository also ships a machine-readable
+[protection-surface contract](compatibility/README.md) with synthetic fixtures
+for every channel, a validator that fails on manifest or documentation drift,
+and a privacy-safe evidence receipt:
+
+```bash
+python scripts/validate_compatibility.py --check   # manifest, fixtures, and docs agree
+python -m pytest tests/test_compatibility_surfaces.py
+python scripts/verify_zero_dependencies.py         # 0 runtime dependencies
+```
+
 These numbers describe documented supported shapes only. They are **not** a
 real-world PII recall benchmark and do not cover unknown names, addresses,
 languages, documents, or images. Read the
@@ -393,6 +404,11 @@ user / retrieval / tool / resource data
                     |
 model / tool / MCP / memory / trace / log boundary
 ```
+
+Every channel above is backed by a synthetic fixture and a reproducible command
+in the [compatibility contract](compatibility/README.md), and summarized in a
+privacy-safe [Proof-of-Compatibility Receipt](compatibility/receipt.md) that
+records redaction counts and output hashes, never raw values.
 
 ## Detection Board
 

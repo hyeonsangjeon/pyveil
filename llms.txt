@@ -29,6 +29,7 @@
 - [Azure OpenAI example](examples/azure_openai.py)
 - [Redaction reference](docs/redaction-reference.md)
 - [Known limitations](docs/known-limitations.md)
+- [Compatibility contract](compatibility/README.md)
 - [Detector provenance](docs/detector-provenance.md)
 - [Roadmap](docs/roadmap.md)
 - [Release checklist](docs/release-checklist.md)

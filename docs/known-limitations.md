@@ -34,3 +34,19 @@ Stable placeholders preserve referential consistency, but that also creates link
 its required sections. Version 0.2.x runtime commands use flags and `PYVEIL_*`
 environment variables; they do not automatically load the YAML file. Full
 configuration loading remains a future candidate.
+
+## Compatibility Contract
+
+The [`compatibility/manifest.json`](../compatibility/manifest.json) contract
+describes each protection surface, and its scope is deliberately narrow:
+
+- A surface is marked `verified` only when it has policy support, a synthetic
+  fixture, and a passing verification command. `verified` is a statement about
+  the documented supported shapes, not a guarantee of full PII recall on that
+  surface.
+- The [Proof-of-Compatibility Receipt](../compatibility/receipt.md) records
+  redaction counts and output hashes only. It is evidence of what the synthetic
+  fixtures exercised, not a coverage or compliance claim, and it never contains
+  raw prompts, PII, or secrets.
+- The receipt is a regenerable snapshot tied to a commit and environment. Treat
+  a checked-in receipt as an example; regenerate it to reflect a given run.
