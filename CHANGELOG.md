@@ -1,5 +1,23 @@
 # Changelog
 
+## Unreleased
+
+### Added
+
+- `pyveil replay` and `examples/privacy_replay.py` for a deterministic, keyless
+  Privacy Boundary Replay across prompt, tool-call, MCP, memory, log, and trace
+  boundaries.
+- Raw-value-free replay evidence with input/output hashes, finding and redaction
+  counts, leak counts, benign-marker preservation, structure preservation, and
+  a gate-based process exit code.
+- Minimum/maximum Python clean-wheel smoke tests that run the replay outside the
+  source checkout.
+
+### Changed
+
+- Added a task-first replay board and direct evidence path near the top of the
+  README, plus a detailed replay guide for report semantics and limitations.
+
 ## 0.2.5 - 2026-07-24
 
 ### Added

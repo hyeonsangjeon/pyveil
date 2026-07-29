@@ -14,6 +14,12 @@ personal data, live credentials, or personal filesystem paths.
   Proof-of-Compatibility Receipt: per-surface entity counts, gate results, and
   output hashes, with no raw prompt, PII, or secret.
 
+For a 30-second installed-package tour of the six most common agent boundaries,
+run `pyveil replay --format markdown` and read the
+[Privacy Boundary Replay guide](../docs/privacy-replay.md). The replay is the
+task-first entry point; this directory remains the complete eight-channel
+contract and includes fail-closed and false-positive controls.
+
 ## Status semantics
 
 A surface is only `verified` when it has policy support, at least one synthetic

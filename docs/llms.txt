@@ -11,6 +11,7 @@ pyveil replaces high-confidence sensitive values with stable, scoped HMAC placeh
 - PyPI: https://pypi.org/project/pyveil/
 - Source: https://github.com/hyeonsangjeon/pyveil
 - Evaluation: https://hyeonsangjeon.github.io/pyveil/evaluation.html
+- Privacy Boundary Replay: https://github.com/hyeonsangjeon/pyveil/blob/main/docs/privacy-replay.md
 
 ## Search-intent guides
 
@@ -27,6 +28,7 @@ pyveil replaces high-confidence sensitive values with stable, scoped HMAC placeh
 - `CustomRule.exact(entity, values)`: known values such as authenticated customer names.
 - `CustomRule(entity, pattern)`: narrow trusted application regexes.
 - `Policy.override(channel, entity, action)`: per-boundary REDACT, BLOCK, or PASS decisions.
+- `pyveil replay --format json`: keyless six-boundary regression evidence with no raw payload output.
 
 ## Supported built-in findings
 
@@ -43,6 +45,7 @@ EMAIL, PHONE, CREDIT_CARD, JWT, AUTH_HEADER, PRIVATE_KEY, API_KEY, URL_QUERY_SEC
 ## Repository documents
 
 - Cookbook: https://github.com/hyeonsangjeon/pyveil/blob/main/docs/cookbook.md
+- Privacy Boundary Replay: https://github.com/hyeonsangjeon/pyveil/blob/main/docs/privacy-replay.md
 - OpenAI Agents SDK vs LiteLLM comparison: https://github.com/hyeonsangjeon/pyveil/blob/main/docs/integrations/openai-agents-vs-litellm.md
 - OpenAI Agents SDK boundary: https://github.com/hyeonsangjeon/pyveil/blob/main/examples/openai_agents_guardrail.py
 - LiteLLM SDK and Proxy boundary: https://github.com/hyeonsangjeon/pyveil/blob/main/examples/litellm_proxy_filter.py

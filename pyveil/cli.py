@@ -87,6 +87,12 @@ def main(argv: Optional[Iterable[str]] = None) -> int:
     demo = subcommands.add_parser("demo", help="Run a synthetic before/after redaction demo")
     demo.add_argument("--format", choices=["text", "json"], default="text")
 
+    replay = subcommands.add_parser(
+        "replay",
+        help="Verify six agent privacy boundaries with synthetic offline cases",
+    )
+    replay.add_argument("--format", choices=["json", "markdown"], default="json")
+
     args = parser.parse_args(list(argv) if argv is not None else None)
     if args.command == "init":
         Path(args.path).write_text(DEFAULT_CONFIG, encoding="utf-8")
@@ -96,6 +102,8 @@ def main(argv: Optional[Iterable[str]] = None) -> int:
         return _test_config(args.path)
     if args.command == "demo":
         return _demo(args.format)
+    if args.command == "replay":
+        return _privacy_replay(args.format)
 
     text = _read_text(args.path)
     secret = _resolve_cli_secret(args.secret)
@@ -225,6 +233,14 @@ def _demo(output_format: str) -> int:
         print("after:  " + result.text)
         print("found:  " + ", ".join(sorted(result.stats.counts_by_type)))
     return 0
+
+
+def _privacy_replay(output_format: str) -> int:
+    from .privacy_replay import replay_output
+
+    rendered, exit_code = replay_output(output_format)
+    print(rendered)
+    return exit_code
 
 
 if __name__ == "__main__":

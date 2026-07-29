@@ -38,6 +38,9 @@ jobs:
       - name: Run synthetic detector evaluation
         run: python evaluation/evaluate.py --check
 
+      - name: Run Privacy Boundary Replay
+        run: python -m pyveil replay --format json
+
       - name: Verify zero-dependency core
         run: python scripts/verify_zero_dependencies.py
 
@@ -115,3 +118,37 @@ jobs:
 
       - name: Run offline provider contract tests
         run: python -m pytest tests/test_provider_contracts.py -m provider_contract --no-cov
+
+  wheel-smoke:
+    name: Installed wheel / Python ${{ matrix.python-version }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version:
+          - "3.8"
+          - "3.14"
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Set up Python
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97  # v7.0.0
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Build and install wheel
+        run: |
+          python -m pip install build
+          python -m build --wheel
+          python -m pip install --force-reinstall dist/*.whl
+
+      - name: Verify installed replay outside source checkout
+        run: |
+          cd "$(mktemp -d)"
+          pyveil --version
+          pyveil replay --format json | python -c \
+            'import json, sys; report = json.load(sys.stdin); assert report["gate"] == "pass"; assert report["totals"]["boundaries"] == 6; assert report["totals"]["leaks"] == 0'

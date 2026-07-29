@@ -164,6 +164,32 @@ def test_cli_demo_json_is_machine_readable(capsys):
     assert payload["counts_by_type"] == {"API_KEY": 1, "EMAIL": 1, "PHONE": 1}
 
 
+def test_cli_replay_is_keyless_and_privacy_safe(capsys, monkeypatch):
+    monkeypatch.delenv("PYVEIL_SECRET", raising=False)
+
+    exit_code = main(["replay", "--format", "json"])
+
+    captured = capsys.readouterr()
+    payload = json.loads(captured.out)
+    assert exit_code == 0
+    assert captured.err == ""
+    assert payload["gate"] == "pass"
+    assert payload["totals"]["boundaries"] == 6
+    assert payload["totals"]["leaks"] == 0
+    assert "replay.user@example.com" not in captured.out
+
+
+def test_cli_replay_markdown_summarizes_each_boundary(capsys):
+    exit_code = main(["replay", "--format", "markdown"])
+
+    captured = capsys.readouterr()
+    assert exit_code == 0
+    assert "# pyveil Privacy Boundary Replay" in captured.out
+    assert "`prompt.input`" in captured.out
+    assert "`trace.span.attributes`" in captured.out
+    assert "replay.user@example.com" not in captured.out
+
+
 def test_cli_reports_package_version(capsys):
     with pytest.raises(SystemExit) as exc_info:
         main(["--version"])

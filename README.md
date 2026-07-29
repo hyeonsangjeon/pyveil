@@ -17,6 +17,7 @@
 <p align="center">
   <a href="https://hyeonsangjeon.github.io/pyveil/manual.html">Documentation</a> &middot;
   <a href="https://hyeonsangjeon.github.io/pyveil/guides/">Guides</a> &middot;
+  <a href="https://github.com/hyeonsangjeon/pyveil/blob/main/docs/privacy-replay.md">Privacy Replay</a> &middot;
   <a href="https://hyeonsangjeon.github.io/pyveil/evaluation.html">Evaluation</a> &middot;
   <a href="https://pypi.org/project/pyveil/">PyPI</a> &middot;
   <a href="https://github.com/hyeonsangjeon/pyveil/blob/main/docs/cookbook.md">Cookbook</a> &middot;
@@ -56,6 +57,28 @@ before: Email alice@example.com, call 010-1234-5678, and use API key sk-proj-...
 after:  Email [EMAIL:...], call [PHONE:...], and use API key [API_KEY:...]
 found:  API_KEY, EMAIL, PHONE
 ```
+
+## Replay Six Agent Boundaries
+
+From a source checkout, run one deterministic, keyless command to verify
+prompt, tool-call, MCP, memory, log, and trace protection:
+
+```bash
+python -m pyveil replay --format markdown
+# same source example with uv: uv run python examples/privacy_replay.py --format markdown
+```
+
+| Task | Protected channels | Observable gate | Start here |
+| --- | --- | --- | --- |
+| Stop sensitive context before execution | `prompt.input`, `tool.call.arguments` | Findings are replaced, benign fields survive | [Prompt and tool cases](docs/privacy-replay.md#what-runs) |
+| Stop sensitive context before reuse | `mcp.resource.content`, `memory.write` | Nested shape survives with zero synthetic leaks | [MCP and memory cases](docs/privacy-replay.md#what-runs) |
+| Stop sensitive context before export | `log.record`, `trace.span.attributes` | Logs and span attributes pass raw-value-free gates | [Log and trace cases](docs/privacy-replay.md#what-runs) |
+
+The built-in replay currently produces **6/6 passing cases, 10 findings, and
+0 surviving synthetic markers**. Its JSON contains only case IDs, channels,
+counts, booleans, and input/output hashes. Read the
+[Privacy Boundary Replay guide](docs/privacy-replay.md) for the report schema,
+failure behavior, clean-wheel CI proof, and limits.
 
 ## Start With Your Integration
 
@@ -323,6 +346,7 @@ in YAML; YAML names the environment variables that contain them.
 | Cover app-specific data | Exact known-value and trusted custom-regex rules |
 | Audit without leaking | Findings contain type, rule, path, placeholder, and fingerprint, not raw values |
 | Verify supported behavior | Public 39-case synthetic regression corpus, evaluator, and CI gate |
+| Replay agent boundaries | One keyless command proves prompt, tool, MCP, memory, log, and trace handling |
 
 ## Reproducible Evidence
 
@@ -343,6 +367,7 @@ for every channel, a validator that fails on manifest or documentation drift,
 and a privacy-safe evidence receipt:
 
 ```bash
+python -m pyveil replay --format markdown          # six-boundary checkout tour
 python scripts/validate_compatibility.py --check   # manifest, fixtures, and docs agree
 python -m pytest tests/test_compatibility_surfaces.py
 python scripts/verify_zero_dependencies.py         # 0 runtime dependencies

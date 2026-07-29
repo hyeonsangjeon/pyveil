@@ -8,6 +8,7 @@ Start with:
 
 - [Rendered guide hub](https://hyeonsangjeon.github.io/pyveil/guides/)
 - [Reproducible evaluation](https://hyeonsangjeon.github.io/pyveil/evaluation.html)
+- [Privacy Boundary Replay](privacy-replay.md)
 - [LLM-readable navigation](https://hyeonsangjeon.github.io/pyveil/llms.txt)
 - [Threat model](threat-model.md)
 - [FAQ](faq.md)

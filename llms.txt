@@ -10,6 +10,7 @@
 - [MCP PII redaction guide](https://hyeonsangjeon.github.io/pyveil/guides/mcp-pii-redaction.html)
 - [pyveil vs Presidio / NER / DLP](https://hyeonsangjeon.github.io/pyveil/guides/pyveil-vs-presidio.html)
 - [Reproducible detector evaluation](https://hyeonsangjeon.github.io/pyveil/evaluation.html)
+- [Privacy Boundary Replay](docs/privacy-replay.md)
 - [Threat model](docs/threat-model.md)
 - [FAQ](docs/faq.md)
 - [Cookbook](docs/cookbook.md)
@@ -30,6 +31,7 @@
 - [Redaction reference](docs/redaction-reference.md)
 - [Known limitations](docs/known-limitations.md)
 - [Compatibility contract](compatibility/README.md)
+- [Privacy Boundary Replay example](examples/privacy_replay.py)
 - [Detector provenance](docs/detector-provenance.md)
 - [Roadmap](docs/roadmap.md)
 - [Release checklist](docs/release-checklist.md)
@@ -48,6 +50,7 @@
 - Use `CustomRule.exact(...)` for values the application already knows are
   sensitive and `CustomRule(...)` for narrow domain identifier regexes.
 - Run `python evaluation/evaluate.py --check` before changing built-in detectors.
+- Run `pyveil replay --format json` after changing a supported agent boundary.
 - Do not expose unmasking functions to a model-controlled tool.
 - Do not claim pyveil guarantees compliance or perfect sensitive-data detection.
 - Keep integrations thin and the core local.

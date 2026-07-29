@@ -17,6 +17,7 @@ Do not turn pyveil into a general DLP suite, gateway, Presidio clone, or prompt-
 - Build package: `uv run --with build python -m build`
 - Check package: `uv run --with twine python -m twine check dist/*`
 - Run CLI demo: `python3 -m pyveil demo`
+- Run the privacy boundary replay: `python3 -m pyveil replay --format json`
 - Run CLI locally: `PYVEIL_SECRET=dev-secret python3 -m pyveil redact <file>`
 - Run detector evaluation: `python3 evaluation/evaluate.py --check`
 - Run the OpenAI boundary without a key: `PYVEIL_SECRET=dev-secret OPENAI_MODEL=gpt-5.6-luna python3 -m pyveil.integrations.openai --dry-run`
@@ -74,6 +75,7 @@ This repository includes files meant for coding agents and LLM readers:
 - [docs/roadmap.md](docs/roadmap.md)
 - [docs/release-checklist.md](docs/release-checklist.md)
 - [docs/evaluation.html](docs/evaluation.html)
+- [docs/privacy-replay.md](docs/privacy-replay.md)
 - [docs/guides/](docs/guides/)
 - [docs/integrations/mcp.md](docs/integrations/mcp.md)
 - [docs/integrations/openai.md](docs/integrations/openai.md)
@@ -98,6 +100,7 @@ Examples:
 - [examples/openai.py](examples/openai.py)
 - [examples/anthropic.py](examples/anthropic.py)
 - [examples/ollama.py](examples/ollama.py)
+- [examples/privacy_replay.py](examples/privacy_replay.py)
 
 ## Development
 
