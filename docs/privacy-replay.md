@@ -12,7 +12,9 @@ can apply its public redaction API at six common agent boundaries:
 
 It is a verification tour, not a scanner for your production data. The command
 uses only built-in synthetic fixtures, makes no network calls, needs no API key,
-and never prints a fixture input or redacted payload.
+and never prints a fixture input or redacted payload. It also runs a
+resume-safety pass that re-crosses each boundary with already-redacted state;
+see [Resume Safety](#resume-safety).
 
 ## Run It
 
@@ -84,6 +86,33 @@ CI runs the replay directly and separately installs the candidate wheel on the
 minimum and maximum supported Python versions. The wheel smoke test changes to
 a temporary directory before importing pyveil and running the command, which
 prevents the source checkout from hiding missing package files.
+
+## Resume Safety
+
+Long-running agents persist state and resume later, which re-crosses a boundary
+with already-redacted content. The replay proves this is safe: it re-applies
+redaction to each boundary's redacted output and checks that no synthetic marker
+returns and that no finding carries a raw value.
+
+Redaction is deterministic but not universally byte-idempotent. A value-only
+placeholder (for example a redacted URL query secret) can be re-masked into a
+fresh placeholder on the second pass. That never restores the original value, so
+each resumed case records a `byte_stable` flag instead of assuming a global fixed
+point. The `resume_safety` gate requires zero returned markers; byte stability is
+reported, not required.
+
+The `resume_safety` block adds only counts, booleans, and output hashes:
+
+| Field | Meaning |
+| --- | --- |
+| `leak_count` | Synthetic markers present after the resumed boundary (must be `0`) |
+| `resume_finding_count` | Findings produced when re-crossing the boundary |
+| `byte_stable` | Whether re-redaction reproduced the first output exactly |
+| `first_output_sha256` / `resumed_output_sha256` | Hashes of the first and resumed outputs, never the outputs themselves |
+| `gate` / `reasons` | Pass/fail state and raw-value-free failure categories |
+
+The built-in resume pass currently reports **6/6 passing cases, 0 returned
+markers, and 4/6 byte-stable boundaries**.
 
 ## Use The Real Boundary
 

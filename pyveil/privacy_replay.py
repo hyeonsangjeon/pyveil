@@ -3,6 +3,10 @@
 The replay uses built-in synthetic values and the public ``Veil`` API. Its
 report contains only identifiers, counts, booleans, and hashes. Raw fixture
 inputs and redacted payloads are never emitted.
+
+The report also carries a resume-safety pass that re-crosses each boundary with
+already-redacted state, modelling a resumed checkpoint. It proves the raw value
+never returns and records whether re-redaction is a byte-stable fixed point.
 """
 
 from __future__ import annotations
@@ -90,6 +94,47 @@ class ReplayOutcome:
             "benign_preserved": self.benign_preserved,
             "structure_preserved": self.structure_preserved,
             "counts_by_type": dict(sorted(self.counts_by_type.items())),
+            "gate": "pass" if self.passed else "fail",
+            "reasons": list(self.failures),
+        }
+
+
+@dataclass(frozen=True)
+class ResumeOutcome:
+    """Privacy-safe evidence that a boundary is safe to persist and resume.
+
+    Produced by re-applying redaction to an already-redacted payload, which
+    models a resumed checkpoint that re-crosses the same boundary. It proves
+    the raw value never returns and records whether re-redaction is a byte
+    stable fixed point.
+    """
+
+    case_id: str
+    boundary: str
+    channel: str
+    leak_count: int
+    resume_finding_count: int
+    byte_stable: bool
+    first_output_sha256: str
+    resumed_output_sha256: str
+    failures: tuple[str, ...] = field(default_factory=tuple)
+
+    @property
+    def passed(self) -> bool:
+        return not self.failures
+
+    def as_dict(self) -> dict[str, Any]:
+        """Return the stable, raw-value-free representation used in reports."""
+
+        return {
+            "case_id": self.case_id,
+            "boundary": self.boundary,
+            "channel": self.channel,
+            "leak_count": self.leak_count,
+            "resume_finding_count": self.resume_finding_count,
+            "byte_stable": self.byte_stable,
+            "first_output_sha256": self.first_output_sha256,
+            "resumed_output_sha256": self.resumed_output_sha256,
             "gate": "pass" if self.passed else "fail",
             "reasons": list(self.failures),
         }
@@ -318,15 +363,81 @@ def run_privacy_replay(
     return tuple(run_replay_case(case, replay_veil) for case in selected_cases)
 
 
-def build_replay_report(outcomes: Sequence[ReplayOutcome]) -> dict[str, Any]:
-    """Build a deterministic, privacy-safe report."""
+def run_resume_case(case: ReplayCase, veil: Veil) -> ResumeOutcome | None:
+    """Redact a case, then re-cross the same boundary with the redacted state.
+
+    Returns ``None`` for fail-closed cases, which never persist an output to
+    resume from. The returned evidence cannot reveal the raw payload.
+    """
+
+    if case.expect_blocked:
+        return None
+    try:
+        if case.mode == "text":
+            first = veil.redact_text(case.payload, channel=case.channel)
+            resumed = veil.redact_text(first.data, channel=case.channel)
+        elif case.mode == "data":
+            first = veil.redact_data(case.payload, channel=case.channel)
+            resumed = veil.redact_data(first.data, channel=case.channel)
+        else:
+            raise ValueError("replay mode must be 'text' or 'data'")
+    except BlockedSensitiveData:
+        return None
+
+    first_output = _serialize(first.data)
+    resumed_output = _serialize(resumed.data)
+    leak_count = sum(marker in resumed_output for marker in case.sensitive_markers)
+    resume_finding_count = sum(dict(resumed.stats.counts_by_type).values())
+    byte_stable = resumed_output == first_output
+
+    failures: list[str] = []
+    if leak_count:
+        failures.append("a sensitive marker returned after resume")
+    if any(finding.raw is not None for finding in resumed.findings):
+        failures.append("resumed finding stored a raw value")
+
+    return ResumeOutcome(
+        case_id=case.case_id,
+        boundary=case.boundary,
+        channel=case.channel,
+        leak_count=leak_count,
+        resume_finding_count=resume_finding_count,
+        byte_stable=byte_stable,
+        first_output_sha256=_sha256(first_output),
+        resumed_output_sha256=_sha256(resumed_output),
+        failures=tuple(failures),
+    )
+
+
+def run_resume_safety(
+    cases: Sequence[ReplayCase] | None = None,
+    veil: Veil | None = None,
+) -> tuple[ResumeOutcome, ...]:
+    """Run the resume-safety pass over every non-blocked boundary case."""
+
+    selected_cases = tuple(cases) if cases is not None else default_replay_cases()
+    replay_veil = veil or Veil.high(secret=_REPLAY_SECRET, scope=_REPLAY_SCOPE)
+    outcomes = (run_resume_case(case, replay_veil) for case in selected_cases)
+    return tuple(outcome for outcome in outcomes if outcome is not None)
+
+
+def build_replay_report(
+    outcomes: Sequence[ReplayOutcome],
+    resume_outcomes: Sequence[ResumeOutcome] | None = None,
+) -> dict[str, Any]:
+    """Build a deterministic, privacy-safe report.
+
+    When ``resume_outcomes`` is provided, the report gains a ``resume_safety``
+    section proving that persisted, redacted state stays safe when a resumed
+    checkpoint re-crosses the same boundary, and the top-level gate reflects it.
+    """
 
     passed = sum(outcome.passed for outcome in outcomes)
     findings = sum(outcome.finding_count for outcome in outcomes)
     redacted = sum(outcome.redacted_count for outcome in outcomes)
     leaks = sum(outcome.leak_count for outcome in outcomes)
     boundaries = {outcome.boundary for outcome in outcomes}
-    return {
+    report: dict[str, Any] = {
         "schema_version": REPLAY_SCHEMA_VERSION,
         "project": "pyveil",
         "replay": "privacy-boundary-replay",
@@ -346,6 +457,32 @@ def build_replay_report(outcomes: Sequence[ReplayOutcome]) -> dict[str, Any]:
             "only case ids, channels, counts, booleans, and SHA-256 hashes."
         ),
     }
+    if resume_outcomes is not None:
+        resume_passed = sum(outcome.passed for outcome in resume_outcomes)
+        leaked_markers = sum(outcome.leak_count for outcome in resume_outcomes)
+        byte_stable_cases = sum(outcome.byte_stable for outcome in resume_outcomes)
+        resume_gate_pass = resume_passed == len(resume_outcomes)
+        report["resume_safety"] = {
+            "gate": "pass" if resume_gate_pass else "fail",
+            "totals": {
+                "resumed_cases": len(resume_outcomes),
+                "passed": resume_passed,
+                "failed": len(resume_outcomes) - resume_passed,
+                "leaked_markers": leaked_markers,
+                "byte_stable_cases": byte_stable_cases,
+            },
+            "cases": [outcome.as_dict() for outcome in resume_outcomes],
+            "note": (
+                "Each case re-crosses its boundary with already-redacted state, "
+                "modelling a resumed checkpoint. No synthetic marker returns; "
+                "byte_stable records whether re-redaction is a fixed point, since "
+                "a value-only placeholder can be re-masked without restoring the "
+                "original."
+            ),
+        }
+        if not resume_gate_pass:
+            report["gate"] = "fail"
+    return report
 
 
 def render_markdown(report: dict[str, Any]) -> str:
@@ -373,6 +510,34 @@ def render_markdown(report: dict[str, Any]) -> str:
             f"| {case['leak_count']} | {str(case['benign_preserved']).lower()} "
             f"| {str(case['structure_preserved']).lower()} | {case['gate']} |"
         )
+    resume = report.get("resume_safety")
+    if resume:
+        resume_totals = resume["totals"]
+        lines.extend(
+            [
+                "",
+                "## Resume Safety",
+                "",
+                "Each boundary is re-crossed with already-redacted state, modelling "
+                "a resumed checkpoint. No synthetic marker returns; `byte_stable` "
+                "records whether re-redaction is a fixed point.",
+                "",
+                f"- Gate: **{resume['gate']}**",
+                f"- Resumed cases: "
+                f"**{resume_totals['passed']}/{resume_totals['resumed_cases']} passing**",
+                f"- Leaked markers: **{resume_totals['leaked_markers']}**",
+                f"- Byte-stable cases: "
+                f"**{resume_totals['byte_stable_cases']}/{resume_totals['resumed_cases']}**",
+                "",
+                "| Boundary | Channel | Leaked | Byte stable | Gate |",
+                "| --- | --- | ---: | --- | --- |",
+            ]
+        )
+        for case in resume["cases"]:
+            lines.append(
+                f"| {case['boundary']} | `{case['channel']}` | {case['leak_count']} "
+                f"| {str(case['byte_stable']).lower()} | {case['gate']} |"
+            )
     lines.append("")
     return "\n".join(lines)
 
@@ -380,7 +545,7 @@ def render_markdown(report: dict[str, Any]) -> str:
 def replay_output(output_format: str = "json") -> tuple[str, int]:
     """Return rendered replay output and its gate-based process exit code."""
 
-    report = build_replay_report(run_privacy_replay())
+    report = build_replay_report(run_privacy_replay(), run_resume_safety())
     if output_format == "json":
         rendered = json.dumps(report, ensure_ascii=False, indent=2, sort_keys=True)
     elif output_format == "markdown":

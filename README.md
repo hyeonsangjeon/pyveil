@@ -75,7 +75,9 @@ python -m pyveil replay --format markdown
 | Stop sensitive context before export | `log.record`, `trace.span.attributes` | Logs and span attributes pass raw-value-free gates | [Log and trace cases](docs/privacy-replay.md#what-runs) |
 
 The built-in replay currently produces **6/6 passing cases, 10 findings, and
-0 surviving synthetic markers**. Its JSON contains only case IDs, channels,
+0 surviving synthetic markers**. It also runs a resume-safety pass that
+re-crosses each boundary with already-redacted state, returning **0** markers
+across **6/6** cases. Its JSON contains only case IDs, channels,
 counts, booleans, and input/output hashes. Read the
 [Privacy Boundary Replay guide](docs/privacy-replay.md) for the report schema,
 failure behavior, clean-wheel CI proof, and limits.

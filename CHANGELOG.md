@@ -12,6 +12,9 @@
   a gate-based process exit code.
 - Minimum/maximum Python clean-wheel smoke tests that run the replay outside the
   source checkout.
+- A resume-safety pass in `pyveil replay` that re-crosses every boundary with
+  already-redacted state, proving no synthetic marker returns on resume and
+  reporting whether re-redaction is a byte-stable fixed point.
 
 ### Changed
 
