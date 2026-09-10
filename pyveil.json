@@ -1,0 +1,14 @@
+{
+  "schema_version": 1,
+  "pyveil_version": "0.3.0",
+  "input": "examples/file-input.json",
+  "input_format": "json",
+  "input_origin": "synthetic",
+  "output_dir": ".pyveil-runs",
+  "secret_env": "PYVEIL_SECRET",
+  "scope": "local/files",
+  "channel": "prompt.input",
+  "level": "HIGH",
+  "max_input_chars": 1000000,
+  "actions": {}
+}

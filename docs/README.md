@@ -6,6 +6,7 @@ traces cross application boundaries.
 
 Start with:
 
+- [Real file runs, configuration, and reproduction](file-runs.md)
 - [Rendered guide hub](https://hyeonsangjeon.github.io/pyveil/guides/)
 - [Reproducible evaluation](https://hyeonsangjeon.github.io/pyveil/evaluation.html)
 - [Privacy Boundary Replay](privacy-replay.md)

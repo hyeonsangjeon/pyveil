@@ -27,7 +27,7 @@
     "name": "pyveil",
     "applicationCategory": "DeveloperApplication",
     "operatingSystem": "Any",
-    "softwareVersion": "0.2.5",
+    "softwareVersion": "0.3.0",
     "programmingLanguage": "Python",
     "description": "Local PII and secret redaction for Python LLM apps and AI agents.",
     "url": "https://hyeonsangjeon.github.io/pyveil/",
@@ -349,7 +349,7 @@
       <h1><strong>PII and secret redaction</strong> for Python AI agents.</h1>
       <p class="lead">Local, dependency-free middleware for LLM prompts, tools, MCP, memory, logs, and traces.</p>
       <div class="actions">
-        <a class="button primary" href="manual.html#quickstart">Start in 30 seconds</a>
+        <a class="button primary" href="manual.html#file-runs">Run a real file</a>
         <a class="button" href="manual.html">Read the manual</a>
         <a class="button" href="manual.html#install">Install</a>
       </div>
@@ -358,29 +358,24 @@
 
   <main>
     <section class="section">
-      <h2>See exactly what the model receives</h2>
+      <h2>One config. A real processed file.</h2>
       <div class="code-row">
-        <pre><code>from pyveil import Channel, Veil
+        <pre><code>python -m pip install pyveil==0.3.0
+python -m pyveil init --example
+python -m pyveil run
 
-veil = Veil.high(
-    secret=b"tenant-secret",
-    scope="tenant/session",
-)
+# Use --input /path/to/request.json
+# instead of --example for your own file.</code></pre>
+        <pre class="output"><code>pyveil.json       executable settings
+.pyveil.key       private local key
 
-safe = veil.redact_data(
-    messages,
-    channel=Channel.PROMPT_INPUT,
-)
-
-response = call_llm(safe.data)</code></pre>
-        <pre class="output"><code>Email alice@example.com
-API key sk-proj-...
-
--> pyveil
-
-Email [EMAIL:a3d2b564c825]
-API key [API_KEY:38ded98a17e7]</code></pre>
+.pyveil-runs/&lt;run-id&gt;/
+  redacted.json   actual processed data
+  receipt.json    provenance, hashes, counts</code></pre>
       </div>
+      <p>The tutorial input is synthetic; processing uses the real installed redactor.
+      No provider is called. Run twice for identical output bytes in separate directories.
+      <a href="manual.html#file-runs">Install, run, reproduce, and handle failures.</a></p>
     </section>
 
     <section class="section">

@@ -21,6 +21,7 @@ uv run --extra dev python -m build
 uv run --extra dev python -m twine check dist/*
 WHEEL="$(find dist -maxdepth 1 -name 'pyveil-*-py3-none-any.whl' -print -quit)"
 test -n "$WHEEL"
+uv run --extra dev python scripts/verify_first_run.py --wheel "$WHEEL"
 uv run --isolated --with "$WHEEL" python -c "from pyveil import CustomRule, Veil; assert '[PERSON:' in Veil.high(secret=b'test', rules=[CustomRule.exact('PERSON', 'Alice Kim')]).redact_text('Alice Kim').text"
 uv run --isolated --with "$WHEEL" pyveil demo
 uv run --isolated --with "$WHEEL" python -m pyveil demo
@@ -42,6 +43,8 @@ PYVEIL_SECRET=release-smoke ANTHROPIC_MODEL=claude-haiku-4-5 uv run --python 3.8
 - Provider contract tests serialize redacted prompts through the official OpenAI and Anthropic SDKs without network calls.
 - Provider SDK metadata keeps Python 3.8 installable while requiring Python 3.9+ only for live OpenAI/Anthropic calls.
 - Version in `pyproject.toml` matches the changelog.
+- The root `pyveil.json` pin matches the release, references the shipped input,
+  and contains only a secret reference.
 
 ## Publishing
 
@@ -49,6 +52,8 @@ PYVEIL_SECRET=release-smoke ANTHROPIC_MODEL=claude-haiku-4-5 uv run --python 3.8
 - Build artifacts pass `twine check`.
 - PyPI trusted publishing is configured for `.github/workflows/release.yml`.
 - GitHub release notes are prepared.
+- After publication, run `python scripts/verify_first_run.py --version VERSION`
+  to repeat the 300-second install-to-file check against the actual PyPI wheel.
 
 ## Security
 

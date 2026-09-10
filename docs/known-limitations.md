@@ -30,10 +30,15 @@ Stable placeholders preserve referential consistency, but that also creates link
 
 ## Configuration Limits
 
-`pyveil init` writes a reference YAML schema and `pyveil test-config` validates
-its required sections. Version 0.2.x runtime commands use flags and `PYVEIL_*`
-environment variables; they do not automatically load the YAML file. Full
-configuration loading remains a future candidate.
+`pyveil run` executes a strict `pyveil.json` ledger for local file redaction.
+It is not a provider orchestrator and does not load custom regex rules. Its
+schema pins the package version and permits only public channels/entities,
+an explicit size limit, and one secret reference. See [file runs](file-runs.md)
+for actual outputs, failure behavior, and 0.2.x YAML migration.
+
+The five-minute check covers a small real file-processing job, not model
+downloads, provider calls, or real-world PII recall. Synthetic input and actual
+execution are recorded as separate fields.
 
 ## Compatibility Contract
 

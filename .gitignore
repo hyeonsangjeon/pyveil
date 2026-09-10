@@ -4,6 +4,9 @@ __pycache__/
 *$py.class
 .vscode
 /local.data/
+# Local run keys and potentially sensitive redacted outputs
+.pyveil.key
+.pyveil-runs/
 # C extensions
 *.so
 

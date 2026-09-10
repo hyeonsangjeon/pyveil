@@ -20,9 +20,15 @@ This roadmap is directional, not a compatibility promise.
 
 ## Future Candidates
 
-- Config loading into `Policy` and `Veil` objects.
+- Provider orchestration and custom rules in file-run configuration, if needed.
 - Optional framework adapters where they do not add hard runtime dependencies.
 - Richer stats for blocked/redacted/passed findings.
+
+## 0.3.x
+
+- Keep the file-run configuration executable, strict, and dependency-free.
+- Maintain clean-install timing and byte-reproducibility checks.
+- Keep synthetic regression tours separate from real user-file processing.
 
 ## Non-goals
 

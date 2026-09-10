@@ -17,6 +17,9 @@ Do not turn pyveil into a general DLP suite, gateway, Presidio clone, or prompt-
 - Build package: `uv run --with build python -m build`
 - Check package: `uv run --with twine python -m twine check dist/*`
 - Run CLI demo: `python3 -m pyveil demo`
+- Run an actual file job: `python3 -m pyveil run pyveil.json` (provide the named secret)
+- Start a separate tutorial directory: `python3 -m pyveil init --example`
+- Validate the run ledger: `python3 -m pyveil test-config pyveil.json`
 - Run the privacy boundary replay: `python3 -m pyveil replay --format json`
 - Run CLI locally: `PYVEIL_SECRET=dev-secret python3 -m pyveil redact <file>`
 - Run detector evaluation: `python3 evaluation/evaluate.py --check`
@@ -48,6 +51,9 @@ detector -> finding -> policy -> masker
 - Do not port proprietary legacy rules or business-specific telecom rules.
 - Do not add CLI defaults that silently reuse a hard-coded redaction secret.
 - Keep CLI JSON input structure-preserving; tool, MCP, and trace payloads are usually JSON-shaped.
+- Never claim `demo`, `replay`, or provider dry-runs are live model calls.
+- Keep file-run receipts free of raw data, secret values, and personal paths.
+- Do not silently override run-ledger settings or replace a missing private key.
 - Keep core deterministic, local, and standard-library only.
 - Treat custom regexes as trusted application code. Require focused positive
   and negative tests and keep `max_input_chars` enabled.
@@ -76,6 +82,7 @@ This repository includes files meant for coding agents and LLM readers:
 - [docs/release-checklist.md](docs/release-checklist.md)
 - [docs/evaluation.html](docs/evaluation.html)
 - [docs/privacy-replay.md](docs/privacy-replay.md)
+- [docs/file-runs.md](docs/file-runs.md)
 - [docs/guides/](docs/guides/)
 - [docs/integrations/mcp.md](docs/integrations/mcp.md)
 - [docs/integrations/openai.md](docs/integrations/openai.md)

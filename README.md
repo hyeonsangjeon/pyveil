@@ -36,31 +36,57 @@ scoped HMAC placeholders before data crosses an application boundary.
 | `api_key: sk-proj-...` | `api_key: [API_KEY:38ded98a17e7]` |
 | `Authorization: Bearer ...` | `[AUTH_HEADER:4fe2926b7d20]` |
 
-No network calls. No reversible vault. No raw values in findings by default.
+No network calls in the redactor. No reversible vault. No raw values in findings by default.
 
-## Try It
+## Five-Minute File Run
 
-```bash
-pip install pyveil
-pyveil demo
-# or: python -m pyveil demo
-```
-
-Or run the synthetic demo in an isolated environment:
+Start in an empty working directory with Python 3.8+ and pip available:
 
 ```bash
-uvx pyveil demo
+python3 -m venv .venv
+source .venv/bin/activate
+python -m pip install pyveil==0.3.0
+python -m pyveil init --example
+python -m pyveil run
 ```
 
-```text
-before: Email alice@example.com, call 010-1234-5678, and use API key sk-proj-...
-after:  Email [EMAIL:...], call [PHONE:...], and use API key [API_KEY:...]
-found:  API_KEY, EMAIL, PHONE
+This writes an input file, then processes it with the **real installed redactor**.
+The input is explicitly synthetic; the result is computed, not mocked. There is
+no model response, API account, or provider call in this path. Installation,
+configuration, disk I/O, redaction, and receipt creation are included in the
+five-minute check. Python installation, model downloads, and provider calls are not.
+
+The command prints the paths to `redacted.json` and `receipt.json` under
+`.pyveil-runs/<run-id>/`. Open the output: the email and authorization value are
+replaced, while ticket `42` and `urgent: false` remain unchanged.
+
+**Use your own file:** replace `init --example` with the following when
+initializing a new working directory. No input is copied or overwritten.
+
+```bash
+python -m pyveil init --input /path/to/request.json --input-format json
+python -m pyveil run
 ```
+
+## One Config, Repeatable Output
+
+`pyveil.json` is the execution ledger: a normal JSON file naming the input,
+output directory, package version, channel, masking level, size limit, and
+secret reference. Change it, then run the same command. All relative paths
+are resolved from that file, not the shell's working directory.
+
+Run `python -m pyveil run` twice. The same input, config, private key, and pinned
+version produce identical output bytes in **different run directories**. Receipts
+record hashes and counts, not raw input or key values. Keep `.pyveil.key` private:
+it is a freshly generated local key, not a shared demo secret. Never commit it
+or assume that a redacted file is automatically safe to publish.
+
+[Configuration, Windows commands, failure cases, and migration](https://github.com/hyeonsangjeon/pyveil/blob/main/docs/file-runs.md)
+&middot; [Web manual](https://hyeonsangjeon.github.io/pyveil/manual.html#file-runs)
 
 ## Replay Six Agent Boundaries
 
-From a source checkout, run one deterministic, keyless command to verify
+For a separate synthetic regression tour, run the installed command to exercise
 prompt, tool-call, MCP, memory, log, and trace protection:
 
 ```bash
@@ -74,7 +100,8 @@ python -m pyveil replay --format markdown
 | Stop sensitive context before reuse | `mcp.resource.content`, `memory.write` | Nested shape survives with zero synthetic leaks | [MCP and memory cases](docs/privacy-replay.md#what-runs) |
 | Stop sensitive context before export | `log.record`, `trace.span.attributes` | Logs and span attributes pass raw-value-free gates | [Log and trace cases](docs/privacy-replay.md#what-runs) |
 
-The built-in replay currently produces **6/6 passing cases, 10 findings, and
+The built-in replay uses synthetic fixtures, not your files or a live model.
+It currently produces **6/6 passing cases, 10 findings, and
 0 surviving synthetic markers**. It also runs a resume-safety pass that
 re-crosses each boundary with already-redacted state, returning **0** markers
 across **6/6** cases. Its JSON contains only case IDs, channels,
@@ -359,7 +386,7 @@ evaluator:
 python evaluation/evaluate.py --check
 ```
 
-For corpus v1, pyveil 0.2.5 matches all 36 expected findings across 39 cases
+For corpus v1, the regression expectation is 36 findings across 39 cases
 (33 positive, 6 negative), with no corpus false positives, false negatives,
 labeled-value leaks, or non-empty `Finding.raw` values.
 
@@ -505,12 +532,21 @@ export PYVEIL_SCOPE="tenant/session"
 printf 'Email alice@example.com' | pyveil redact -
 pyveil redact request.json --channel tool.call.result --format json
 pyveil scan prompt.txt --format json
-pyveil init
-pyveil test-config pyveil.yaml
 ```
 
 `scan` emits finding metadata without raw sensitive values. JSON-shaped input
-is parsed and traversed structurally.
+is parsed and traversed structurally. These legacy stdout commands keep their
+flag/environment interface. For repeatable file jobs use `pyveil run pyveil.json`;
+it rejects malformed JSON instead of silently treating it as text.
+
+```bash
+python -m pyveil test-config pyveil.json
+python -m pyveil run pyveil.json --format json
+```
+
+`test-config` validates the entire JSON schema and version pin without executing
+anything. `run` also checks the input and secret, then returns output locations.
+Legacy reference YAML is no longer accepted by `init` or `test-config`.
 
 ## Integration Recipes
 
