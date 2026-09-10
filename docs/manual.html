@@ -406,6 +406,7 @@
       <div class="nav-group">
         <h4>Get started</h4>
         <a href="#overview">Overview</a>
+        <a href="#file-runs">Run a real file</a>
         <a href="#install">Installation</a>
         <a href="#quickstart">Quickstart</a>
       </div>
@@ -502,7 +503,7 @@ ollama pull qwen3.5:4b</code></pre>
         <p>Install the latest <code>main</code> directly from GitHub:</p>
         <pre><code>pip install "git+https://github.com/hyeonsangjeon/pyveil.git"</code></pre>
         <p>Pin to a released tag for reproducible builds:</p>
-        <pre><code>pip install "git+https://github.com/hyeonsangjeon/pyveil.git@v0.2.5"</code></pre>
+        <pre><code>pip install "git+https://github.com/hyeonsangjeon/pyveil.git@v0.3.0"</code></pre>
 
         <h3>For development (editable clone)</h3>
         <pre><code>git clone https://github.com/hyeonsangjeon/pyveil.git
@@ -520,6 +521,8 @@ pyveil --help</code></pre>
       <!-- ============ QUICKSTART ============ -->
       <section id="quickstart">
         <h2>Quickstart</h2>
+        <p>For a complete install-to-file workflow, start with <a href="#file-runs">Run a real file</a>.
+        The examples below show the Python API.</p>
         <p>Create one redactor, then call <code>redact_text</code> for strings or <code>redact_data</code> for dict/list/JSON.</p>
 
         <h4>30-second example</h4>
@@ -557,6 +560,64 @@ print(safe.text)
       </section>
 
       <!-- ============ HOW IT WORKS ============ -->
+      <section id="file-runs">
+        <h2>Run a real file from one config</h2>
+        <p>In a new working directory, install the package, create the run config, and execute it.
+        Python 3.8+ and pip must already be available.</p>
+        <pre><code>python3 -m venv .venv
+source .venv/bin/activate
+python -m pip install pyveil==0.3.0
+python -m pyveil init --example
+python -m pyveil run</code></pre>
+        <p><code>--example</code> creates a labeled synthetic input file. <code>run</code> reads it from disk
+        and computes the result with the real installed engine, not a mocked response. It calls no model
+        or provider. To process your own file, replace <code>init --example</code> with:</p>
+        <pre><code>python -m pyveil init --input /path/to/request.json --input-format json</code></pre>
+
+        <h3>One executable ledger</h3>
+        <p>The generated <code>pyveil.json</code> is the only run configuration. Relative paths start at its
+        directory, and environment variables do not silently override its channel, scope, or level.</p>
+        <pre><code>{
+  "schema_version": 1,
+  "pyveil_version": "0.3.0",
+  "input": "input.example.json",
+  "input_format": "json",
+  "input_origin": "synthetic",
+  "output_dir": ".pyveil-runs",
+  "scope": "local/files",
+  "channel": "prompt.input",
+  "level": "HIGH",
+  "max_input_chars": 1000000,
+  "actions": {},
+  "secret_file": ".pyveil.key"
+}</code></pre>
+        <p><code>init</code> creates a random private local key and never overwrites existing files.
+        To use a secret manager instead, initialize with <code>--secret-env PYVEIL_SECRET</code>.
+        The ledger contains the variable name, never its value.</p>
+
+        <h3>Read the result and repeat it</h3>
+        <p>Each success prints two paths: <code>redacted.json</code> (or <code>redacted.txt</code>) and
+        <code>receipt.json</code> in a new <code>.pyveil-runs/&lt;run-id&gt;/</code> directory.
+        The original file is never overwritten. The receipt records actual local execution, input origin,
+        version, config/output hashes, a keyed input digest, action counts, and timing.</p>
+        <pre><code>python -m pyveil test-config pyveil.json
+python -m pyveil run pyveil.json --format json
+python -m pyveil run pyveil.json --format json</code></pre>
+        <p>The same input, config, private key, and version produce identical output bytes in separate run
+        directories. Run IDs and timings differ. Keep keys and inputs private, and review redacted output
+        before sharing it: <code>LOW</code>, <code>PASS</code>, and unsupported shapes can retain sensitive data.</p>
+
+        <h3>Failure is not a demo</h3>
+        <p>Change the tutorial channel to <code>tool.call.arguments</code> to exercise a real credential block.
+        The command exits <code>2</code> and publishes no output. Exit <code>1</code> means input/encoding/JSON
+        or output I/O failure. Unknown config fields, duplicate keys, version mismatches, and missing keys
+        fail explicitly; there is no fallback to a sample result.</p>
+        <p>The five-minute check includes installation, configuration, disk I/O, and actual file redaction.
+        It does not include Python installation, model downloads, provider calls, or prove general PII recall.
+        See the <a href="https://github.com/hyeonsangjeon/pyveil/blob/main/docs/file-runs.md">full reproduction
+        guide, Windows commands, and YAML migration</a>.</p>
+      </section>
+
       <section id="how-it-works">
         <h2>How it works</h2>
         <p>Every redaction call runs the same three stages:</p>
@@ -1102,9 +1163,11 @@ pyveil redact request.json --channel tool.call.result --format json &gt; request
       <!-- ============ CLI ============ -->
       <section id="cli">
         <h2>Command line</h2>
-        <p>Installing pyveil registers the <code>pyveil</code> command. It reads the secret from <code>--secret</code>
+        <p>Installing pyveil registers the <code>pyveil</code> command. <code>redact</code> and <code>scan</code>
+        read the secret from <code>--secret</code>
         or <code>PYVEIL_SECRET</code>, and the scope from <code>--scope</code> or <code>PYVEIL_SCOPE</code>
-        (default <code>default</code>). JSON-shaped input is treated as structured data.</p>
+        (default <code>default</code>). JSON-shaped input is treated as structured data.
+        <code>run</code> instead executes the explicit <a href="#file-runs">JSON ledger</a>.</p>
 
         <table>
           <thead><tr><th>Command</th><th>What it does</th></tr></thead>
@@ -1112,15 +1175,18 @@ pyveil redact request.json --channel tool.call.result --format json &gt; request
             <tr><td><code>pyveil demo</code></td><td>Run a synthetic before/after demo without configuration.</td></tr>
             <tr><td><code>pyveil redact [PATH]</code></td><td>Redact a file or stdin. <code>--channel</code>, <code>--level low|high</code>, <code>--format text|json</code>.</td></tr>
             <tr><td><code>pyveil scan [PATH]</code></td><td>Detect and emit findings + stats as JSON (no raw values).</td></tr>
-            <tr><td><code>pyveil init [PATH]</code></td><td>Write a reference <code>pyveil.yaml</code> schema (default path <code>pyveil.yaml</code>).</td></tr>
-            <tr><td><code>pyveil test-config [PATH]</code></td><td>Validate the required sections of the reference schema.</td></tr>
+            <tr><td><code>pyveil init [PATH]</code></td><td>Create executable <code>pyveil.json</code>. Use <code>--input FILE</code> or <code>--example</code>; never overwrites files.</td></tr>
+            <tr><td><code>pyveil test-config [PATH]</code></td><td>Validate the entire JSON schema and version pin without executing.</td></tr>
+            <tr><td><code>pyveil run [PATH]</code></td><td>Process the configured file and persist output plus receipt in a new private directory.</td></tr>
+            <tr><td><code>pyveil replay</code></td><td>Separate synthetic regression tour; not a user-file job or model call.</td></tr>
           </tbody>
         </table>
 
         <div class="callout warn">
-          <p><span class="c-label">YAML loading</span></p>
-          <p>Version 0.2.x runtime commands use CLI flags and <code>PYVEIL_*</code> environment variables. They do
-          not automatically load <code>pyveil.yaml</code>; the generated file is a review and validation schema.</p>
+          <p><span class="c-label">Migrating from 0.2.x</span></p>
+          <p>The old root <code>pyveil.yaml</code> was a reference, never an executable core config.
+          Version 0.3 rejects it rather than claiming it is valid. Create a JSON ledger and choose its
+          settings explicitly. Provider-specific YAML loaders remain unchanged.</p>
         </div>
 
         <pre><code><span class="tok-cmt"># set credentials once</span>

@@ -37,7 +37,7 @@ def test_cli_scan_file(tmp_path, capsys):
 
 
 def test_cli_init_and_test_config(tmp_path, capsys):
-    config_path = tmp_path / "pyveil.yaml"
+    config_path = tmp_path / "pyveil.json"
 
     init_exit = main(["init", str(config_path)])
     test_exit = main(["test-config", str(config_path)])
@@ -46,6 +46,29 @@ def test_cli_init_and_test_config(tmp_path, capsys):
     assert init_exit == 0
     assert test_exit == 0
     assert "ok" in captured.out
+
+
+def test_cli_rejects_legacy_comment_only_yaml(tmp_path, capsys):
+    config = tmp_path / "pyveil.yaml"
+    config.write_text("# version:\n# default_level:\n# channels:\n# detectors:\n# safety:\n")
+
+    assert main(["test-config", str(config)]) == 2
+    captured = capsys.readouterr()
+    assert captured.out == ""
+    assert "not executable" in captured.err
+
+
+def test_cli_reports_missing_secret_before_reading_stdin(monkeypatch, capsys):
+    monkeypatch.delenv("PYVEIL_SECRET", raising=False)
+    assert main(["redact"]) == 2
+    assert "secret is required" in capsys.readouterr().err
+
+
+def test_cli_reports_missing_file_without_traceback(tmp_path, capsys):
+    assert main(["redact", str(tmp_path / "missing.txt"), "--secret", "test-secret"]) == 1
+    captured = capsys.readouterr()
+    assert captured.out == ""
+    assert "cannot read input" in captured.err
 
 
 def test_cli_requires_secret_when_env_is_missing(tmp_path, capsys, monkeypatch):
@@ -196,7 +219,7 @@ def test_cli_reports_package_version(capsys):
 
     captured = capsys.readouterr()
     assert exc_info.value.code == 0
-    assert captured.out == "pyveil 0.2.5\n"
+    assert captured.out == f"pyveil {__version__}\n"
 
 
 def test_package_version_matches_project_metadata():

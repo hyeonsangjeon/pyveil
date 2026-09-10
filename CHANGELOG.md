@@ -1,6 +1,32 @@
 # Changelog
 
-## Unreleased
+## 0.3.0 - 2026-09-11
+
+### Executable file runs
+
+- Added `pyveil run [pyveil.json]`: the installed redactor reads a real input
+  file, applies the configured channel/level/actions, and writes redacted data
+  plus a receipt to a new private run directory.
+- Added strict, dependency-free JSON configuration with an exact package-version
+  pin, config-relative paths, explicit input format/origin, size limit, and one
+  secret reference. There are no hidden scope or policy environment overrides.
+- `init` creates a random per-directory private key unless `--secret-env` is
+  chosen. `--example` creates a labeled synthetic input file, not a mock response.
+  Existing files and keys are never overwritten.
+- Receipts distinguish actual local processing from input provenance and record
+  the config/output hashes, keyed input digest, action counts, and measured time.
+- Installed-wheel CI now creates a fresh environment, processes the file twice,
+  verifies identical outputs and failure paths, and fails after 300 seconds.
+
+### Migration
+
+- `init` and `test-config` now use executable `pyveil.json`. The old root
+  `pyveil.yaml` was only a reference and was never loaded by the core CLI.
+  YAML reference files are now rejected rather than falsely validated.
+- Existing `redact`, `scan`, Python APIs, and provider-specific YAML loaders
+  retain their interfaces. See `docs/file-runs.md` for migration and error codes.
+- Missing secrets are reported before waiting for stdin. File/encoding/size
+  failures have explicit CLI errors rather than tracebacks.
 
 ### Added
 

@@ -1,0 +1,9 @@
+{
+  "source": "synthetic tutorial input; processed by the real redactor",
+  "message": "Please contact tutorial.user@example.com about this ticket.",
+  "headers": {
+    "Authorization": "Bearer TUTORIAL_ONLY_NOT_A_CREDENTIAL"
+  },
+  "ticket": 42,
+  "urgent": false
+}

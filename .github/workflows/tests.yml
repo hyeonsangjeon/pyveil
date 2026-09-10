@@ -146,6 +146,9 @@ jobs:
           python -m build --wheel
           python -m pip install --force-reinstall dist/*.whl
 
+      - name: Prove a real first run in under five minutes
+        run: python scripts/verify_first_run.py --wheel dist/pyveil-*-py3-none-any.whl
+
       - name: Verify installed replay outside source checkout
         run: |
           cd "$(mktemp -d)"
