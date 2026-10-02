@@ -11,7 +11,7 @@ Use a new working directory. On macOS or Linux:
 ```bash
 python3 -m venv .venv
 source .venv/bin/activate
-python -m pip install pyveil==0.3.0
+python -m pip install pyveil==0.3.1
 python -m pyveil init --input /path/to/request.json --input-format json
 python -m pyveil run
 ```
@@ -20,7 +20,7 @@ On Windows PowerShell, use the environment's executable directly:
 
 ```powershell
 py -m venv .venv
-.\.venv\Scripts\python -m pip install pyveil==0.3.0
+.\.venv\Scripts\python -m pip install pyveil==0.3.1
 .\.venv\Scripts\python -m pyveil init --input C:\path\to\request.json --input-format json
 .\.venv\Scripts\python -m pyveil run
 ```
@@ -41,7 +41,7 @@ The generated `pyveil.json` contains:
 ```json
 {
   "schema_version": 1,
-  "pyveil_version": "0.3.0",
+  "pyveil_version": "0.3.1",
   "input": "input.example.json",
   "input_format": "json",
   "input_origin": "synthetic",
@@ -167,8 +167,8 @@ From a checkout, using only the project's existing Python tooling:
 ```bash
 python -m pip install -e ".[dev]"
 python -m build
-python scripts/verify_first_run.py --wheel dist/pyveil-0.3.0-py3-none-any.whl
-python scripts/verify_first_run.py --version 0.3.0
+python scripts/verify_first_run.py --wheel dist/pyveil-0.3.1-py3-none-any.whl
+python scripts/verify_first_run.py --version 0.3.1
 ```
 
 Each check creates a fresh virtual environment and uses the installed package

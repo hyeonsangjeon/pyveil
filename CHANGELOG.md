@@ -1,6 +1,9 @@
 # Changelog
 
-## Unreleased
+## 0.3.1 - 2026-10-02
+
+Documentation and onboarding patch. No changes to the core redaction API or
+detector behavior.
 
 ### Documentation and maintainer tooling
 
@@ -12,6 +15,14 @@
   wheels; check public quickstart drift and local documentation navigation.
 - Add an opt-in maintainer traffic snapshot script with private local output,
   actual returned windows, and explicit limits on usage/conversion inference.
+
+### Upgrading
+
+- Install with `python -m pip install --upgrade pyveil==0.3.1`.
+- Existing file-run configurations pin an exact version. After reviewing this
+  release, change `pyveil_version` in your `pyveil.json` to `0.3.1`, or keep
+  `0.3.0` installed for a pinned reproduction. Keep your input, scope, and
+  private key unchanged; do not re-run `init` or regenerate keys to upgrade.
 
 ## 0.3.0 - 2026-09-11
 
