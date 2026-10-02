@@ -35,6 +35,9 @@ jobs:
       - name: Typecheck
         run: python -m mypy pyveil tests
 
+      - name: Check public quickstarts and documentation links
+        run: python scripts/documentation_checks.py
+
       - name: Run synthetic detector evaluation
         run: python evaluation/evaluate.py --check
 

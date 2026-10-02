@@ -1,612 +1,202 @@
-# pyveil: PII and secret redaction for Python AI agents
+# pyveil
 
-<p align="center">
-  <strong>Stop sensitive data before it reaches an LLM, tool, MCP resource, memory store, log, or trace.</strong>
-</p>
+**Redact PII and secrets before sending Python data to an LLM.**
 
-<p align="center">
-  <a href="https://pypi.org/project/pyveil/"><img alt="PyPI version" src="https://img.shields.io/pypi/v/pyveil?style=flat-square"></a>
-  <a href="https://github.com/hyeonsangjeon/pyveil/actions/workflows/tests.yml"><img alt="Tests" src="https://github.com/hyeonsangjeon/pyveil/actions/workflows/tests.yml/badge.svg"></a>
-  <a href="https://www.python.org/"><img alt="Python 3.8 to 3.14" src="https://img.shields.io/badge/python-3.8%20to%203.14-3776AB?style=flat-square"></a>
-  <img alt="Zero core dependencies" src="https://img.shields.io/badge/core%20dependencies-zero-111827?style=flat-square">
-  <img alt="Typed package" src="https://img.shields.io/badge/typed-py.typed-7C3AED?style=flat-square">
-  <a href="https://hyeonsangjeon.github.io/pyveil/evaluation.html"><img alt="Synthetic evaluation: 39 cases passing" src="https://img.shields.io/badge/synthetic%20evaluation-39%20cases%20passing-4ade80?style=flat-square"></a>
-  <a href="LICENSE"><img alt="MIT license" src="https://img.shields.io/badge/license-MIT-green?style=flat-square"></a>
-</p>
+[![PyPI](https://img.shields.io/pypi/v/pyveil?style=flat-square)](https://pypi.org/project/pyveil/)
+[![Tests](https://github.com/hyeonsangjeon/pyveil/actions/workflows/tests.yml/badge.svg)](https://github.com/hyeonsangjeon/pyveil/actions/workflows/tests.yml)
+[![Python 3.8 to 3.14](https://img.shields.io/badge/python-3.8%20to%203.14-3776AB?style=flat-square)](https://github.com/hyeonsangjeon/pyveil/actions/workflows/tests.yml)
+[![Zero core dependencies](https://img.shields.io/badge/core%20dependencies-zero-111827?style=flat-square)](https://github.com/hyeonsangjeon/pyveil/blob/main/pyproject.toml)
+[![MIT](https://img.shields.io/badge/license-MIT-green?style=flat-square)](https://github.com/hyeonsangjeon/pyveil/blob/main/LICENSE)
 
-<p align="center">
-  <a href="https://hyeonsangjeon.github.io/pyveil/manual.html">Documentation</a> &middot;
-  <a href="https://hyeonsangjeon.github.io/pyveil/guides/">Guides</a> &middot;
-  <a href="https://github.com/hyeonsangjeon/pyveil/blob/main/docs/privacy-replay.md">Privacy Replay</a> &middot;
-  <a href="https://hyeonsangjeon.github.io/pyveil/evaluation.html">Evaluation</a> &middot;
-  <a href="https://pypi.org/project/pyveil/">PyPI</a> &middot;
-  <a href="https://github.com/hyeonsangjeon/pyveil/blob/main/docs/cookbook.md">Cookbook</a> &middot;
-  <a href="https://github.com/hyeonsangjeon/pyveil/blob/main/docs/redaction-reference.md">Detection reference</a> &middot;
-  <a href="https://github.com/hyeonsangjeon/pyveil/discussions">Support</a> &middot;
-  <a href="https://github.com/hyeonsangjeon/pyveil/security">Security</a>
-</p>
+[Quickstart](#quickstart) · [OpenAI Agents / LiteLLM](https://github.com/hyeonsangjeon/pyveil/blob/main/docs/integrations/openai-agents-vs-litellm.md) · [Manual](https://hyeonsangjeon.github.io/pyveil/manual.html) · [Detection reference](https://github.com/hyeonsangjeon/pyveil/blob/main/docs/redaction-reference.md) · [Security](https://github.com/hyeonsangjeon/pyveil/blob/main/SECURITY.md)
 
-`pyveil` is local, dependency-free redaction middleware for LLM applications and
-AI agents. It replaces high-confidence PII and credentials with deterministic,
-scoped HMAC placeholders before data crosses an application boundary.
+Keep email addresses, phone numbers, and supported credentials out of model
+requests, tool results, MCP resources, memory, logs, and traces. pyveil runs
+locally, preserves JSON-shaped payloads, and needs **no model, API key, or
+runtime dependency**. You call it before each boundary you want to protect;
+installing it does not automatically intercept SDK calls.
 
-| Raw application context | Context sent to the model |
-| --- | --- |
-| `Email alice@example.com` | `Email [EMAIL:a13f7c91b0d2]` |
-| `api_key: sk-proj-...` | `api_key: [API_KEY:38ded98a17e7]` |
-| `Authorization: Bearer ...` | `[AUTH_HEADER:4fe2926b7d20]` |
+## Quickstart
 
-No network calls in the redactor. No reversible vault. No raw values in findings by default.
-
-## Five-Minute File Run
-
-Start in an empty working directory with Python 3.8+ and pip available:
+Requires Python 3.8+. In your Python environment:
 
 ```bash
-python3 -m venv .venv
-source .venv/bin/activate
-python -m pip install pyveil==0.3.0
+python -m pip install pyveil
+```
+
+Run this complete example. It makes no provider request:
+
+<!-- quickstart:python -->
+```python
+import secrets
+
+from pyveil import Channel, Veil
+
+veil = Veil.high(secret=secrets.token_bytes(32), scope="support/session-42")
+messages = [
+    {"role": "user", "content": "Email alice@example.com about ticket 42."},
+]
+safe = veil.redact_data(messages, channel=Channel.PROMPT_INPUT)
+print(safe.data[0]["content"])
+```
+<!-- /quickstart:python -->
+
+Output shape (the 12-hex suffix depends on your key and scope):
+
+```text
+Email [EMAIL:...] about ticket 42.
+```
+
+Pass **`safe.data`**, not `messages`, to your SDK. The original input is unchanged;
+message roles and ticket `42` are preserved. For plain strings use
+`veil.redact_text(text).text`.
+
+This example creates a random key once per run. Reuse the same `Veil` within a
+session; load a private, stable secret from your environment or secret manager
+when placeholders must survive restarts. Never reuse a documentation secret
+with real data. [Key and scope guidance](https://hyeonsangjeon.github.io/pyveil/manual.html#placeholders)
+
+## Start With Your Integration
+
+| Your stack | Start here | What runs locally |
+| --- | --- | --- |
+| OpenAI Agents SDK | [Runner wrapper and setup](https://github.com/hyeonsangjeon/pyveil/blob/main/docs/integrations/openai-agents-vs-litellm.md#openai-agents-sdk) | Redacts initial input **before** `Runner.run`; keyless checkout example |
+| LiteLLM SDK / Proxy | [SDK wrapper and Proxy hook](https://github.com/hyeonsangjeon/pyveil/blob/main/docs/integrations/openai-agents-vs-litellm.md#litellm-proxy) | Redacts completion `messages` before dispatch; keyless checkout example |
+| OpenAI Responses API | [Installable helper](https://github.com/hyeonsangjeon/pyveil/blob/main/docs/integrations/openai.md) | `python -m pyveil.integrations.openai --dry-run` |
+| Anthropic / Claude | [Installable helper](https://github.com/hyeonsangjeon/pyveil/blob/main/docs/integrations/anthropic.md) | `python -m pyveil.integrations.anthropic --dry-run` |
+| Azure OpenAI | [Env / YAML setup](https://github.com/hyeonsangjeon/pyveil/blob/main/docs/cookbook.md#5-azure-openai-with-environment-or-yaml-configuration) | `python -m pyveil.integrations.azure_openai --dry-run` |
+| Ollama | [Local model guide](https://github.com/hyeonsangjeon/pyveil/blob/main/docs/integrations/ollama.md) | `python -m pyveil.integrations.ollama --dry-run` |
+| MCP, logs, memory, FastAPI | [Cookbook](https://github.com/hyeonsangjeon/pyveil/blob/main/docs/cookbook.md) | Explicit wrappers at your application's boundaries |
+
+Provider dry-runs require `PYVEIL_SECRET`; the linked guides cover configuration
+and optional SDK dependencies for live calls. Dry-runs are **not model responses**.
+OpenAI Agents input guardrails validate or block; they do not replace the input,
+so the example redacts before dispatch. The LiteLLM Proxy hook covers
+list-valued `messages`, not every endpoint or payload field.
+
+**Examples vs installed modules:** `pyveil.integrations.*` ships in the wheel.
+`examples/*.py` does not. To run the OpenAI Agents and LiteLLM recipes without
+either SDK or a provider key, start from a checkout:
+
+```bash
+git clone https://github.com/hyeonsangjeon/pyveil.git
+cd pyveil
+python -m pip install .
+python examples/openai_agents_guardrail.py
+python examples/litellm_proxy_filter.py
+```
+
+Use a virtual environment for installation. See the
+[comparison guide](https://github.com/hyeonsangjeon/pyveil/blob/main/docs/integrations/openai-agents-vs-litellm.md#run-both-without-keys)
+for macOS/Linux and Windows setup, expected output, and bypass risks.
+
+## What Gets Redacted?
+
+HIGH replaces supported findings with `[TYPE:12hex]` HMAC placeholders. The same
+value, type, key, and scope produce the same placeholder, so repeated references
+remain linkable within your chosen scope.
+
+| Type | Supported shapes |
+| --- | --- |
+| `EMAIL` | Email addresses |
+| `PHONE` | Korean, separated international, and compact E.164 shapes |
+| `CREDIT_CARD` | Candidate card numbers that pass Luhn validation |
+| `JWT` | Compact JSON Web Tokens |
+| `AUTH_HEADER` | Bearer and Basic authorization headers |
+| `PRIVATE_KEY` | PEM private-key blocks |
+| `API_KEY` | Supported OpenAI, GitHub, Slack, Google, and AWS-style patterns |
+| `URL_QUERY_SECRET` | Supported secret-bearing URL query parameters |
+| `KV_SECRET` | Sensitive key-value pairs, including passwords and tokens |
+| Custom rules | Exact known values and trusted application regexes |
+
+Unknown names, addresses, images, and documents are **not** automatically
+detected. Use `CustomRule.exact(...)` for known values, or add a separate semantic
+detection layer. The [detection board](https://github.com/hyeonsangjeon/pyveil/blob/main/docs/redaction-reference.md)
+shows inputs, HIGH/LOW outputs, validation rules, and limits.
+
+Use **HIGH** for model-facing data. **LOW** is a human-facing preview, such as
+`al***@e******.com`; it deliberately retains identifying shape. Credentials stay
+aggressively hidden in both levels. pyveil is not a compliance guarantee,
+prompt-injection firewall, DLP suite, or reversible vault.
+
+## Protect More Than Prompts
+
+| Task | Channel | Example |
+| --- | --- | --- |
+| Prepare model input / output | `prompt.input`, `prompt.output` | [Provider-neutral boundary](https://github.com/hyeonsangjeon/pyveil/blob/main/examples/llm_client_boundary.py) |
+| Block credentials in tool arguments | `tool.call.arguments` | [Blocking recipe](https://github.com/hyeonsangjeon/pyveil/blob/main/docs/cookbook.md#6-block-credentials-before-model-controlled-tool-calls) |
+| Redact tool results / MCP resources | `tool.call.result`, `mcp.resource.content` | [MCP wrapper](https://github.com/hyeonsangjeon/pyveil/blob/main/examples/mcp_server_wrapper.py) |
+| Redact before embedding or persistence | `memory.write` | [Memory example](https://github.com/hyeonsangjeon/pyveil/blob/main/examples/memory_write.py) |
+| Redact before telemetry export | `log.record`, `trace.span.attributes` | [Logging](https://github.com/hyeonsangjeon/pyveil/blob/main/docs/integrations/logging.md) / [tracing](https://github.com/hyeonsangjeon/pyveil/blob/main/docs/integrations/tracing.md) |
+
+The default policy raises `BlockedSensitiveData` for credential-like findings in
+`tool.call.arguments`. On failure, **do not dispatch the original payload**.
+Findings omit raw sensitive values by default; your application's original
+objects still exist in memory. [Policy and failure handling](https://hyeonsangjeon.github.io/pyveil/manual.html#policy)
+
+## Process A File
+
+From an empty working directory after installation:
+
+```bash
 python -m pyveil init --example
 python -m pyveil run
 ```
 
-This writes an input file, then processes it with the **real installed redactor**.
-The input is explicitly synthetic; the result is computed, not mocked. There is
-no model response, API account, or provider call in this path. Installation,
-configuration, disk I/O, redaction, and receipt creation are included in the
-five-minute check. Python installation, model downloads, and provider calls are not.
+This creates synthetic input, `pyveil.json`, and a random private `.pyveil.key`,
+then writes real redacted output and a receipt under `.pyveil-runs/<run-id>/`.
+No model is called. Run twice with unchanged input, config, key, and version for
+identical output bytes in separate directories.
 
-The command prints the paths to `redacted.json` and `receipt.json` under
-`.pyveil-runs/<run-id>/`. Open the output: the email and authorization value are
-replaced, while ticket `42` and `urgent: false` remain unchanged.
-
-**Use your own file:** replace `init --example` with the following when
-initializing a new working directory. No input is copied or overwritten.
+For your own file, use the following instead of `init --example`:
 
 ```bash
 python -m pyveil init --input /path/to/request.json --input-format json
-python -m pyveil run
 ```
 
-## One Config, Repeatable Output
+Keep keys and outputs out of Git; redacted output is not automatically safe to
+publish. [Configuration, Windows commands, error codes, and migration](https://github.com/hyeonsangjeon/pyveil/blob/main/docs/file-runs.md)
 
-`pyveil.json` is the execution ledger: a normal JSON file naming the input,
-output directory, package version, channel, masking level, size limit, and
-secret reference. Change it, then run the same command. All relative paths
-are resolved from that file, not the shell's working directory.
+## Verify Before You Integrate
 
-Run `python -m pyveil run` twice. The same input, config, private key, and pinned
-version produce identical output bytes in **different run directories**. Receipts
-record hashes and counts, not raw input or key values. Keep `.pyveil.key` private:
-it is a freshly generated local key, not a shared demo secret. Never commit it
-or assume that a redacted file is automatically safe to publish.
-
-[Configuration, Windows commands, failure cases, and migration](https://github.com/hyeonsangjeon/pyveil/blob/main/docs/file-runs.md)
-&middot; [Web manual](https://hyeonsangjeon.github.io/pyveil/manual.html#file-runs)
-
-## Replay Six Agent Boundaries
-
-For a separate synthetic regression tour, run the installed command to exercise
-prompt, tool-call, MCP, memory, log, and trace protection:
+One installed command exercises six synthetic agent boundaries without keys:
 
 ```bash
 python -m pyveil replay --format markdown
-# same source example with uv: uv run python examples/privacy_replay.py --format markdown
 ```
 
-| Task | Protected channels | Observable gate | Start here |
-| --- | --- | --- | --- |
-| Stop sensitive context before execution | `prompt.input`, `tool.call.arguments` | Findings are replaced, benign fields survive | [Prompt and tool cases](docs/privacy-replay.md#what-runs) |
-| Stop sensitive context before reuse | `mcp.resource.content`, `memory.write` | Nested shape survives with zero synthetic leaks | [MCP and memory cases](docs/privacy-replay.md#what-runs) |
-| Stop sensitive context before export | `log.record`, `trace.span.attributes` | Logs and span attributes pass raw-value-free gates | [Log and trace cases](docs/privacy-replay.md#what-runs) |
+The current regression expectation is **6/6 passing cases, 10 findings, and
+0 surviving labeled synthetic markers**. It checks benign fields, structure,
+and a second redaction pass. It is not a real-world PII recall benchmark.
+[Replay methodology and limits](https://github.com/hyeonsangjeon/pyveil/blob/main/docs/privacy-replay.md)
 
-The built-in replay uses synthetic fixtures, not your files or a live model.
-It currently produces **6/6 passing cases, 10 findings, and
-0 surviving synthetic markers**. It also runs a resume-safety pass that
-re-crosses each boundary with already-redacted state, returning **0** markers
-across **6/6** cases. Its JSON contains only case IDs, channels,
-counts, booleans, and input/output hashes. Read the
-[Privacy Boundary Replay guide](docs/privacy-replay.md) for the report schema,
-failure behavior, clean-wheel CI proof, and limits.
+CI tests Python 3.8 through 3.14, installs built wheels in clean environments,
+executes the quickstart above, and verifies file runs. Separate offline tests
+inspect official OpenAI and Anthropic SDK request bodies through local mock
+transports; they do not claim live paid API validation.
 
-## Start With Your Integration
+[Test runs](https://github.com/hyeonsangjeon/pyveil/actions/workflows/tests.yml) ·
+[39-case detector corpus](https://hyeonsangjeon.github.io/pyveil/evaluation.html) ·
+[Protection-surface contract](https://github.com/hyeonsangjeon/pyveil/blob/main/compatibility/README.md)
 
-Choose the boundary you need and begin with a runnable example. The keyless
-paths use synthetic input and stop before a provider request.
+<details>
+<summary>Watch the synthetic redaction demo</summary>
 
-| You use | Install | Start here | Protected boundary |
-| --- | --- | --- | --- |
-| OpenAI Agents SDK | `pip install pyveil openai-agents` | [Pre-dispatch Runner wrapper](https://github.com/hyeonsangjeon/pyveil/blob/main/examples/openai_agents_guardrail.py) | Input is redacted before `Runner.run`; Python 3.10+ for the current SDK |
-| LiteLLM SDK or Proxy | `pip install pyveil litellm` or `pip install pyveil "litellm[proxy]"` | [SDK wrapper and Proxy pre-call hook](https://github.com/hyeonsangjeon/pyveil/blob/main/examples/litellm_proxy_filter.py) | Messages before `completion(...)` or proxy provider dispatch; Python 3.10+ for current LiteLLM |
-| OpenAI Responses API | `pip install "pyveil[openai]"` | [Keyless contract guide](https://github.com/hyeonsangjeon/pyveil/blob/main/docs/integrations/openai.md) | Exact input before `client.responses.create(...)` |
-| Anthropic / Claude | `pip install "pyveil[anthropic]"` | [Keyless contract guide](https://github.com/hyeonsangjeon/pyveil/blob/main/docs/integrations/anthropic.md) | Exact content before `client.messages.create(...)` |
-| Azure OpenAI | `pip install "pyveil[azure-openai]"` | [Environment and YAML example](https://github.com/hyeonsangjeon/pyveil/blob/main/examples/azure_openai.py) | Prompt before the Azure Responses API request |
-| Ollama | `pip install "pyveil[ollama]"` | [Local end-to-end guide](https://github.com/hyeonsangjeon/pyveil/blob/main/docs/integrations/ollama.md) | Prompt before the local model call |
-| MCP | `pip install pyveil` | [Server wrapper](https://github.com/hyeonsangjeon/pyveil/blob/main/examples/mcp_server_wrapper.py) | Tool results and resource content before agent context |
-| FastAPI, logs, or memory | `pip install pyveil` | [Cookbook](https://github.com/hyeonsangjeon/pyveil/blob/main/docs/cookbook.md) | Request payloads, log records, and memory writes |
+![pyveil redacting synthetic agent context](https://raw.githubusercontent.com/hyeonsangjeon/pyveil/main/docs/media/pyveil-awesome-demo.gif)
 
-Before production use, confirm the supported [detection shapes](https://github.com/hyeonsangjeon/pyveil/blob/main/docs/redaction-reference.md)
-and read the [security contract](https://github.com/hyeonsangjeon/pyveil/blob/main/SECURITY.md). The examples demonstrate where
-to place the boundary; they do not claim perfect PII recall or compliance.
+[English video](https://github.com/hyeonsangjeon/pyveil/releases/download/v0.1.2/pyveil-usage-guide-en.mp4) ·
+[Korean video](https://github.com/hyeonsangjeon/pyveil/releases/download/v0.1.2/pyveil-usage-guide-ko.mp4)
+(v0.1.2 walkthroughs; current CLI setup is in the manual).
 
-### OpenAI Agents And LiteLLM, Side By Side
+</details>
 
-| | OpenAI Agents SDK | LiteLLM Python SDK | LiteLLM Proxy |
-| --- | --- | --- | --- |
-| Detection point | Before `Runner.run` | Before `litellm.completion` | `async_pre_call_hook` before provider dispatch |
-| Input | String or structured agent input | Message list | `data["messages"]` when list-valued |
-| Safe output | Same shape passed to `Runner.run` | Redacted message list passed to `completion(...)` | Payload copy with redacted `messages` |
-| Bypass risk | Direct `Runner.run` calls | Direct `completion(...)` calls | Non-message payloads and fields |
-| Example limit | Does not cover later tools, memory, logs, or traces | Does not cover other LiteLLM APIs | Only completion-style `messages` are handled |
+## Documentation And Support
 
-See the [full comparison](https://github.com/hyeonsangjeon/pyveil/blob/main/docs/integrations/openai-agents-vs-litellm.md)
-for install commands, failure behavior, expected output, detector scope, and
-security limitations.
-
-## Protect An LLM Call
-
-Put `pyveil` immediately before the provider call. The same code works with
-OpenAI, Azure OpenAI, Anthropic, Gemini, LiteLLM, or an internal gateway.
-
-```python
-from pyveil import Channel, Veil
-
-veil = Veil.high(
-    secret=b"tenant-or-run-secret",
-    scope="tenant/session",
-)
-
-messages = [
-    {"role": "user", "content": "Email alice@example.com about my account."},
-]
-
-safe = veil.redact_data(messages, channel=Channel.PROMPT_INPUT)
-response = call_llm(safe.data)  # Your provider SDK call
-```
-
-The provider receives the same list and dictionary shape, with sensitive values
-replaced before serialization or transmission.
-
-## OpenAI And Claude: Keyless Contract-Tested Templates
-
-Install provider-specific templates without adding either SDK to pyveil's
-zero-dependency core:
-
-```bash
-pip install "pyveil[openai]"     # OpenAI Responses API
-pip install "pyveil[anthropic]"  # Claude Messages API
-```
-
-Both integrations redact locally at the final SDK boundary and return the exact
-provider input for inspection:
-
-```python
-from pyveil.integrations.openai import ask_openai, load_settings
-
-settings = load_settings()
-result = ask_openai(
-    "Write a follow-up for alice@example.com or 010-1234-5678.",
-    settings,
-)
-
-print(result.redacted_input)  # exact client.responses.create(...) input
-print(result.output_text)
-```
-
-```python
-from pyveil.integrations.anthropic import ask_anthropic, load_settings
-
-settings = load_settings()
-result = ask_anthropic(
-    "Write a follow-up for alice@example.com or 010-1234-5678.",
-    settings,
-)
-
-print(result.redacted_input)  # exact client.messages.create(...) content
-print(result.output_text)
-```
-
-No API key is needed to prove either boundary:
-
-```bash
-PYVEIL_SECRET=docs-demo-secret OPENAI_MODEL=gpt-5.6-luna \
-  python -m pyveil.integrations.openai --dry-run
-
-PYVEIL_SECRET=docs-demo-secret ANTHROPIC_MODEL=claude-haiku-4-5 \
-  python -m pyveil.integrations.anthropic --dry-run
-```
-
-```text
-sent-to-openai:    ... [EMAIL:17c25f8a4fe3] ... [PHONE:3f6dc5a3c9f3].
-sent-to-anthropic: ... [EMAIL:0b77abd1b26b] ... [PHONE:ec56e2456ba2].
-provider-response: skipped (--dry-run)
-```
-
-The repository also exercises the real official SDKs through local mock HTTP
-transports and asserts against the serialized `/v1/responses` and `/v1/messages`
-JSON bodies. These tests use no credentials, make no network requests, and
-cannot incur provider spend. A live paid API call has **not** been claimed.
-Historical provider models are not a free fallback and may be retired; keep the
-model ID configurable and use dry-run or mock contracts for cost-free checks.
-
-Current OpenAI and Anthropic SDKs require Python 3.9+. The pyveil core and both
-keyless dry-run paths remain compatible with Python 3.8 through 3.14. Use the
-checked-in [OpenAI guide](docs/integrations/openai.md) and
-[Anthropic / Claude guide](docs/integrations/anthropic.md) for configuration,
-offline verification, and boundary notes.
-
-## Ollama: Local End To End
-
-Run a local model behind the same redaction boundary. The optional integration
-uses Ollama's official Python client and defaults to `qwen3.5:4b`, a Q4_K_M
-4.7B model that fits comfortably on a 16GB Apple silicon Mac with a 4K context:
-
-```bash
-pip install "pyveil[ollama]"
-ollama pull qwen3.5:4b
-```
-
-```python
-from pyveil.integrations.ollama import ask_ollama, load_settings
-
-settings = load_settings()  # OLLAMA_* + PYVEIL_* environment variables
-result = ask_ollama(
-    "Write a follow-up for alice@example.com or 010-1234-5678.",
-    settings,
-)
-
-print(result.redacted_input)  # The exact prompt sent to Ollama
-print(result.output_text)     # The local model response
-```
-
-Prove the boundary without loading a model:
-
-```bash
-PYVEIL_SECRET=docs-demo-secret \
-  python -m pyveil.integrations.ollama --dry-run
-```
-
-```text
-mode: dry-run
-model: qwen3.5:4b
-host: http://127.0.0.1:11434
-sent-to-ollama: Write a one-sentence support follow-up for [EMAIL:71c6727a7fa2] or [PHONE:b4b889df07ce].
-findings: EMAIL=1, PHONE=1
-ollama-response: skipped (--dry-run)
-```
-
-For a live local call, set `PYVEIL_SECRET` and run the module. Configuration
-priority is process environment, `.env`, YAML, then defaults:
-
-```bash
-PYVEIL_SECRET=a-long-random-hmac-secret \
-  python -m pyveil.integrations.ollama
-
-python -m pyveil.integrations.ollama \
-  --config examples/ollama.example.yaml --env-file .env
-```
-
-The checked-in [`.env` template](examples/ollama.env.example) and
-[YAML template](examples/ollama.example.yaml) expose model, host, context,
-output length, temperature, timeout, and keep-alive. pyveil caps the default
-context at 4096 and uses `keep_alive=0`, so one-shot calls release model memory;
-set `OLLAMA_KEEP_ALIVE=5m` for faster repeated calls.
-
-Observed on this project's M1 Mac mini with 16GB memory and Ollama 0.31.2:
-`qwen3.5:4b` used about 3.2GB at a 4096-token context, a cold request took
-8.1 seconds, and a warm request took 1.3 seconds. These are local measurements,
-not portable performance guarantees. See the
-[Ollama integration guide](docs/integrations/ollama.md) for the full setup and
-memory trade-offs.
-
-## Azure OpenAI: End To End
-
-Install the optional Azure example dependencies, then load configuration from
-environment variables, `.env`, or YAML:
-
-```bash
-pip install "pyveil[azure-openai]"
-```
-
-```python
-from pyveil.integrations.azure_openai import ask_azure_openai, load_settings
-
-settings = load_settings()  # AZURE_OPENAI_* + PYVEIL_* environment variables
-result = ask_azure_openai(
-    "Write a follow-up for alice@example.com or 010-1234-5678.",
-    settings,
-)
-
-print(result.redacted_input)  # The exact text sent to Azure OpenAI
-print(result.output_text)     # The model response
-```
-
-The integration uses Azure OpenAI's v1 endpoint and Responses API. The
-deployment name is passed as `model`; pyveil redacts the prompt before
-`client.responses.create(...)` runs.
-
-Prove the boundary without an Azure request:
-
-```bash
-PYVEIL_SECRET=docs-demo-secret \
-  python -m pyveil.integrations.azure_openai --dry-run
-```
-
-```text
-mode: dry-run
-deployment: not configured
-sent-to-azure: Write a one-sentence support follow-up for [EMAIL:347ab11285a3] or [PHONE:548017338f6f].
-findings: EMAIL=1, PHONE=1
-azure-response: skipped (--dry-run)
-```
-
-For a live call, either export `AZURE_OPENAI_ENDPOINT`,
-`AZURE_OPENAI_DEPLOYMENT`, `AZURE_OPENAI_API_KEY`, `PYVEIL_SECRET`, and
-optionally `PYVEIL_SCOPE`, or use the checked-in
-[`.env` template](https://github.com/hyeonsangjeon/pyveil/blob/main/examples/azure_openai.env.example)
-and [YAML template](https://github.com/hyeonsangjeon/pyveil/blob/main/examples/azure_openai.example.yaml):
-
-```bash
-python -m pyveil.integrations.azure_openai --env-file .env
-python -m pyveil.integrations.azure_openai \
-  --config examples/azure_openai.example.yaml --env-file .env
-```
-
-Process environment variables override `.env`, which overrides non-secret YAML
-settings. API keys and the pyveil HMAC secret are rejected if placed directly
-in YAML; YAML names the environment variables that contain them.
-
-<p align="center">
-  <img src="https://raw.githubusercontent.com/hyeonsangjeon/pyveil/main/docs/media/pyveil-awesome-demo.gif"
-       alt="pyveil redacts synthetic PII and secrets before an AI agent boundary"
-       width="820">
-</p>
-
-## Why pyveil
-
-| Need | What pyveil provides |
-| --- | --- |
-| Keep data local | Standard-library core, zero required dependencies, zero network calls |
-| Preserve references | Stable `[TYPE:12hex]` placeholders from HMAC-SHA256 |
-| Isolate tenants and runs | Caller-defined `scope` changes placeholders across boundaries |
-| Redact real agent payloads | Recursive dictionaries, lists, tuples, and JSON strings |
-| Cover more than prompts | Policy channels for tools, MCP, memory, logs, traces, input, and output |
-| Stop credentials in tool calls | Auth headers, private keys, API keys, JWTs, and tokens block by default |
-| Cover app-specific data | Exact known-value and trusted custom-regex rules |
-| Audit without leaking | Findings contain type, rule, path, placeholder, and fingerprint, not raw values |
-| Verify supported behavior | Public 39-case synthetic regression corpus, evaluator, and CI gate |
-| Replay agent boundaries | One keyless command proves prompt, tool, MCP, memory, log, and trace handling |
-
-## Reproducible Evidence
-
-The repository ships a public synthetic detector corpus and a standard-library
-evaluator:
-
-```bash
-python evaluation/evaluate.py --check
-```
-
-For corpus v1, the regression expectation is 36 findings across 39 cases
-(33 positive, 6 negative), with no corpus false positives, false negatives,
-labeled-value leaks, or non-empty `Finding.raw` values.
-
-The repository also ships a machine-readable
-[protection-surface contract](compatibility/README.md) with synthetic fixtures
-for every channel, a validator that fails on manifest or documentation drift,
-and a privacy-safe evidence receipt:
-
-```bash
-python -m pyveil replay --format markdown          # six-boundary checkout tour
-python scripts/validate_compatibility.py --check   # manifest, fixtures, and docs agree
-python -m pytest tests/test_compatibility_surfaces.py
-python scripts/verify_zero_dependencies.py         # 0 runtime dependencies
-```
-
-These numbers describe documented supported shapes only. They are **not** a
-real-world PII recall benchmark and do not cover unknown names, addresses,
-languages, documents, or images. Read the
-[methodology and limits](https://hyeonsangjeon.github.io/pyveil/evaluation.html).
-
-## Known Names And Domain IDs
-
-Regex cannot discover arbitrary names or addresses. When your application
-already knows a value is sensitive, teach that value to `pyveil` without adding
-an NER model:
-
-```python
-from pyveil import CustomRule, Veil
-
-rules = [
-    CustomRule.exact("PERSON", ["Alice Kim", "Hong Gildong"]),
-    CustomRule("CUSTOMER_ID", r"\bCUS-[A-Z0-9]{8}\b", rule_id="customer_id"),
-]
-
-veil = Veil.high(
-    secret=b"tenant-secret",
-    scope="tenant/session",
-    rules=rules,
-)
-
-result = veil.redact_text("Alice Kim owns CUS-A1B2C3D4.")
-print(result.text)
-# [PERSON:...] owns [CUSTOMER_ID:...].
-```
-
-Custom patterns are trusted application code. Keep them narrow and test them
-against realistic positive and negative samples.
-
-## Agent Boundaries
-
-Classic masking often stops at text input. Agents move data across several
-surfaces, so channels are first-class policy inputs:
-
-| Channel | Redact before |
-| --- | --- |
-| `prompt.input` | User, RAG, or application context reaches a model |
-| `prompt.output` | Model output is displayed or chained |
-| `tool.call.arguments` | A model-controlled tool executes |
-| `tool.call.result` | Tool output returns to a model |
-| `mcp.resource.content` | MCP resource content enters context |
-| `memory.write` | Text is embedded or persisted |
-| `trace.span.attributes` | Attributes leave through telemetry |
-| `log.record` | Records reach handlers or external sinks |
-
-```text
-user / retrieval / tool / resource data
-                    |
-                  pyveil
-                    |
-model / tool / MCP / memory / trace / log boundary
-```
-
-Every channel above is backed by a synthetic fixture and a reproducible command
-in the [compatibility contract](compatibility/README.md), and summarized in a
-privacy-safe [Proof-of-Compatibility Receipt](compatibility/receipt.md) that
-records redaction counts and output hashes, never raw values.
-
-## Detection Board
-
-Core detection is intentionally conservative and high precision:
-
-| Type | Examples | HIGH output |
-| --- | --- | --- |
-| `EMAIL` | Email addresses | `[EMAIL:12hex]` |
-| `PHONE` | Korean, separated international, and compact E.164 phone shapes | `[PHONE:12hex]` |
-| `CREDIT_CARD` | Card numbers that pass Luhn validation | `[CREDIT_CARD:12hex]` |
-| `JWT` | Compact JSON Web Tokens | `[JWT:12hex]` |
-| `AUTH_HEADER` | Bearer and Basic authorization headers | `[AUTH_HEADER:12hex]` |
-| `PRIVATE_KEY` | PEM private-key blocks | `[PRIVATE_KEY:12hex]` |
-| `API_KEY` | OpenAI, GitHub, Slack, Google, and AWS-style keys | `[API_KEY:12hex]` |
-| `URL_QUERY_SECRET` | Token, key, secret, code, and auth query values | `[URL_QUERY_SECRET:12hex]` |
-| `KV_SECRET` | Password, cookie, secret, and token key-value pairs | `[KV_SECRET:12hex]` |
-| Custom | Known values and application regex rules | `[YOUR_TYPE:12hex]` |
-
-See the [full redaction reference](https://github.com/hyeonsangjeon/pyveil/blob/main/docs/redaction-reference.md)
-for examples, validation rules, LOW masking output, and limitations.
-
-## HIGH And LOW
-
-Use `HIGH` at model, agent, tool, MCP, memory, trace, and external log
-boundaries. It produces stable HMAC placeholders such as
-`[EMAIL:a13f7c91b0d2]`.
-
-Use `LOW` only for human-facing previews where preserving shape is useful:
-
-```text
-alice@example.com  -> al***@e******.com
-010-1234-5678      -> 010-****-5678
-4242 4242 4242 4242 -> **** **** **** 4242
-```
-
-Credential-like values remain aggressively hidden in both levels.
-
-## Policy
-
-The default high policy redacts supported findings and blocks credentials in
-`tool.call.arguments`:
-
-```python
-from pyveil import Action, Channel, Entity, Policy, Veil
-
-policy = Policy.default_high().override(
-    Channel.PROMPT_INPUT,
-    Entity.EMAIL,
-    Action.PASS,
-)
-
-veil = Veil.high(secret=b"tenant-secret", policy=policy)
-```
-
-When both `policy` and `level` are supplied, the explicit policy decides channel
-levels and actions. Build one `Veil` per tenant, session, or run and reuse it.
-
-## CLI
-
-Use stdin for shell pipelines, files for preflight checks, and JSON output for
-structured automation:
-
-```bash
-export PYVEIL_SECRET="tenant-or-run-secret"
-export PYVEIL_SCOPE="tenant/session"
-
-printf 'Email alice@example.com' | pyveil redact -
-pyveil redact request.json --channel tool.call.result --format json
-pyveil scan prompt.txt --format json
-```
-
-`scan` emits finding metadata without raw sensitive values. JSON-shaped input
-is parsed and traversed structurally. These legacy stdout commands keep their
-flag/environment interface. For repeatable file jobs use `pyveil run pyveil.json`;
-it rejects malformed JSON instead of silently treating it as text.
-
-```bash
-python -m pyveil test-config pyveil.json
-python -m pyveil run pyveil.json --format json
-```
-
-`test-config` validates the entire JSON schema and version pin without executing
-anything. `run` also checks the input and secret, then returns output locations.
-Legacy reference YAML is no longer accepted by `init` or `test-config`.
-
-## Integration Recipes
-
-| Stack or boundary | Copy-paste example |
-| --- | --- |
-| Any LLM provider | [Provider-neutral client wrapper](https://github.com/hyeonsangjeon/pyveil/blob/main/examples/llm_client_boundary.py) |
-| OpenAI Agents SDK | [Pre-dispatch `Runner.run` wrapper](https://github.com/hyeonsangjeon/pyveil/blob/main/examples/openai_agents_guardrail.py) |
-| OpenAI Responses API | [Installable integration](https://github.com/hyeonsangjeon/pyveil/blob/main/pyveil/integrations/openai.py) and [keyless contract guide](https://github.com/hyeonsangjeon/pyveil/blob/main/docs/integrations/openai.md) |
-| Anthropic / Claude | [Installable integration](https://github.com/hyeonsangjeon/pyveil/blob/main/pyveil/integrations/anthropic.py) and [keyless contract guide](https://github.com/hyeonsangjeon/pyveil/blob/main/docs/integrations/anthropic.md) |
-| Azure OpenAI | [Runnable env/YAML integration](https://github.com/hyeonsangjeon/pyveil/blob/main/pyveil/integrations/azure_openai.py) and [short example](https://github.com/hyeonsangjeon/pyveil/blob/main/examples/azure_openai.py) |
-| LiteLLM | [SDK wrapper and Proxy pre-call hook](https://github.com/hyeonsangjeon/pyveil/blob/main/examples/litellm_proxy_filter.py) |
-| FastAPI | [Request middleware example](https://github.com/hyeonsangjeon/pyveil/blob/main/examples/fastapi_middleware.py) |
-| MCP | [Server wrapper](https://github.com/hyeonsangjeon/pyveil/blob/main/examples/mcp_server_wrapper.py) and [integration guide](https://hyeonsangjeon.github.io/pyveil/manual.html#integrations) |
-| Python logging | [Logging filter example](https://github.com/hyeonsangjeon/pyveil/blob/main/examples/log_filter.py) |
-| Agent memory | [Before-embedding example](https://github.com/hyeonsangjeon/pyveil/blob/main/examples/memory_write.py) |
-
-The [cookbook](https://github.com/hyeonsangjeon/pyveil/blob/main/docs/cookbook.md)
-covers prompts, tools, MCP, memory, logging, tracing, JSON, and CLI workflows.
-
-## Pick The Right Tool
-
-Choose `pyveil` when you want a small local boundary filter for structured PII,
-credentials, known values, and domain identifiers across agent context flows.
-
-Choose Presidio, GLiNER, or another NER-backed system when you need broad
-semantic discovery of unknown people, organizations, locations, or addresses.
-Choose an enterprise DLP product when you need managed policy, document/image
-coverage, incident workflows, or compliance reporting.
-
-These tools can be layered. `pyveil` does not claim perfect recall.
-See the full [pyveil vs Presidio, NER, guardrails, and DLP decision guide](https://hyeonsangjeon.github.io/pyveil/guides/pyveil-vs-presidio.html).
-
-## Safety Contract
-
-- Raw sensitive values are not stored in `Finding` objects by default.
-- Placeholders use HMAC-SHA256 with a caller-provided secret and scope.
-- Credential-like values can be blocked before model-controlled tools execute.
-- `max_input_chars` bounds work performed on text and structured payloads.
-- The core makes no network calls and has no required third-party dependency.
-- pyveil has no reversible vault or unmasking API.
-
-`pyveil` is not a compliance guarantee, enterprise DLP system, secret-scanning
-replacement, or prompt-injection firewall. Read the
-[threat model](https://github.com/hyeonsangjeon/pyveil/blob/main/docs/threat-model.md),
-[known limitations](https://github.com/hyeonsangjeon/pyveil/blob/main/docs/known-limitations.md),
-and [security policy](https://github.com/hyeonsangjeon/pyveil/blob/main/SECURITY.md)
-before production use.
-
-## Guides
-
-- [Complete manual](https://hyeonsangjeon.github.io/pyveil/manual.html)
-- [Python LLM PII redaction guide](https://hyeonsangjeon.github.io/pyveil/guides/python-llm-pii-redaction.html)
-- [MCP PII redaction guide](https://hyeonsangjeon.github.io/pyveil/guides/mcp-pii-redaction.html)
+- [Manual](https://hyeonsangjeon.github.io/pyveil/manual.html), [cookbook](https://github.com/hyeonsangjeon/pyveil/blob/main/docs/cookbook.md), and [troubleshooting](https://github.com/hyeonsangjeon/pyveil/blob/main/docs/faq.md)
+- [Threat model](https://github.com/hyeonsangjeon/pyveil/blob/main/docs/threat-model.md), [known limitations](https://github.com/hyeonsangjeon/pyveil/blob/main/docs/known-limitations.md), and [security policy](https://github.com/hyeonsangjeon/pyveil/blob/main/SECURITY.md)
 - [pyveil vs Presidio / NER / DLP](https://hyeonsangjeon.github.io/pyveil/guides/pyveil-vs-presidio.html)
-- [Reproducible detector evaluation](https://hyeonsangjeon.github.io/pyveil/evaluation.html)
-- [English video guide](https://github.com/hyeonsangjeon/pyveil/releases/download/v0.1.2/pyveil-usage-guide-en.mp4)
-- [Korean video guide](https://github.com/hyeonsangjeon/pyveil/releases/download/v0.1.2/pyveil-usage-guide-ko.mp4)
-- [AGENTS.md](https://github.com/hyeonsangjeon/pyveil/blob/main/AGENTS.md) for coding agents
-- [llms.txt](https://hyeonsangjeon.github.io/pyveil/llms.txt) for LLM-readable navigation
-- [Contributing](https://github.com/hyeonsangjeon/pyveil/blob/main/CONTRIBUTING.md)
+- [Ask an integration question](https://github.com/hyeonsangjeon/pyveil/discussions) or [report a bug](https://github.com/hyeonsangjeon/pyveil/issues/new/choose). Share synthetic inputs, not real PII or credentials.
+- [AGENTS.md](https://github.com/hyeonsangjeon/pyveil/blob/main/AGENTS.md) and [llms.txt](https://hyeonsangjeon.github.io/pyveil/llms.txt) for coding agents
 
 ## Development
 
@@ -617,5 +207,6 @@ uv run --extra test pytest
 uv run --extra test python evaluation/evaluate.py --check
 ```
 
-CI runs the test suite on Python `3.8` through `3.14`. The core remains typed,
-dependency-free, and MIT licensed.
+[Contributing](https://github.com/hyeonsangjeon/pyveil/blob/main/CONTRIBUTING.md) ·
+[Changelog](https://github.com/hyeonsangjeon/pyveil/blob/main/CHANGELOG.md) ·
+[Maintainer traffic measurements](https://github.com/hyeonsangjeon/pyveil/blob/main/docs/maintainer-metrics.md)

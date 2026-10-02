@@ -34,13 +34,30 @@ you need into your application and keep its contract test.
 
 ## Run Both Without Keys
 
-From a repository checkout, install only pyveil to exercise the local
-transformations:
+The files below are not included in `pip install pyveil`. Clone the repository
+first; neither provider SDK is needed for the keyless examples.
+
+macOS / Linux:
 
 ```bash
-pip install pyveil
+git clone https://github.com/hyeonsangjeon/pyveil.git
+cd pyveil
+python3 -m venv .venv
+source .venv/bin/activate
+python -m pip install .
 python examples/openai_agents_guardrail.py
 python examples/litellm_proxy_filter.py
+```
+
+Windows PowerShell (no activation-policy change required):
+
+```powershell
+git clone https://github.com/hyeonsangjeon/pyveil.git
+cd pyveil
+py -m venv .venv
+.\.venv\Scripts\python.exe -m pip install .
+.\.venv\Scripts\python.exe examples/openai_agents_guardrail.py
+.\.venv\Scripts\python.exe examples/litellm_proxy_filter.py
 ```
 
 Representative output:
@@ -55,6 +72,10 @@ The exact HMAC suffix differs by scope. The raw synthetic email is not present
 in either provider-bound value.
 
 ## OpenAI Agents SDK
+
+After the keyless check, install the optional SDK in the same environment for
+a live run: `python -m pip install openai-agents`. Supply the provider key through
+the SDK's configuration and load pyveil's HMAC key from a separate secret.
 
 Install the current upstream SDK on a supported Python version, then route all
 initial agent input through the wrapper:
@@ -81,6 +102,9 @@ instead of treating an SDK guardrail as a sanitizer.
 
 ## LiteLLM SDK
 
+For live completions: `python -m pip install litellm`. Configure the chosen
+provider separately; the keyless example above does not exercise a live model.
+
 Pass the provider call into the wrapper or let the example import
 `litellm.completion` lazily:
 
@@ -103,6 +127,8 @@ This is opt-in. A direct call to `litellm.completion(...)` is outside pyveil's
 boundary.
 
 ## LiteLLM Proxy
+
+Install the proxy extras with `python -m pip install "litellm[proxy]"`.
 
 Make the repository or copied callback module importable by the proxy process,
 then register the module-level hook:
@@ -149,6 +175,10 @@ Run them with:
 ```bash
 pytest tests/test_integration_examples.py
 ```
+
+Install test dependencies first with `python -m pip install ".[test]"`.
+See the [cookbook](../cookbook.md) for subsequent tool, memory, and log boundaries;
+protecting initial messages does not protect the rest of an agent loop.
 
 On 2026-07-22, the import and hook contracts were also smoke-tested locally
 against OpenAI Agents SDK 0.18.3 and LiteLLM 1.93.0 on Python 3.10. Those are

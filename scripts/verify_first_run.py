@@ -12,12 +12,19 @@ import hashlib
 import json
 import os
 import platform
+import re
 import subprocess
 import sys
 import tempfile
 import time
 from pathlib import Path
 from typing import Any
+
+ROOT = Path(__file__).resolve().parent.parent
+if str(ROOT) not in sys.path:
+    sys.path.insert(0, str(ROOT))
+
+from scripts.documentation_checks import quickstart_code  # noqa: E402
 
 
 def verify_install(wheel: Path | None, version: str | None) -> dict[str, Any]:
@@ -85,6 +92,14 @@ def verify_install(wheel: Path | None, version: str | None) -> dict[str, Any]:
         if environment.resolve() not in Path(installed[0]).resolve().parents:
             raise RuntimeError("source checkout shadowed the installed distribution")
         install_seconds = time.perf_counter() - started
+        snippet = quickstart_code()
+        quickstart_output = execute([str(python), "-I", "-c", snippet], workspace)
+        if not re.fullmatch(r"Email \[EMAIL:[0-9a-f]{12}\] about ticket 42\.\n", quickstart_output):
+            raise RuntimeError("installed README quickstart did not produce the documented shape")
+        for example in ("openai_agents_guardrail.py", "litellm_proxy_filter.py"):
+            output = execute([str(python), "-I", str(ROOT / "examples" / example)], workspace)
+            if "alice@example.com" in output or "[EMAIL:" not in output or "skipped" not in output:
+                raise RuntimeError("keyless integration recipe contract failed")
         execute([*command, "init", "--example"], workspace)
         config = workspace / "pyveil.json"
         data = json.loads(config.read_text(encoding="utf-8"))
@@ -160,6 +175,8 @@ def verify_install(wheel: Path | None, version: str | None) -> dict[str, Any]:
             "input_unchanged": True,
             "blocked_run_wrote_nothing": True,
             "config_errors_fail": True,
+            "readme_quickstart_passed": True,
+            "keyless_checkout_recipes_passed": True,
             "output_sha256": receipt["output_sha256"],
         }
 

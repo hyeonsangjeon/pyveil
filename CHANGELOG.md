@@ -1,5 +1,18 @@
 # Changelog
 
+## Unreleased
+
+### Documentation and maintainer tooling
+
+- Put a runnable, keyless Python example before configuration details; align
+  README, homepage, and manual and make README file links usable on PyPI.
+- Clarify installed modules versus checkout-only OpenAI Agents / LiteLLM
+  recipes, with complete environment setup and direct integration links.
+- Verify the exact quickstart and keyless recipes against clean installed
+  wheels; check public quickstart drift and local documentation navigation.
+- Add an opt-in maintainer traffic snapshot script with private local output,
+  actual returned windows, and explicit limits on usage/conversion inference.
+
 ## 0.3.0 - 2026-09-11
 
 ### Executable file runs

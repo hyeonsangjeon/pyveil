@@ -6,6 +6,8 @@ traces cross application boundaries.
 
 Start with:
 
+- [Runnable Python quickstart](../README.md#quickstart)
+- [OpenAI Agents SDK and LiteLLM setup](integrations/openai-agents-vs-litellm.md#run-both-without-keys)
 - [Real file runs, configuration, and reproduction](file-runs.md)
 - [Rendered guide hub](https://hyeonsangjeon.github.io/pyveil/guides/)
 - [Reproducible evaluation](https://hyeonsangjeon.github.io/pyveil/evaluation.html)

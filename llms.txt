@@ -5,6 +5,7 @@
 ## Start Here
 
 - [README](README.md)
+- [Python quickstart](README.md#quickstart)
 - [Real file runs and executable configuration](docs/file-runs.md)
 - [Rendered guide hub](https://hyeonsangjeon.github.io/pyveil/guides/)
 - [Python LLM PII redaction guide](https://hyeonsangjeon.github.io/pyveil/guides/python-llm-pii-redaction.html)
@@ -44,6 +45,8 @@
 
 ## Rules for AI Coding Agents
 
+- Start with the README Python quickstart for in-process redaction. It needs only `pip install pyveil`.
+- `examples/*.py` requires a repository checkout; these recipes are not installed by pip. `pyveil.integrations.*` modules are installed.
 - Use `pyveil run pyveil.json` for real file jobs; the ledger pins paths, policy, and package version.
 - `pyveil init --example` creates synthetic input, not a mock response. Never call it a live provider test.
 - Use `python scripts/verify_first_run.py --wheel WHEEL` to check a clean installed run within 300 seconds.

@@ -8,6 +8,8 @@ pyveil replaces high-confidence sensitive values with stable, scoped HMAC placeh
 
 - Homepage: https://hyeonsangjeon.github.io/pyveil/
 - Manual: https://hyeonsangjeon.github.io/pyveil/manual.html
+- Python quickstart: https://hyeonsangjeon.github.io/pyveil/manual.html#quickstart
+- OpenAI Agents and LiteLLM checkout setup: https://github.com/hyeonsangjeon/pyveil/blob/main/docs/integrations/openai-agents-vs-litellm.md#run-both-without-keys
 - Real file runs: https://hyeonsangjeon.github.io/pyveil/manual.html#file-runs
 - Configuration and reproduction: https://github.com/hyeonsangjeon/pyveil/blob/main/docs/file-runs.md
 - PyPI: https://pypi.org/project/pyveil/
@@ -41,6 +43,8 @@ EMAIL, PHONE, CREDIT_CARD, JWT, AUTH_HEADER, PRIVATE_KEY, API_KEY, URL_QUERY_SEC
 
 ## Safety boundaries
 
+- Installation does not intercept SDK calls. Pass the redacted result explicitly at each boundary.
+- `examples/*.py` requires a checkout; only `pyveil.integrations.*` ships in the wheel.
 - Findings do not retain raw sensitive values by default.
 - Credential-like values are blocked by default in `tool.call.arguments`.
 - pyveil has no reversible vault or unmasking API.

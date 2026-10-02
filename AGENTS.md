@@ -16,6 +16,8 @@ Do not turn pyveil into a general DLP suite, gateway, Presidio clone, or prompt-
 - Run typecheck: `uv run --extra dev mypy pyveil tests`
 - Build package: `uv run --with build python -m build`
 - Check package: `uv run --with twine python -m twine check dist/*`
+- Check documentation links and quickstart drift: `python3 scripts/documentation_checks.py`
+- Verify the README against a clean installed wheel: `python3 scripts/verify_first_run.py --wheel dist/pyveil-VERSION-py3-none-any.whl`
 - Run CLI demo: `python3 -m pyveil demo`
 - Run an actual file job: `python3 -m pyveil run pyveil.json` (provide the named secret)
 - Start a separate tutorial directory: `python3 -m pyveil init --example`

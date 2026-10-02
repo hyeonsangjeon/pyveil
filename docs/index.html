@@ -69,16 +69,9 @@
     }
 
     .hero {
-      min-height: 560px;
       position: relative;
-      display: flex;
-      align-items: flex-end;
+      display: block;
       padding: 36px;
-      background-image:
-        linear-gradient(90deg, rgba(7, 17, 15, 0.98), rgba(7, 17, 15, 0.93) 52%, rgba(7, 17, 15, 0.78)),
-        url("media/social-preview.png");
-      background-size: cover;
-      background-position: center;
       border-bottom: 1px solid var(--line);
     }
 
@@ -90,10 +83,8 @@
     }
 
     .nav {
-      position: absolute;
-      top: 22px;
-      left: 36px;
-      right: 36px;
+      width: min(1120px, 100%);
+      margin: 0 auto 48px;
       display: flex;
       align-items: center;
       justify-content: space-between;
@@ -138,7 +129,7 @@
     h1 {
       max-width: 760px;
       margin: 0;
-      font-size: clamp(48px, 7vw, 86px);
+      font-size: 64px;
       line-height: 0.98;
       letter-spacing: 0;
     }
@@ -151,7 +142,7 @@
       max-width: 760px;
       margin: 20px 0 0;
       color: var(--muted);
-      font-size: clamp(20px, 2.4vw, 28px);
+      font-size: 20px;
       font-weight: 600;
     }
 
@@ -240,6 +231,8 @@
       min-width: 0;
       padding: 20px;
       overflow: auto;
+      white-space: pre-wrap;
+      overflow-wrap: anywhere;
       border: 1px solid var(--line);
       border-radius: 8px;
       background: #050b0f;
@@ -275,15 +268,14 @@
 
     @media (max-width: 820px) {
       .hero {
-        min-height: 620px;
         padding: 28px 20px;
       }
 
       .nav {
-        left: 20px;
-        right: 20px;
         align-items: flex-start;
         flex-direction: column;
+        gap: 12px;
+        margin-bottom: 24px;
       }
 
       .links a:nth-child(n+4) {
@@ -292,7 +284,7 @@
 
       h1 {
         max-width: 340px;
-        font-size: clamp(40px, 11vw, 46px);
+        font-size: 46px;
         overflow-wrap: anywhere;
       }
 
@@ -339,24 +331,49 @@
       <div class="brand">py<span>veil</span></div>
       <div class="links">
         <a class="primary" href="manual.html">Manual</a>
-        <a href="guides/">Guides</a>
-        <a href="evaluation.html">Evaluation</a>
         <a href="https://github.com/hyeonsangjeon/pyveil">GitHub</a>
         <a href="https://pypi.org/project/pyveil/">PyPI</a>
+        <a href="guides/">Guides</a>
+        <a href="evaluation.html">Evaluation</a>
       </div>
     </nav>
     <div class="hero-inner">
-      <h1><strong>PII and secret redaction</strong> for Python AI agents.</h1>
-      <p class="lead">Local, dependency-free middleware for LLM prompts, tools, MCP, memory, logs, and traces.</p>
+      <h1><strong>pyveil</strong></h1>
+      <p class="lead">Redact PII and secrets before LLM calls. Local Python. No API key.</p>
       <div class="actions">
-        <a class="button primary" href="manual.html#file-runs">Run a real file</a>
-        <a class="button" href="manual.html">Read the manual</a>
-        <a class="button" href="manual.html#install">Install</a>
+        <a class="button primary" href="#quickstart">Try the Python example</a>
+        <a class="button" href="#integrations">Integrations</a>
       </div>
     </div>
   </header>
 
   <main>
+    <section class="section" id="quickstart">
+      <h2>From raw context to a redacted request</h2>
+      <p>Install with <code>python -m pip install pyveil</code>, then run this complete example. Python 3.8+; no provider request.</p>
+      <div class="code-row">
+        <pre><code data-quickstart>import secrets
+
+from pyveil import Channel, Veil
+
+veil = Veil.high(secret=secrets.token_bytes(32), scope="support/session-42")
+messages = [
+    {"role": "user", "content": "Email alice@example.com about ticket 42."},
+]
+safe = veil.redact_data(messages, channel=Channel.PROMPT_INPUT)
+print(safe.data[0]["content"])</code></pre>
+        <div>
+          <p>Output shape (the HMAC suffix varies):</p>
+          <pre class="output"><code>Email [EMAIL:...] about ticket 42.</code></pre>
+          <p>Pass <code>safe.data</code> to your SDK. Roles and ticket 42 survive; the original input is unchanged.</p>
+          <p>Reuse this redactor within a session. For stable placeholders across restarts, load a private key from your environment or secret manager.</p>
+          <a href="manual.html#quickstart">Python quickstart and key handling &rarr;</a>
+        </div>
+      </div>
+      <p>Only supported patterns are detected. Unknown names, addresses, images, and documents need a separate layer.
+      <a href="manual.html#detectors">See the detection board and limits.</a></p>
+    </section>
+
     <section class="section">
       <h2>One config. A real processed file.</h2>
       <div class="code-row">
@@ -378,9 +395,20 @@ python -m pyveil run
       <a href="manual.html#file-runs">Install, run, reproduce, and handle failures.</a></p>
     </section>
 
-    <section class="section">
-      <h2>Recipes people actually need</h2>
+    <section class="section" id="integrations">
+      <h2>Start with your integration</h2>
+      <p>Installable provider helpers ship with pyveil. OpenAI Agents and LiteLLM wrappers are checkout recipes; each guide lists setup, keyless execution, and limits.</p>
       <div class="grid">
+        <a class="recipe" href="https://github.com/hyeonsangjeon/pyveil/blob/main/docs/integrations/openai-agents-vs-litellm.md#openai-agents-sdk">
+          <h3>OpenAI Agents SDK</h3>
+          <p>Redact initial input before Runner.run. Run the checkout example without an API key.</p>
+          <span class="more">Setup and boundary &rarr;</span>
+        </a>
+        <a class="recipe" href="https://github.com/hyeonsangjeon/pyveil/blob/main/docs/integrations/openai-agents-vs-litellm.md#litellm-proxy">
+          <h3>LiteLLM SDK and Proxy</h3>
+          <p>Redact completion messages before dispatch. Compare the SDK wrapper and Proxy hook.</p>
+          <span class="more">Setup and boundary &rarr;</span>
+        </a>
         <a class="recipe" href="manual.html#openai">
           <h3>OpenAI, verified without a key</h3>
           <p>Inspect the exact redacted Responses API input and run a real SDK contract test without network usage.</p>
@@ -458,7 +486,7 @@ python -m pyveil run
     <section class="section">
       <h2>Demo</h2>
       <p class="lead">The package keeps core behavior local, deterministic, and small: no network calls, no unmasking API, no third-party core dependency.</p>
-      <img class="demo" src="media/pyveil-awesome-demo.gif" alt="pyveil redacts synthetic sensitive context before agent boundaries">
+      <img class="demo" src="media/pyveil-awesome-demo.gif" loading="lazy" alt="pyveil redacts synthetic sensitive context before agent boundaries">
     </section>
 
     <footer class="section footer">

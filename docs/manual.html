@@ -406,9 +406,9 @@
       <div class="nav-group">
         <h4>Get started</h4>
         <a href="#overview">Overview</a>
-        <a href="#file-runs">Run a real file</a>
         <a href="#install">Installation</a>
         <a href="#quickstart">Quickstart</a>
+        <a href="#file-runs">Run a real file</a>
       </div>
       <div class="nav-group">
         <h4>Core concepts</h4>
@@ -425,6 +425,7 @@
         <a href="#structured">Structured redaction</a>
         <a href="#custom-rules">Custom rules</a>
         <a href="#recipes">Recipes</a>
+        <a href="https://github.com/hyeonsangjeon/pyveil/blob/main/docs/integrations/openai-agents-vs-litellm.md">OpenAI Agents / LiteLLM</a>
         <a href="#openai">OpenAI</a>
         <a href="#anthropic">Claude</a>
         <a href="#ollama">Ollama</a>
@@ -521,28 +522,31 @@ pyveil --help</code></pre>
       <!-- ============ QUICKSTART ============ -->
       <section id="quickstart">
         <h2>Quickstart</h2>
-        <p>For a complete install-to-file workflow, start with <a href="#file-runs">Run a real file</a>.
-        The examples below show the Python API.</p>
+        <p>Install <code>pyveil</code>, then run this complete Python example without a provider key.
+        For disk-based jobs, see <a href="#file-runs">Run a real file</a>.</p>
         <p>Create one redactor, then call <code>redact_text</code> for strings or <code>redact_data</code> for dict/list/JSON.</p>
 
         <h4>30-second example</h4>
-        <pre><code>from pyveil import Veil
+        <pre><code data-quickstart>import secrets
 
-veil = Veil.high(secret=b"tenant-or-run-secret", scope="tenant/session")
+from pyveil import Channel, Veil
 
-result = veil.redact_text(
-    "Email alice@example.com and call 010-1234-5678",
-    channel="prompt.input",
-)
-
-print(result.text)
-<span class="tok-out"># Email [EMAIL:a3d2b564c825] and call [PHONE:cbbfb8059b58]</span></code></pre>
+veil = Veil.high(secret=secrets.token_bytes(32), scope="support/session-42")
+messages = [
+    {"role": "user", "content": "Email alice@example.com about ticket 42."},
+]
+safe = veil.redact_data(messages, channel=Channel.PROMPT_INPUT)
+print(safe.data[0]["content"])</code></pre>
+        <p>Output shape: <code>Email [EMAIL:...] about ticket 42.</code> The suffix has 12 hex characters;
+        it varies with the key and scope. Send <code>safe.data</code> to the provider, not <code>messages</code>.
+        The original input remains unchanged.</p>
 
         <div class="callout tip">
           <p><span class="c-label">The secret matters</span></p>
           <p>The <code>secret</code> keys the HMAC placeholders. The same secret + scope + value always produces the
-          same placeholder, so pass a stable per-tenant or per-run secret &mdash; not a random one each call. You can
-          also set <code>PYVEIL_SECRET</code> in the environment (see below).</p>
+          same placeholder. This example generates one key per run; reuse the redactor within the session.
+          For stability across restarts, load a private secret from your environment or secret manager.
+          Never use a documentation secret with real data.</p>
         </div>
 
         <h4>One-off scripts</h4>
